@@ -7,7 +7,7 @@ Le jeu ne contacte jamais API-Football directement. Les données sont récupér�
 | Index (jours disponibles, mention de la source) | `https://macgama.github.io/fanaroundtheworld-data/index.json` | toutes les 3 h |
 | Compétitions | `https://macgama.github.io/fanaroundtheworld-data/competitions.json` | toutes les 3 h |
 | Matchs d'un jour (UTC) | `https://macgama.github.io/fanaroundtheworld-data/days/AAAA-MM-JJ.json` | toutes les 3 h |
-| Live | `https://fanaroundtheworld-live.<compte>.workers.dev/live.json` | chaque minute pendant les matchs |
+| Live | `https://fanaroundtheworld-live.gael-manigley.workers.dev/live.json` | chaque minute pendant les matchs |
 
 ## Côté jeu (Godot)
 
