@@ -1,0 +1,14 @@
+# Fins de ligne normalisées (Windows / Linux / macOS)
+* text=auto eol=lf
+
+# Fichiers binaires
+*.png binary
+*.jpg binary
+*.webp binary
+*.ogg binary
+*.wav binary
+*.mp3 binary
+*.ttf binary
+*.otf binary
+*.blend binary
+*.psd binary
