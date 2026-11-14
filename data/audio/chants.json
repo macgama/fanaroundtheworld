@@ -1,0 +1,122 @@
+{
+ "version": 1,
+ "_doc": "Chants rythmés du duel. Une piste par voix (T tambour, C claps, S caisse claire, H hey, G cri de groupe) et J = les appuis attendus du joueur. Un caractère par pas : X fort, x normal, o léger, . rien. Une mesure = temps_par_mesure × pas_par_temps caractères ; une piste plus courte se répète. Du rythme, jamais un air connu.",
+ "chants": [
+  {
+   "id": "tempo",
+   "nom": "L'unisson",
+   "description": "Tambour et claps sur chaque temps, un temps fort tous les quatre.",
+   "bpm": 112,
+   "temps_par_mesure": 4,
+   "pas_par_temps": 4,
+   "difficulte": 1,
+   "pistes": {
+    "T": "X...x...x...x...",
+    "C": "x...x...x...x...",
+    "J": "x...x...x...x..."
+   }
+  },
+  {
+   "id": "marche",
+   "nom": "La marche",
+   "description": "Le tambour sur les temps forts, la tribune frappe les temps faibles.",
+   "bpm": 104,
+   "temps_par_mesure": 4,
+   "pas_par_temps": 4,
+   "difficulte": 1,
+   "pistes": {
+    "T": "X.......x.......",
+    "C": "....x.......x...",
+    "J": "....x.......x..."
+   }
+  },
+  {
+   "id": "contretemps",
+   "nom": "Le contretemps",
+   "description": "Le tambour marque le temps, la tribune frappe entre deux.",
+   "bpm": 100,
+   "temps_par_mesure": 4,
+   "pas_par_temps": 4,
+   "difficulte": 2,
+   "pistes": {
+    "T": "x...x...x...x...",
+    "C": "..x...x...x...x.",
+    "J": "..x...x...x...x."
+   }
+  },
+  {
+   "id": "appel",
+   "nom": "L'appel",
+   "description": "Trois coups de tambour, la tribune répond d'un « hey ! ».",
+   "bpm": 116,
+   "temps_par_mesure": 4,
+   "pas_par_temps": 4,
+   "difficulte": 2,
+   "pistes": {
+    "T": "X...x...x.......",
+    "H": "............X...",
+    "J": "............x..."
+   }
+  },
+  {
+   "id": "galop",
+   "nom": "Le galop",
+   "description": "Un tambour qui galope ; on frappe sur chaque temps.",
+   "bpm": 120,
+   "temps_par_mesure": 4,
+   "pas_par_temps": 4,
+   "difficulte": 2,
+   "pistes": {
+    "T": "X..xX..xX..xX..x",
+    "C": "x...x...x...x...",
+    "J": "x...x...x...x..."
+   }
+  },
+  {
+   "id": "roulement",
+   "nom": "Le roulement",
+   "description": "La caisse claire roule et enfle, tout le monde frappe le dernier temps.",
+   "bpm": 96,
+   "temps_par_mesure": 4,
+   "pas_par_temps": 4,
+   "difficulte": 3,
+   "pistes": {
+    "S": "o.o.o.o.oxoxxxxx",
+    "T": "............X...",
+    "C": "............X...",
+    "J": "............x..."
+   }
+  },
+  {
+   "id": "syncope",
+   "nom": "La syncope",
+   "description": "Deux claps rapprochés puis un silence : le motif le plus piégeux.",
+   "bpm": 108,
+   "temps_par_mesure": 4,
+   "pas_par_temps": 4,
+   "difficulte": 3,
+   "pistes": {
+    "T": "X.......X.......",
+    "C": "x..x..x...x.x...",
+    "J": "x..x..x...x.x..."
+   }
+  },
+  {
+   "id": "grand_clap",
+   "nom": "Le grand clap",
+   "description": "Un clap géant, lent, qui accélère à chaque mesure.",
+   "bpm": 60,
+   "bpm_par_mesure": 14,
+   "bpm_max": 150,
+   "temps_par_mesure": 4,
+   "pas_par_temps": 1,
+   "difficulte": 3,
+   "pistes": {
+    "T": "X.X.",
+    "C": "X.X.",
+    "G": "X.X.",
+    "J": "x.x."
+   }
+  }
+ ]
+}
