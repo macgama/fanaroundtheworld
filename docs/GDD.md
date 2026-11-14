@@ -159,7 +159,7 @@ Prototype : 150 Jetons au départ, coût du billet et du trajet, gains à la fin
 
 - Inspiré des passes saisonniers des jeux free-to-play : paliers gagnés avec l'XP.
 - Une piste gratuite et une piste payante.
-- Contenu uniquement cosmétique (FANZZY, écharpes, tifos, décors du hub).
+- Contenu uniquement cosmétique : skins de FANZZY, écharpes, tifos, décors du hub.
 - Une saison du PASS suit une saison de football.
 
 ## 9. Les vraies données et les droits

@@ -46,7 +46,7 @@ Supprime ce fichier pour recommencer à zéro.
 | `scripts/donnees/` | Noms fictifs (`fiction.gd`), placement sur la carte (`geo.gd`), fiche d'un match |
 | `scripts/carte/` | La carte du monde dessinée |
 | `scripts/ui/` | Style commun de l'interface (couleurs, boutons, icônes) |
-| `assets/fanzzy/` | Les FANZZY (skins cosmétiques), importés depuis thebestfan.online |
+| `assets/fanzzy/` | Les FANZZY (personnages jouables, avec leurs skins cosmétiques), importés depuis thebestfan.online |
 | `assets/stades/` | Images des stades et des tribunes |
 | `assets/ui/` | Boutons, cadres, icônes de l'interface |
 | `assets/fonts/` | Polices (libres de droits uniquement) |
