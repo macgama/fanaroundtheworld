@@ -1,0 +1,625 @@
+{
+ "source": "macgama/thebestfan (catalogue du 3 novembre 2026), échantillon de 18 FANZZY pour le prototype",
+ "familles": {
+  "voix": {
+   "nom": "Voix",
+   "couleur": "#F5C33B",
+   "gestes": [
+    "tempo",
+    "contretemps",
+    "echo",
+    "capo",
+    "justesse"
+   ]
+  },
+  "perc": {
+   "nom": "Percussion",
+   "couleur": "#3C82E8",
+   "gestes": [
+    "mash",
+    "crescendo",
+    "salves",
+    "deuxvoix",
+    "accents"
+   ]
+  },
+  "fide": {
+   "nom": "Fidélité",
+   "couleur": "#C2CAD6",
+   "gestes": [
+    "hold",
+    "tenue",
+    "retenue",
+    "jauge",
+    "leurres"
+   ]
+  },
+  "tifo": {
+   "nom": "Tifo",
+   "couleur": "#8257DA",
+   "gestes": [
+    "tifo",
+    "mosaique",
+    "tri",
+    "ola",
+    "puzzle"
+   ]
+  },
+  "pyro": {
+   "nom": "Pyro",
+   "couleur": "#E0402C",
+   "gestes": [
+    "relance",
+    "compte",
+    "visee",
+    "rouleaux",
+    "meche"
+   ]
+  },
+  "depl": {
+   "nom": "Déplacement",
+   "couleur": "#1E9E6A",
+   "gestes": [
+    "echarpe",
+    "memoire",
+    "bascule",
+    "miroir",
+    "cortege"
+   ]
+  }
+ },
+ "fanzzy": [
+  {
+   "id": "TR1",
+   "nom": "Le Petit Teigneux",
+   "famille": "voix",
+   "serie": "TR",
+   "rarete": "commune",
+   "histoire": "Onze ans, une parka trop grande, et l’air de quelqu’un qu’on a déjà déçu. Il connaît les chants avant les paroles.",
+   "mods": {
+    "tempoWindow": 1.1
+   },
+   "cri": {
+    "label": "C’EST PAS FINI",
+    "gest": "tempo",
+    "power": 48
+   },
+   "skins": [
+    {
+     "id": "TR1",
+     "nom": "Le Petit Teigneux"
+    },
+    {
+     "id": "TR1B",
+     "nom": "Le Teigneux"
+    },
+    {
+     "id": "TR1C",
+     "nom": "Le Vieux Teigneux"
+    }
+   ]
+  },
+  {
+   "id": "AN3",
+   "nom": "Le Loueur de Transats",
+   "famille": "voix",
+   "serie": "AN",
+   "rarete": "commune",
+   "histoire": "Il loue des transats sur une promenade où il pleut neuf jours sur dix. Il les annonce quand même, à pleine voix, au rythme des vagues — et le dixième jour, il a raison.",
+   "mods": {
+    "tempoWindow": 1.16,
+    "refundBonus": 0.92
+   },
+   "cri": {
+    "label": "UN TRANSAT, MONSIEUR ?",
+    "gest": "tempo",
+    "power": 53
+   },
+   "skins": [
+    {
+     "id": "AN3",
+     "nom": "Le Loueur de Transats"
+    },
+    {
+     "id": "AN3B",
+     "nom": "Le Roi de la Promenade"
+    },
+    {
+     "id": "AN3C",
+     "nom": "La Jetée Vivante"
+    }
+   ]
+  },
+  {
+   "id": "GD8",
+   "nom": "Le Train Supprimé",
+   "famille": "voix",
+   "serie": "GD",
+   "rarete": "commune",
+   "histoire": "Annoncé sur le quai, deux minutes avant l’heure. Trente personnes en maillot regardent le même panneau sans y croire.",
+   "mods": {
+    "tempoWindow": 1.16,
+    "refundBonus": 0.9
+   },
+   "cri": {
+    "label": "C’EST PAS VRAI",
+    "gest": "tempo",
+    "power": 45
+   },
+   "skins": [
+    {
+     "id": "GD8",
+     "nom": "Le Train Supprimé"
+    },
+    {
+     "id": "GD8B",
+     "nom": "Le Quai Qui S’Organise"
+    },
+    {
+     "id": "GD8C",
+     "nom": "Le Quai 3"
+    }
+   ]
+  },
+  {
+   "id": "AN6",
+   "nom": "La Timide du Grand Boulevard",
+   "famille": "perc",
+   "serie": "AN",
+   "rarete": "commune",
+   "histoire": "Elle remonte la grande rue des boutiques en uniforme, le blouson de cuir bleu plié sur le bras : elle n’ose pas encore le mettre. Dans son baladeur, une cassette prêtée, et le pied qui bat la mesure sans qu’elle s’en rende compte.",
+   "mods": {
+    "mashBonus": 1.16,
+    "breathBonus": 0.92
+   },
+   "cri": {
+    "label": "J’OSE PAS ENCORE",
+    "gest": "mash",
+    "power": 53
+   },
+   "skins": [
+    {
+     "id": "AN6",
+     "nom": "La Timide du Grand Boulevard"
+    },
+    {
+     "id": "AN6B",
+     "nom": "La Punk à Épingles"
+    },
+    {
+     "id": "AN6C",
+     "nom": "La Reine du Grand Boulevard"
+    }
+   ]
+  },
+  {
+   "id": "MS30",
+   "nom": "Gamin au tambour",
+   "famille": "perc",
+   "serie": "MS",
+   "rarete": "commune",
+   "histoire": "Onze ans, une caisse claire trop grande pour lui, et l’air de quelqu’un à qui on a confié une mission d’État.",
+   "mods": {
+    "mashBonus": 1.06
+   },
+   "cri": {
+    "label": "ROULEMENT",
+    "gest": "mash",
+    "power": 52
+   },
+   "skins": [
+    {
+     "id": "MS30",
+     "nom": "Gamin au tambour"
+    },
+    {
+     "id": "MS30B",
+     "nom": "Tambour Major"
+    },
+    {
+     "id": "MS30C",
+     "nom": "Grosse Caisse Sud"
+    }
+   ]
+  },
+  {
+   "id": "GD4",
+   "nom": "Le Pneu Crevé",
+   "famille": "perc",
+   "serie": "GD",
+   "rarete": "commune",
+   "histoire": "À la sortie du parking, avant même d’avoir pris l’autoroute. La roue de secours est sous les écharpes et les écharpes sont sous tout le reste.",
+   "mods": {
+    "mashBonus": 1.18,
+    "holdForgive": -1
+   },
+   "cri": {
+    "label": "DÉJÀ ?",
+    "gest": "mash",
+    "power": 46
+   },
+   "skins": [
+    {
+     "id": "GD4",
+     "nom": "Le Pneu Crevé"
+    },
+    {
+     "id": "GD4B",
+     "nom": "La Roue de Secours"
+    },
+    {
+     "id": "GD4C",
+     "nom": "Les Quatre Minutes"
+    }
+   ]
+  },
+  {
+   "id": "TR3",
+   "nom": "Le Porteur de Banderole",
+   "famille": "tifo",
+   "serie": "TR",
+   "rarete": "commune",
+   "histoire": "Sa banderole est vide. Il attend le bon soir pour écrire dessus, et ça fait trois saisons que le bon soir n’est pas venu.",
+   "mods": {
+    "parryBonus": 1.25,
+    "tempoWindow": 0.94
+   },
+   "cri": {
+    "label": "CE SOIR PEUT-ÊTRE",
+    "gest": "tifo",
+    "power": 56
+   },
+   "skins": [
+    {
+     "id": "TR3",
+     "nom": "Le Porteur de Banderole"
+    },
+    {
+     "id": "TR3B",
+     "nom": "La Banderole Écrite"
+    },
+    {
+     "id": "TR3C",
+     "nom": "La Banderole de Tous"
+    }
+   ]
+  },
+  {
+   "id": "AN4",
+   "nom": "Le Gamin du Comptoir",
+   "famille": "tifo",
+   "serie": "AN",
+   "rarete": "commune",
+   "histoire": "Trop jeune pour entrer, il attend sur le trottoir que son père finisse sa pinte. Il regarde l’enseigne peinte grincer au vent, et il la recopie sur tout ce qu’il trouve.",
+   "mods": {
+    "parryBonus": 1.17,
+    "mashBonus": 0.91
+   },
+   "cri": {
+    "label": "JE LA REPEINDRAI",
+    "gest": "tifo",
+    "power": 52
+   },
+   "skins": [
+    {
+     "id": "AN4",
+     "nom": "Le Gamin du Comptoir"
+    },
+    {
+     "id": "AN4B",
+     "nom": "Le Peintre d’Enseignes"
+    },
+    {
+     "id": "AN4C",
+     "nom": "Le Maître des Quatre Coins"
+    }
+   ]
+  },
+  {
+   "id": "MS31",
+   "nom": "Colleur d’affiches",
+   "famille": "tifo",
+   "serie": "MS",
+   "rarete": "commune",
+   "histoire": "Il pose les avis de déplacement la nuit, capuche relevée, un œil sur le côté. Les affiches sont vierges : il n’a jamais rien fait de mal.",
+   "mods": {
+    "parryBonus": 1.2
+   },
+   "cri": {
+    "label": "CONSIGNES",
+    "gest": "tifo",
+    "power": 48
+   },
+   "skins": [
+    {
+     "id": "MS31",
+     "nom": "Colleur d’affiches"
+    },
+    {
+     "id": "MS31B",
+     "nom": "Bâcheur Nocturne"
+    },
+    {
+     "id": "MS31C",
+     "nom": "Chef Tifo"
+    }
+   ]
+  },
+  {
+   "id": "TR33",
+   "nom": "Abonné",
+   "famille": "fide",
+   "serie": "TR",
+   "rarete": "commune",
+   "histoire": "La personne la plus ordinaire de la tribune, et celle qui est toujours là. Mains dans les poches, thermos dans l’autre.",
+   "mods": {
+    "holdBonus": 1.07
+   },
+   "cri": {
+    "label": "PRÉSENTS",
+    "gest": "hold",
+    "power": 50
+   },
+   "skins": [
+    {
+     "id": "TR33",
+     "nom": "Abonné"
+    },
+    {
+     "id": "TR33B",
+     "nom": "Vieille Garde"
+    },
+    {
+     "id": "TR33C",
+     "nom": "Doyen du Bloc C"
+    }
+   ]
+  },
+  {
+   "id": "AN1",
+   "nom": "Le Petit Visiteur de la Tour",
+   "famille": "fide",
+   "serie": "AN",
+   "rarete": "commune",
+   "histoire": "Il était venu visiter la vieille forteresse un jour sans match. Un corbeau s’est posé sur son épaule et n’en est plus reparti : depuis, ils vont au stade à deux, avec un sachet de miettes.",
+   "mods": {
+    "holdBonus": 1.16,
+    "tempoWindow": 0.92
+   },
+   "cri": {
+    "label": "UNE MIETTE CHACUN",
+    "gest": "hold",
+    "power": 53
+   },
+   "skins": [
+    {
+     "id": "AN1",
+     "nom": "Le Petit Visiteur de la Tour"
+    },
+    {
+     "id": "AN1B",
+     "nom": "Le Garde Écarlate"
+    },
+    {
+     "id": "AN1C",
+     "nom": "Le Maître des Corbeaux"
+    }
+   ]
+  },
+  {
+   "id": "GD3",
+   "nom": "Le Péagiste Endormi",
+   "famille": "fide",
+   "serie": "GD",
+   "rarete": "commune",
+   "histoire": "Trois heures du matin, une cabine, et un car de supporters qui chante. Il lève la barrière sans ouvrir les yeux.",
+   "mods": {
+    "holdBonus": 1.15,
+    "tempoWindow": 0.92
+   },
+   "cri": {
+    "label": "IL DORT",
+    "gest": "hold",
+    "power": 43
+   },
+   "skins": [
+    {
+     "id": "GD3",
+     "nom": "Le Péagiste Endormi"
+    },
+    {
+     "id": "GD3B",
+     "nom": "Le Péagiste Qui Reconnaît le Car"
+    },
+    {
+     "id": "GD3C",
+     "nom": "Celui de la Cabine 4"
+    }
+   ]
+  },
+  {
+   "id": "TR34",
+   "nom": "Porte-torche",
+   "famille": "pyro",
+   "serie": "TR",
+   "rarete": "commune",
+   "histoire": "Écharpe remontée sur le nez, torche éteinte au poing, il attend la minute exacte. Rien n’est encore allumé, et c’est tout le sujet.",
+   "mods": {
+    "perfectBonus": 1.2
+   },
+   "cri": {
+    "label": "TORCHE",
+    "gest": "relance",
+    "power": 54
+   },
+   "skins": [
+    {
+     "id": "TR34",
+     "nom": "Porte-torche"
+    },
+    {
+     "id": "TR34B",
+     "nom": "Fumigène"
+    },
+    {
+     "id": "TR34C",
+     "nom": "Craqueur"
+    }
+   ]
+  },
+  {
+   "id": "AN5",
+   "nom": "La Gamine au Sucre d’Orge",
+   "famille": "pyro",
+   "serie": "AN",
+   "rarete": "commune",
+   "histoire": "Sur la plage de galets, elle suce un bâton de sucre rayé plus long que sa main. Au but, elle lance tous ses bonbons par-dessus la rambarde, et elle le regrette jusqu’à la mi-temps.",
+   "mods": {
+    "perfectBonus": 1.18,
+    "costPenalty": 1.06
+   },
+   "cri": {
+    "label": "ATTENTION, ÇA COLLE",
+    "gest": "rouleaux",
+    "power": 54
+   },
+   "skins": [
+    {
+     "id": "AN5",
+     "nom": "La Gamine au Sucre d’Orge"
+    },
+    {
+     "id": "AN5B",
+     "nom": "La Confiseuse du Front de Mer"
+    },
+    {
+     "id": "AN5C",
+     "nom": "La Reine des Bâtons de Sucre"
+    }
+   ]
+  },
+  {
+   "id": "GD22",
+   "nom": "La Grand-Mère du Covoiturage",
+   "famille": "pyro",
+   "serie": "GD",
+   "rarete": "commune",
+   "histoire": "La grand-mère qui conduit quatre jeunes au stade dans sa petite voiture. Elle connaît tous les raccourcis et elle ne ralentit jamais.",
+   "mods": {
+    "perfectBonus": 1.18,
+    "breathBonus": 0.92
+   },
+   "cri": {
+    "label": "ATTACHEZ-VOUS",
+    "gest": "relance",
+    "power": 46
+   },
+   "skins": [
+    {
+     "id": "GD22",
+     "nom": "La Grand-Mère du Covoiturage"
+    },
+    {
+     "id": "GD22B",
+     "nom": "La Copilote"
+    },
+    {
+     "id": "GD22C",
+     "nom": "La Reine du Rallye"
+    }
+   ]
+  },
+  {
+   "id": "AN2",
+   "nom": "Le Gamin de l’Écluse",
+   "famille": "depl",
+   "serie": "AN",
+   "rarete": "commune",
+   "histoire": "Assis sur la porte de l’écluse, il regardait passer les péniches peintes en se demandant où elles allaient. Il l’a compris un samedi : à l’extérieur, à six kilomètres à l’heure.",
+   "mods": {
+    "breathBonus": 1.15,
+    "parryResist": 0.92
+   },
+   "cri": {
+    "label": "ON ATTEND L’ÉCLUSE",
+    "gest": "echarpe",
+    "power": 54
+   },
+   "skins": [
+    {
+     "id": "AN2",
+     "nom": "Le Gamin de l’Écluse"
+    },
+    {
+     "id": "AN2B",
+     "nom": "Le Batelier des Roses"
+    },
+    {
+     "id": "AN2C",
+     "nom": "Le Capitaine du Long Bateau"
+    }
+   ]
+  },
+  {
+   "id": "MS32",
+   "nom": "Auto-stoppeur",
+   "famille": "depl",
+   "serie": "MS",
+   "rarete": "commune",
+   "histoire": "Pouce levé, carton vierge sous le bras, quatre cents kilomètres à faire et aucune inquiétude à ce sujet.",
+   "mods": {
+    "breathBonus": 1.08
+   },
+   "cri": {
+    "label": "PREMIER PÉAGE",
+    "gest": "echarpe",
+    "power": 50
+   },
+   "skins": [
+    {
+     "id": "MS32",
+     "nom": "Auto-stoppeur"
+    },
+    {
+     "id": "MS32B",
+     "nom": "Conducteur de car"
+    },
+    {
+     "id": "MS32C",
+     "nom": "Convoi 4h du Mat"
+    }
+   ]
+  },
+  {
+   "id": "GD1",
+   "nom": "Le Minibus en Panne",
+   "famille": "depl",
+   "serie": "GD",
+   "rarete": "commune",
+   "histoire": "Immobilisé sur la bande d’arrêt d’urgence à cent quarante kilomètres du stade. Neuf personnes et une seule idée de ce qu’il faut faire.",
+   "mods": {
+    "breathBonus": 1.16,
+    "tempoInterval": 80
+   },
+   "cri": {
+    "label": "QUELQU’UN S’Y CONNAÎT ?",
+    "gest": "echarpe",
+    "power": 45
+   },
+   "skins": [
+    {
+     "id": "GD1",
+     "nom": "Le Minibus en Panne"
+    },
+    {
+     "id": "GD1B",
+     "nom": "Le Minibus Réparé"
+    },
+    {
+     "id": "GD1C",
+     "nom": "Le Minibus de Tout le Monde"
+    }
+   ]
+  }
+ ]
+}

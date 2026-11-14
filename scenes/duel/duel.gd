@@ -1,0 +1,1095 @@
+class_name Duel
+extends Control
+## Duel d'ambiance : ta tribune contre la tribune adverse, pendant 90 secondes
+## (une seconde = une minute de match).
+##   Chant (ESPACE ou clic) : appuie quand la note arrive dans le cercle.
+##   Tifo (T) : se charge avec les bons chants, puis gros boost.
+##   Ola (O) : prête toutes les 20 s, enchaîne 4 flèches à temps.
+## La jauge d'ambiance dit qui domine. Le vrai score du match donne un bonus,
+## et un vrai but pendant le duel fait exploser la tribune.
+## Touches de test : B = simuler un but pour toi, N = but adverse.
+
+const DUREE := 90.0
+const BPM := 112.0
+const TRAJET_NOTE := 1.7      # secondes entre l'apparition d'une note et le cercle
+const FENETRE_BIEN := 0.13
+const FENETRE_PARFAIT := 0.055
+const OLA_PERIODE := 20.0
+const MOTIFS := [[1, 1, 1, 1], [1, 0, 1, 0], [1, 1, 0, 1], [1, 0, 1, 1], [0, 1, 1, 1], [1, 1, 1, 0], [1, 0, 0, 1]]
+const FLECHES := ["ui_left", "ui_up", "ui_right", "ui_down"]
+
+var fiche: Dictionary
+var camp := "home"
+var mode := "stade"
+
+# état du duel
+var temps := 0.0
+var jauge := 0.0             # -100 (adversaire) … +100 (toi)
+var points := 0
+var combo := 0
+var combo_max := 0
+var parfaits := 0
+var biens := 0
+var rates := 0
+var charge_tifo := 0.0
+var tifos := 0
+var olas := 0
+var termine := false
+var pret := false
+
+var _notes: Array = []        # temps (s) des notes à jouer
+var _prochaine_mesure := 0.0
+var _beat := 60.0 / BPM
+var _dernier_beat := -1
+var _ola_prete_a := OLA_PERIODE * 0.6
+var _ola_sequence: Array = []
+var _ola_index := 0
+var _ola_fin := 0.0
+var _chant_adverse_fin := -1.0
+var _prochain_chant_adverse := 12.0
+var _bonus_score := 1.0
+var _score_vu := Vector2i(-1, -1)
+
+# bonus des FANZZY (multiplicatifs)
+var mods := {}
+
+# nœuds
+var _decor: Decor
+var _piste: Piste
+var _fanzzy: Array = []       # Marionnette
+var _jauge_barre: Control
+var _lbl_temps: Label
+var _lbl_score_reel: Label
+var _lbl_minute_reelle: Label
+var _lbl_combo: Label
+var _lbl_combo_sous: Label
+var _lbl_info: Label
+var _btn_chant: Button
+var _btn_tifo: Button
+var _btn_ola: Button
+var _barre_tifo: ProgressBar
+var _panneau_ola: PanelContainer
+var _fleches_ola: HBoxContainer
+var _banniere: Control
+var _sons: Dictionary = {}
+
+
+func _ready() -> void:
+	var p: Dictionary = Game.params
+	var m := Donnees.match_par_id(str(p.get("match_id", "")))
+	if m.is_empty():
+		Game.aller(Game.SCENE_CARTE)
+		return
+	fiche = FicheMatch.de(m)
+	camp = p.get("camp", "home")
+	mode = p.get("mode", "stade")
+	mods = Duel.mods_equipe()
+	_preparer_sons()
+	_construire()
+	_calculer_bonus_score(true)
+	Donnees.mis_a_jour.connect(func(): _calculer_bonus_score(false))
+	_compte_a_rebours()
+
+
+# ------------------------------------------------------------------ FANZZY
+
+static func mods_equipe() -> Dictionary:
+	var res := {"tempoWindow": 1.0, "perfectBonus": 1.0, "mashBonus": 1.0, "parryBonus": 1.0,
+		"holdBonus": 1.0, "breathBonus": 1.0, "refundBonus": 1.0, "backfire": false}
+	for id in Game.equipe:
+		var z := Game.fanzzy_par_id(str(id))
+		for k in z.get("mods", {}):
+			if not res.has(k):
+				continue
+			if k == "backfire":
+				res[k] = res[k] or bool(z["mods"][k])
+			else:
+				res[k] *= float(z["mods"][k])
+	return res
+
+
+static func effets_texte(z: Dictionary) -> Array:
+	var noms := {
+		"tempoWindow": "rythme plus tolérant", "perfectBonus": "points des « parfait »",
+		"mashBonus": "points de chant", "parryBonus": "charge du tifo", "holdBonus": "résistance à l'adversaire",
+		"breathBonus": "temps pour l'ola", "refundBonus": "combo gardé après une erreur",
+	}
+	var res: Array = []
+	for k in z.get("mods", {}):
+		var v: Variant = z["mods"][k]
+		if k == "backfire":
+			if v:
+				res.append("risqué : un raté coûte plus cher")
+		elif noms.has(k):
+			var pct := int(round((float(v) - 1.0) * 100.0))
+			if pct != 0:
+				res.append("%s %s%d %%" % [noms[k], "+" if pct > 0 else "", pct])
+	return res
+
+
+# ------------------------------------------------------------------ construction
+
+func _construire() -> void:
+	_decor = Decor.new()
+	_decor.duel = self
+	_decor.set_anchors_preset(Control.PRESET_FULL_RECT)
+	_decor.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	add_child(_decor)
+	var dom: Dictionary = fiche["dom"]
+	var ext: Dictionary = fiche["ext"]
+	var nous: Dictionary = dom if camp == "home" else ext
+	var eux: Dictionary = ext if camp == "home" else dom
+	_decor.c_nous = Duel._vive(nous["c1"], nous["c2"], Ui.BLEU)
+	_decor.c_nous2 = nous["c2"]
+	_decor.c_eux = Duel._vive(eux["c1"], eux["c2"], Ui.ROUGE)
+	if _decor.c_eux.is_equal_approx(_decor.c_nous):
+		_decor.c_eux = Ui.ROUGE if not _decor.c_nous.is_equal_approx(Ui.ROUGE) else Ui.JAUNE
+	_decor.c_eux2 = eux["c2"]
+	_decor.mode = mode
+	_decor.texte_tifo = Game.fan_club_nom.to_upper()
+
+	# FANZZY de la tribune, au premier plan
+	for i in 3:
+		var mar := Marionnette.new()
+		mar.texture = Game.texture_fanzzy(str(Game.equipe[i]))
+		mar.position = Vector2(560 + i * 300, 1090)
+		mar.hauteur = 430.0 if i == 1 else 390.0
+		mar.phase = i * 0.9
+		add_child(mar)
+		_fanzzy.append(mar)
+
+	# piste de rythme
+	_piste = Piste.new()
+	_piste.duel = self
+	_piste.position = Vector2(380, 560)
+	_piste.size = Vector2(1160, 110)
+	_piste.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	add_child(_piste)
+
+	# --- jauge en haut
+	var hj := Ui.vbox(4)
+	hj.set_anchors_preset(Control.PRESET_CENTER_TOP)
+	hj.offset_left = -560
+	hj.offset_right = 560
+	hj.offset_top = 22
+	add_child(hj)
+	var noms := Ui.hbox(10)
+	var n1 := Ui.label(Game.fan_club_nom.to_upper(), 30, Ui.BLANC, true, 8)
+	n1.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	n1.clip_text = true
+	noms.add_child(n1)
+	noms.add_child(Ui.label("DUEL D'AMBIANCE", 40, Ui.JAUNE, true, 10))
+	var n2 := Ui.label(("TRIBUNE " + eux["nom"]).to_upper(), 30, Ui.BLANC, true, 8)
+	n2.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	n2.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	n2.clip_text = true
+	noms.add_child(n2)
+	hj.add_child(noms)
+	_jauge_barre = Jauge.new()
+	(_jauge_barre as Jauge).duel = self
+	_jauge_barre.custom_minimum_size = Vector2(1120, 48)
+	hj.add_child(_jauge_barre)
+
+	# --- match réel (en haut à droite)
+	var mr := Ui.panneau(Ui.NUIT, 22, 5)
+	mr.set_anchors_preset(Control.PRESET_TOP_RIGHT)
+	mr.offset_left = -330
+	mr.offset_right = -24
+	mr.offset_top = 22
+	add_child(mr)
+	var vmr := Ui.vbox(0)
+	mr.add_child(vmr)
+	_lbl_minute_reelle = Ui.label("MATCH RÉEL", 18, Ui.GRIS, true)
+	_lbl_minute_reelle.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	vmr.add_child(_lbl_minute_reelle)
+	_lbl_score_reel = Ui.label("", 40, Ui.BLANC, true, 6)
+	_lbl_score_reel.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	vmr.add_child(_lbl_score_reel)
+
+	# --- chrono et info (en haut à gauche)
+	var ch := Ui.panneau(Ui.NUIT, 22, 5)
+	ch.set_anchors_preset(Control.PRESET_TOP_LEFT)
+	ch.offset_left = 24
+	ch.offset_top = 22
+	ch.offset_right = 330
+	add_child(ch)
+	var vch := Ui.vbox(0)
+	ch.add_child(vch)
+	_lbl_temps = Ui.label("0'", 44, Ui.JAUNE, true, 8)
+	vch.add_child(_lbl_temps)
+	_lbl_info = Ui.label("", 16, Ui.BLANC)
+	_lbl_info.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_lbl_info.custom_minimum_size = Vector2(270, 0)
+	vch.add_child(_lbl_info)
+
+	# --- combo (en bas à gauche)
+	var cb := Ui.panneau(Ui.NUIT, 22, 5)
+	cb.set_anchors_preset(Control.PRESET_BOTTOM_LEFT)
+	cb.offset_left = 24
+	cb.offset_right = 420
+	cb.offset_top = -130
+	cb.offset_bottom = -24
+	add_child(cb)
+	var vcb := Ui.vbox(0)
+	cb.add_child(vcb)
+	_lbl_combo = Ui.label("COMBO x0", 36, Ui.BLANC, true, 8)
+	vcb.add_child(_lbl_combo)
+	var cri: String = Game.fanzzy_par_id(str(Game.equipe[0])).get("cri", {}).get("label", "Allez allez")
+	_lbl_combo_sous = Ui.label("Appuie en rythme · chant « %s »" % cri.capitalize(), 17, Ui.GRIS)
+	_lbl_combo_sous.clip_text = true
+	vcb.add_child(_lbl_combo_sous)
+
+	# --- boutons d'action (en bas à droite)
+	var ba := Ui.hbox(14)
+	ba.set_anchors_preset(Control.PRESET_BOTTOM_RIGHT)
+	ba.offset_left = -640
+	ba.offset_right = -24
+	ba.offset_top = -124
+	ba.offset_bottom = -24
+	ba.alignment = BoxContainer.ALIGNMENT_END
+	add_child(ba)
+	_btn_chant = Ui.bouton("Chant", Ui.BLEU, 34)
+	_btn_chant.custom_minimum_size = Vector2(200, 96)
+	_btn_chant.button_down.connect(func(): _chant())
+	_btn_chant.focus_mode = Control.FOCUS_NONE
+	ba.add_child(_btn_chant)
+	var vt := Ui.vbox(4)
+	_btn_tifo = Ui.bouton("Tifo", Ui.ROSE, 34)
+	_btn_tifo.custom_minimum_size = Vector2(200, 78)
+	_btn_tifo.focus_mode = Control.FOCUS_NONE
+	_btn_tifo.pressed.connect(_tifo)
+	vt.add_child(_btn_tifo)
+	_barre_tifo = ProgressBar.new()
+	_barre_tifo.show_percentage = false
+	_barre_tifo.custom_minimum_size = Vector2(200, 14)
+	_barre_tifo.add_theme_stylebox_override("background", Ui.boite(Color("#1a1640"), 7, 3))
+	_barre_tifo.add_theme_stylebox_override("fill", Ui.boite(Ui.ROSE, 7, 0))
+	vt.add_child(_barre_tifo)
+	ba.add_child(vt)
+	_btn_ola = Ui.bouton("Ola", Ui.JAUNE, 34)
+	Ui.colorer_bouton(_btn_ola, Ui.JAUNE, true)
+	_btn_ola.custom_minimum_size = Vector2(200, 96)
+	_btn_ola.focus_mode = Control.FOCUS_NONE
+	_btn_ola.pressed.connect(_ola_lancer)
+	ba.add_child(_btn_ola)
+
+	# --- panneau de l'ola (séquence de flèches)
+	_panneau_ola = Ui.panneau(Ui.NUIT, 26, 6)
+	_panneau_ola.set_anchors_preset(Control.PRESET_CENTER)
+	_panneau_ola.offset_left = -330
+	_panneau_ola.offset_right = 330
+	_panneau_ola.offset_top = -250
+	_panneau_ola.offset_bottom = -60
+	_panneau_ola.visible = false
+	add_child(_panneau_ola)
+	var vo := Ui.vbox(10)
+	_panneau_ola.add_child(vo)
+	var to := Ui.label("OLA ! Tape les flèches dans l'ordre", 28, Ui.JAUNE, true, 6)
+	to.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	vo.add_child(to)
+	_fleches_ola = Ui.hbox(14)
+	_fleches_ola.alignment = BoxContainer.ALIGNMENT_CENTER
+	vo.add_child(_fleches_ola)
+
+	# --- bannière de tifo
+	_banniere = Banniere.new()
+	_banniere.texte = Game.fan_club_nom.to_upper()
+	_banniere.sous = Game.fanzzy_par_id(str(Game.equipe[1])).get("cri", {}).get("label", "")
+	_banniere.couleur = _decor.c_nous
+	_banniere.couleur2 = _decor.c_nous2
+	_banniere.set_anchors_preset(Control.PRESET_FULL_RECT)
+	_banniere.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_banniere.visible = false
+	add_child(_banniere)
+	_maj_score_reel()
+
+
+## Une couleur de club lisible sur la jauge (ni presque noire, ni presque blanche).
+static func _vive(c1: Color, c2: Color, defaut: Color) -> Color:
+	for c in [c1, c2]:
+		if c.get_luminance() > 0.12 and c.get_luminance() < 0.85:
+			return c
+	return defaut
+
+
+func _compte_a_rebours() -> void:
+	var l := Ui.label("3", 220, Ui.JAUNE, true, 24)
+	l.set_anchors_preset(Control.PRESET_CENTER)
+	l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	l.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	l.grow_horizontal = Control.GROW_DIRECTION_BOTH
+	l.grow_vertical = Control.GROW_DIRECTION_BOTH
+	add_child(l)
+	for t in ["3", "2", "1", "ALLEZ !"]:
+		l.text = t
+		l.pivot_offset = l.size / 2.0
+		Ui.pop(l, 1.4, 0.3)
+		_jouer("tambour")
+		await get_tree().create_timer(0.7).timeout
+	l.queue_free()
+	_prochaine_mesure = 0.4
+	pret = true
+
+
+# ------------------------------------------------------------------ boucle
+
+func _process(delta: float) -> void:
+	_decor.queue_redraw()
+	_piste.queue_redraw()
+	_jauge_barre.queue_redraw()
+	if not pret or termine:
+		return
+	temps += delta
+	_lbl_temps.text = "%d'" % mini(90, int(temps * 90.0 / DUREE))
+
+	# notes : une mesure de 4 temps à la fois, sauf pendant l'ola
+	while _prochaine_mesure < temps + TRAJET_NOTE and _prochaine_mesure < DUREE - 1.0:
+		var motif: Array = MOTIFS[randi() % MOTIFS.size()] if _prochaine_mesure > 4.0 else [1, 0, 1, 0]
+		for i in 4:
+			var t := _prochaine_mesure + i * _beat
+			if motif[i] == 1 and not _pendant_ola(t):
+				_notes.append(t)
+		_prochaine_mesure += 4 * _beat
+	# notes ratées (passées sans appui)
+	while not _notes.is_empty() and _notes[0] < temps - FENETRE_BIEN * mods["tempoWindow"]:
+		_notes.pop_front()
+		_rate(false)
+
+	# tambour de la tribune sur chaque temps
+	var b := int(temps / _beat)
+	if b != _dernier_beat:
+		_dernier_beat = b
+		_jouer("tambour", -12.0)
+		for mar in _fanzzy:
+			mar.battement()
+
+	# pression adverse continue (plus forte quand ils lancent un chant)
+	var pression := 0.95 + 0.06 * FicheMatch.ambiance_prevue(fiche)
+	if temps > _prochain_chant_adverse and _chant_adverse_fin < temps:
+		_chant_adverse_fin = temps + 3.5
+		_prochain_chant_adverse = temps + randf_range(10.0, 15.0)
+		_annonce("Ils lancent un chant ! Réponds plus fort !", Ui.ROUGE)
+		_decor.secousse_eux = 1.0
+	if temps < _chant_adverse_fin:
+		pression *= 3.0
+	jauge -= pression * delta * 1.6 / float(mods["holdBonus"])
+	jauge = clampf(jauge, -100.0, 100.0)
+
+	# ola
+	if temps >= _ola_prete_a and _ola_sequence.is_empty():
+		_btn_ola.disabled = false
+		_btn_ola.text = "Ola (O)"
+	else:
+		_btn_ola.disabled = true
+		_btn_ola.text = "Ola" if _ola_sequence.is_empty() else "Ola…"
+	if not _ola_sequence.is_empty() and temps > _ola_fin:
+		_ola_finir(false)
+
+	_barre_tifo.value = charge_tifo
+	_btn_tifo.disabled = charge_tifo < 100.0
+	_btn_tifo.text = "Tifo (T)" if charge_tifo >= 100.0 else "Tifo"
+
+	if auto:
+		_jouer_tout_seul()
+	if temps >= DUREE:
+		_finir()
+
+
+## Mode démo / test (option « --auto ») : la tribune joue toute seule, avec quelques erreurs.
+var auto := "--auto" in OS.get_cmdline_user_args()
+
+
+func _jouer_tout_seul() -> void:
+	if not _notes.is_empty() and temps >= _notes[0] - 0.02:
+		if randf() < 0.85:
+			_chant()
+	if charge_tifo >= 100.0:
+		_tifo()
+	if temps >= _ola_prete_a and _ola_sequence.is_empty():
+		_ola_lancer()
+	elif not _ola_sequence.is_empty() and randf() < 0.05:
+		_ola_touche(_ola_sequence[_ola_index])
+
+
+func _pendant_ola(t: float) -> bool:
+	return not _ola_sequence.is_empty() and t < _ola_fin + 0.3
+
+
+func _unhandled_input(ev: InputEvent) -> void:
+	if termine or not pret:
+		return
+	if ev is InputEventKey and ev.pressed and not ev.echo:
+		var k := (ev as InputEventKey).keycode
+		if not _ola_sequence.is_empty():
+			for i in FLECHES.size():
+				if ev.is_action(FLECHES[i]):
+					_ola_touche(i)
+					get_viewport().set_input_as_handled()
+					return
+		match k:
+			KEY_SPACE, KEY_J, KEY_F:
+				_chant()
+			KEY_T:
+				_tifo()
+			KEY_O:
+				_ola_lancer()
+			KEY_B:
+				_but(true)
+			KEY_N:
+				_but(false)
+		get_viewport().set_input_as_handled()
+
+
+# ------------------------------------------------------------------ actions
+
+func _chant() -> void:
+	if termine or not pret:
+		return
+	Ui.pop(_btn_chant, 1.08, 0.12)
+	if _notes.is_empty():
+		_rate(true)
+		return
+	var ecart := absf(_notes[0] - temps)
+	var tw: float = mods["tempoWindow"]
+	if ecart > FENETRE_BIEN * tw:
+		# trop tôt : on ne mange pas la note, petite pénalité
+		if ecart < FENETRE_BIEN * tw * 2.2:
+			_rate(true)
+		return
+	_notes.pop_front()
+	combo += 1
+	combo_max = maxi(combo_max, combo)
+	var mult := (1.0 + minf(combo, 40) / 20.0) * _bonus_score * float(mods["mashBonus"])
+	var gain := 1.0
+	if ecart <= FENETRE_PARFAIT * tw:
+		parfaits += 1
+		gain = 2.0 * float(mods["perfectBonus"])
+		_piste.eclat("PARFAIT !", Ui.JAUNE)
+		_jouer("clap", 0.0, 1.15)
+	else:
+		biens += 1
+		_piste.eclat("BIEN", Ui.VERT)
+		_jouer("clap", -4.0)
+	jauge = clampf(jauge + gain * mult * 0.9, -100.0, 100.0)
+	points += int(gain * mult * 10.0)
+	charge_tifo = minf(100.0, charge_tifo + 3.2 * float(mods["parryBonus"]))
+	_fanzzy[0].sauter(0.9)
+	if combo % 10 == 0:
+		_decor.confettis(40)
+		_fanzzy[1].sauter(1.0)
+		_fanzzy[2].sauter(1.0)
+	_maj_combo()
+
+
+func _rate(appui: bool) -> void:
+	rates += 1
+	var garde := clampf(float(mods["refundBonus"]) - 1.0, 0.0, 0.6)
+	combo = int(combo * garde)
+	var cout := 1.0 if appui else 1.4
+	if mods["backfire"]:
+		cout *= 1.5
+	jauge = clampf(jauge - cout, -100.0, 100.0)
+	_piste.eclat("RATÉ", Ui.ROUGE)
+	_fanzzy[0].trembler()
+	_maj_combo()
+
+
+func _maj_combo() -> void:
+	_lbl_combo.text = "COMBO x%d%s" % [combo, " !" if combo >= 10 else ""]
+	if combo > 0 and combo % 5 == 0:
+		_lbl_combo.pivot_offset = _lbl_combo.size / 2.0
+		Ui.pop(_lbl_combo, 1.2)
+
+
+func _tifo() -> void:
+	if charge_tifo < 100.0 or termine:
+		return
+	charge_tifo = 0.0
+	tifos += 1
+	var gain := 14.0 * _bonus_score
+	jauge = clampf(jauge + gain, -100.0, 100.0)
+	points += int(gain * 25)
+	_jouer("foule", 0.0)
+	_banniere.deployer()
+	_decor.confettis(120)
+	for mar in _fanzzy:
+		mar.sauter(1.3)
+	_annonce("TIFO DÉPLOYÉ ! +%d" % int(gain), Ui.ROSE)
+
+
+func _ola_lancer() -> void:
+	if termine or temps < _ola_prete_a or not _ola_sequence.is_empty():
+		return
+	_ola_sequence = []
+	for i in 4:
+		_ola_sequence.append(randi() % 4)
+	_ola_index = 0
+	_ola_fin = temps + 3.2 * float(mods["breathBonus"])
+	_notes = _notes.filter(func(t): return t < temps + 0.2 or t > _ola_fin + 0.3)
+	for c in _fleches_ola.get_children():
+		c.queue_free()
+	for d in _ola_sequence:
+		var f := Fleche.new()
+		f.direction = d
+		f.custom_minimum_size = Vector2(96, 96)
+		f.mouse_filter = Control.MOUSE_FILTER_STOP
+		var dd: int = d
+		f.gui_input.connect(func(e: InputEvent):
+			if e is InputEventMouseButton and e.pressed:
+				_ola_touche(dd))
+		_fleches_ola.add_child(f)
+	_panneau_ola.visible = true
+	Ui.pop(_panneau_ola, 1.08)
+
+
+func _ola_touche(d: int) -> void:
+	if _ola_sequence.is_empty():
+		return
+	if d == _ola_sequence[_ola_index]:
+		var f: Fleche = _fleches_ola.get_child(_ola_index)
+		f.validee = true
+		f.queue_redraw()
+		Ui.pop(f, 1.25)
+		_jouer("clap", -6.0, 1.3 + _ola_index * 0.1)
+		_ola_index += 1
+		if _ola_index >= _ola_sequence.size():
+			_ola_finir(true)
+	else:
+		_ola_finir(false)
+
+
+func _ola_finir(reussie: bool) -> void:
+	_ola_sequence = []
+	_panneau_ola.visible = false
+	_ola_prete_a = temps + OLA_PERIODE
+	if reussie:
+		olas += 1
+		var gain := 12.0 * _bonus_score
+		jauge = clampf(jauge + gain, -100.0, 100.0)
+		points += int(gain * 25)
+		_decor.lancer_ola()
+		_jouer("foule", -3.0)
+		for i in _fanzzy.size():
+			_fanzzy[i].sauter(1.2, i * 0.12)
+		_annonce("OLA RÉUSSIE ! +%d" % int(gain), Ui.JAUNE)
+	else:
+		_annonce("Ola ratée… la tribune s'est emmêlée", Ui.GRIS)
+		for mar in _fanzzy:
+			mar.trembler()
+
+
+func _but(pour_nous: bool) -> void:
+	if pour_nous:
+		jauge = clampf(jauge + 15.0, -100.0, 100.0)
+		_annonce("BUT !!! La tribune explose", Ui.VERT)
+		_decor.confettis(200)
+		_jouer("foule", 3.0)
+		for mar in _fanzzy:
+			mar.sauter(1.6)
+	else:
+		jauge = clampf(jauge - 10.0, -100.0, 100.0)
+		_annonce("But adverse… relance la tribune !", Ui.ROUGE)
+		_decor.secousse_eux = 1.0
+		for mar in _fanzzy:
+			mar.trembler()
+
+
+func _annonce(texte: String, couleur: Color) -> void:
+	var l := Ui.label(texte, 46, couleur, true, 12)
+	l.set_anchors_preset(Control.PRESET_CENTER_TOP)
+	l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	l.offset_left = -700
+	l.offset_right = 700
+	l.offset_top = 160
+	l.offset_bottom = 230
+	l.pivot_offset = Vector2(700, 35)
+	add_child(l)
+	Ui.pop(l, 1.3, 0.3)
+	var t := l.create_tween()
+	t.tween_interval(1.4)
+	t.tween_property(l, "modulate:a", 0.0, 0.4)
+	t.tween_callback(l.queue_free)
+
+
+# ------------------------------------------------------------------ vrai score
+
+func _buts(m: Dictionary) -> Vector2i:
+	var sc: Variant = m.get("score", {}).get("current")
+	if not sc is Dictionary:
+		return Vector2i(-1, -1)
+	var h := int(sc.get("home", 0))
+	var a := int(sc.get("away", 0))
+	return Vector2i(h, a) if camp == "home" else Vector2i(a, h)
+
+
+func _calculer_bonus_score(debut: bool) -> void:
+	var m := Donnees.match_par_id(fiche["id"])
+	if m.is_empty():
+		return
+	fiche["m"] = m
+	var b := _buts(m)
+	if b.x >= 0:
+		if not debut and _score_vu.x >= 0 and pret and not termine:
+			if b.x > _score_vu.x:
+				_but(true)
+			if b.y > _score_vu.y:
+				_but(false)
+		_score_vu = b
+		_bonus_score = clampf(1.0 + 0.08 * (b.x - b.y), 0.76, 1.24)
+		var pct := int(round((_bonus_score - 1.0) * 100))
+		if pct > 0:
+			_lbl_info.text = "Ton équipe mène %d–%d : +%d %% d'ambiance" % [b.x, b.y, pct]
+		elif pct < 0:
+			_lbl_info.text = "Ton équipe est menée %d–%d : %d %% d'ambiance" % [b.x, b.y, pct]
+		else:
+			_lbl_info.text = "Égalité %d–%d : pas de bonus" % [b.x, b.y]
+	else:
+		_bonus_score = 1.0
+		_lbl_info.text = "Match pas encore commencé : pas de bonus de score"
+	_maj_score_reel()
+
+
+func _maj_score_reel() -> void:
+	var m: Dictionary = fiche["m"]
+	_lbl_minute_reelle.text = "MATCH RÉEL · " + FicheMatch.statut_court(fiche)
+	var sc := Donnees.score_texte(m) if m.get("score", {}).get("current") is Dictionary else "–"
+	_lbl_score_reel.text = "%s %s %s" % [fiche["dom"]["sigle"], sc, fiche["ext"]["sigle"]]
+
+
+# ------------------------------------------------------------------ fin
+
+func _finir() -> void:
+	termine = true
+	_notes.clear()
+	_panneau_ola.visible = false
+	var gagne := jauge > 0.0
+	var b := _buts(fiche["m"])
+	var equipe_gagne := b.x >= 0 and b.x > b.y and str(fiche["m"].get("status", "")) in ["LIVE", "HALFTIME", "FINISHED"]
+	var gain_mode: float = Game.MODES_SUIVI.get(mode, {}).get("gain", 1.0)
+	var jetons := int(round((10.0 + points / 60.0 + (15.0 if gagne else 0.0)) * gain_mode * (1.3 if equipe_gagne else 1.0)))
+	var xp := 40 + points / 40 + (40 if gagne else 0)
+	Game.duels_joues += 1
+	if gagne:
+		Game.duels_gagnes += 1
+	Game.gagner_jetons(jetons)
+	Game.ajouter_xp(xp)
+	if gagne:
+		_decor.confettis(300)
+		for mar in _fanzzy:
+			mar.sauter(1.5)
+		_jouer("foule", 2.0)
+
+	var voile := ColorRect.new()
+	voile.color = Color(0.05, 0.03, 0.15, 0.0)
+	voile.set_anchors_preset(Control.PRESET_FULL_RECT)
+	add_child(voile)
+	voile.create_tween().tween_property(voile, "color:a", 0.65, 0.4)
+	var pan := Ui.panneau()
+	pan.set_anchors_preset(Control.PRESET_CENTER)
+	pan.offset_left = -460
+	pan.offset_right = 460
+	pan.offset_top = -330
+	pan.offset_bottom = 330
+	add_child(pan)
+	var v := Ui.vbox(12)
+	v.alignment = BoxContainer.ALIGNMENT_CENTER
+	pan.add_child(v)
+	var t := Ui.label("VICTOIRE D'AMBIANCE !" if gagne else "LA TRIBUNE D'EN FACE A GAGNÉ…", 50 if gagne else 38, Ui.JAUNE if gagne else Ui.ROSE, true, 10)
+	t.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	v.add_child(t)
+	var lignes := [
+		["Points d'ambiance", str(points)],
+		["Parfaits / Biens / Ratés", "%d / %d / %d" % [parfaits, biens, rates]],
+		["Meilleur combo", "x%d" % combo_max],
+		["Tifos / Olas", "%d / %d" % [tifos, olas]],
+		["Bonus « ton équipe gagne vraiment »", "x1,3" if equipe_gagne else "non"],
+		["Jetons gagnés", "+%d" % jetons],
+		["XP du fan club", "+%d" % xp],
+	]
+	for l in lignes:
+		var h := Ui.hbox(10)
+		var a := Ui.label(l[0], 24, Ui.BLANC)
+		a.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		h.add_child(a)
+		h.add_child(Ui.label(l[1], 26, Ui.JAUNE, true))
+		v.add_child(h)
+	var hb := Ui.hbox(16)
+	hb.alignment = BoxContainer.ALIGNMENT_CENTER
+	var retour := Ui.bouton("Retour à la carte", Ui.BLEU, 30)
+	retour.custom_minimum_size = Vector2(380, 90)
+	var p: Dictionary = Game.params
+	retour.pressed.connect(func(): Game.aller(Game.SCENE_CARTE, {"niveau": p.get("niveau", "monde"), "continent": p.get("continent", ""), "pays": p.get("pays", "")}))
+	hb.add_child(retour)
+	var rejouer := Ui.bouton("Rejouer", Ui.VERT, 30)
+	Ui.colorer_bouton(rejouer, Ui.VERT, true)
+	rejouer.custom_minimum_size = Vector2(260, 90)
+	rejouer.pressed.connect(func(): Game.aller(Game.SCENE_DUEL, p))
+	hb.add_child(rejouer)
+	v.add_child(hb)
+	pan.pivot_offset = Vector2(460, 330)
+	pan.scale = Vector2.ONE * 0.6
+	pan.create_tween().tween_property(pan, "scale", Vector2.ONE, 0.35).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+
+
+# ------------------------------------------------------------------ sons (générés, aucun fichier)
+
+func _preparer_sons() -> void:
+	_sons["tambour"] = _son(func(t): return sin(TAU * (55.0 + 90.0 * exp(-t * 30.0)) * t) * exp(-t * 9.0), 0.35)
+	_sons["clap"] = _son(func(t): return randf_range(-1, 1) * exp(-t * 28.0) * 0.8, 0.2)
+	_sons["foule"] = _son(func(t): return randf_range(-1, 1) * 0.35 * sin(PI * t / 1.6) * (0.6 + 0.4 * sin(TAU * 3.0 * t)), 1.6)
+	for i in 6:
+		var lecteur := AudioStreamPlayer.new()
+		lecteur.name = "Son%d" % i
+		add_child(lecteur)
+
+
+func _son(f: Callable, duree: float) -> AudioStreamWAV:
+	var freq := 22050
+	var n := int(duree * freq)
+	var data := PackedByteArray()
+	data.resize(n * 2)
+	var precedent := 0.0
+	for i in n:
+		var v: float = f.call(float(i) / freq)
+		precedent = lerpf(precedent, v, 0.6)  # petit filtre pour adoucir le bruit
+		data.encode_s16(i * 2, int(clampf(precedent, -1.0, 1.0) * 26000.0))
+	var s := AudioStreamWAV.new()
+	s.format = AudioStreamWAV.FORMAT_16_BITS
+	s.mix_rate = freq
+	s.data = data
+	return s
+
+
+func _jouer(nom: String, volume := 0.0, hauteur := 1.0) -> void:
+	if not _sons.has(nom):
+		return
+	for i in 6:
+		var l := get_node_or_null("Son%d" % i) as AudioStreamPlayer
+		if l and not l.playing:
+			l.stream = _sons[nom]
+			l.volume_db = volume
+			l.pitch_scale = hauteur
+			l.play()
+			return
+
+
+# ================================================================== éléments dessinés
+
+## Un FANZZY animé façon marionnette : respiration, sauts, tremblements.
+## (Les expressions neutre / pousse / joie / dépit / colère viendront remplacer
+## l'image selon l'action quand elles seront importées.)
+class Marionnette extends Node2D:
+	var texture: Texture2D
+	var hauteur := 400.0
+	var phase := 0.0
+	var _saut := 0.0
+	var _ecrase := 0.0
+	var _tremble := 0.0
+	var _t := 0.0
+
+	func _process(delta: float) -> void:
+		_t += delta
+		_tremble = maxf(0.0, _tremble - delta * 3.0)
+		queue_redraw()
+
+	func battement() -> void:
+		_ecrase = 0.06
+
+	func sauter(force := 1.0, delai := 0.0) -> void:
+		var tw := create_tween()
+		if delai > 0:
+			tw.tween_interval(delai)
+		tw.tween_property(self, "_ecrase", 0.12 * force, 0.06)
+		tw.tween_property(self, "_saut", 60.0 * force, 0.16).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
+		tw.parallel().tween_property(self, "_ecrase", -0.08 * force, 0.16)
+		tw.tween_property(self, "_saut", 0.0, 0.18).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
+		tw.parallel().tween_property(self, "_ecrase", 0.08, 0.18)
+		tw.tween_property(self, "_ecrase", 0.0, 0.12)
+
+	func trembler() -> void:
+		_tremble = 1.0
+
+	func _draw() -> void:
+		if texture == null:
+			return
+		_ecrase = lerpf(_ecrase, 0.0, 0.08)
+		var respir := sin(_t * 2.4 + phase) * 0.015
+		var sx := 1.0 + _ecrase * 0.8
+		var sy := 1.0 - _ecrase + respir
+		var h := hauteur * sy
+		var w := hauteur * texture.get_width() / float(texture.get_height()) * sx
+		var bascule := sin(_t * 1.7 + phase) * 0.03 + sin(_t * 40.0) * 0.05 * _tremble
+		# ombre au sol
+		draw_set_transform(Vector2.ZERO, 0, Vector2(1, 0.25))
+		draw_circle(Vector2.ZERO, w * 0.32 * (1.0 - _saut / 200.0), Color(0, 0, 0, 0.3))
+		draw_set_transform(Vector2(0, -_saut), bascule, Vector2.ONE)
+		draw_texture_rect(texture, Rect2(Vector2(-w / 2.0, -h), Vector2(w, h)), false)
+		draw_set_transform(Vector2.ZERO, 0, Vector2.ONE)
+
+
+## Le décor : ciel, tribune adverse, terrain (ou écran), notre tribune, confettis.
+class Decor extends Control:
+	var duel: Duel
+	var mode := "stade"
+	var c_nous := Ui.BLEU
+	var c_nous2 := Ui.BLANC
+	var c_eux := Ui.ROUGE
+	var c_eux2 := Ui.BLANC
+	var texte_tifo := ""
+	var secousse_eux := 0.0
+	var _t := 0.0
+	var _confettis: Array = []
+	var _ola_t := -10.0
+	var _graine := 12345
+
+	func confettis(n: int) -> void:
+		var cols := [Ui.JAUNE, Ui.ROSE, Ui.BLEU, Ui.VERT, Ui.VIOLET, c_nous]
+		for i in n:
+			_confettis.append({"p": Vector2(randf() * 1920.0, randf_range(-200, 0)), "v": Vector2(randf_range(-60, 60), randf_range(150, 380)),
+				"c": cols[randi() % cols.size()], "r": randf() * TAU, "vr": randf_range(-8, 8)})
+
+	func lancer_ola() -> void:
+		_ola_t = _t
+
+	func _process(delta: float) -> void:
+		_t += delta
+		secousse_eux = maxf(0.0, secousse_eux - delta * 0.4)
+		for c in _confettis:
+			c["p"] += c["v"] * delta
+			c["r"] += c["vr"] * delta
+		_confettis = _confettis.filter(func(c): return c["p"].y < 1150)
+
+	func _draw() -> void:
+		var w := size.x
+		var h := size.y
+		var ferveur_nous := 0.35 + 0.65 * clampf((duel.jauge + 100.0) / 200.0, 0.0, 1.0)
+		var ferveur_eux := 0.35 + 0.65 * clampf((100.0 - duel.jauge) / 200.0, 0.0, 1.0) + secousse_eux * 0.5
+		match mode:
+			"stade":
+				_ciel(Color("#3b1c8f"), Color("#e0507f"))
+				# toit
+				draw_rect(Rect2(0, 120, w, 16), Color("#ff6f9c"))
+				for x in range(60, int(w), 240):
+					draw_rect(Rect2(x, 0, 10, 130), Color(1, 1, 1, 0.4))
+				_foule(Rect2(0, 150, w, 270), c_eux, c_eux2, ferveur_eux, 14.0, false)
+				_terrain(Rect2(0, 420, w, 230))
+			"ecran":
+				_ciel(Color("#0d0a2e"), Color("#3a2a7a"))
+				_ecran_geant(Rect2(w / 2 - 420, 110, 840, 330))
+				_foule(Rect2(0, 300, w / 2 - 440, 200), c_eux, c_eux2, ferveur_eux, 13.0, false)
+				_foule(Rect2(w / 2 + 440, 300, w / 2 - 440, 200), c_eux, c_eux2, ferveur_eux, 13.0, false)
+				draw_rect(Rect2(0, 470, w, 190), Color("#2a2550"))
+			"pub":
+				_ciel(Color("#5a3416"), Color("#8a5a2b"))
+				for x in range(0, int(w), 90):
+					draw_rect(Rect2(x, 0, 6, 520), Color(0, 0, 0, 0.15))
+				_ecran_geant(Rect2(w / 2 - 260, 90, 520, 260))
+				draw_rect(Rect2(0, 430, w, 60), Color("#3d2210"))  # comptoir
+				_foule(Rect2(w * 0.55, 260, w * 0.45, 200), c_eux, c_eux2, ferveur_eux, 16.0, false)
+				draw_rect(Rect2(0, 480, w, 180), Color("#6b4423"))
+			"maison":
+				_ciel(Color("#f6d7a7"), Color("#f0b98a"))
+				draw_rect(Rect2(0, 420, w, 240), Color("#c98d5a"))
+				_ecran_geant(Rect2(w / 2 - 300, 120, 600, 300))
+				_foule(Rect2(w * 0.72, 300, w * 0.28, 140), c_eux, c_eux2, ferveur_eux, 18.0, false)
+		# notre tribune
+		_foule(Rect2(0, 650, w, 430), c_nous, c_nous2, ferveur_nous, 18.0, true)
+		# confettis
+		for c in _confettis:
+			draw_set_transform(c["p"], c["r"], Vector2.ONE)
+			draw_rect(Rect2(-6, -3, 12, 6), c["c"])
+		draw_set_transform(Vector2.ZERO, 0, Vector2.ONE)
+
+	func _ciel(haut: Color, bas: Color) -> void:
+		var pts := PackedVector2Array([Vector2(0, 0), Vector2(size.x, 0), Vector2(size.x, size.y), Vector2(0, size.y)])
+		draw_polygon(pts, PackedColorArray([haut, haut, bas, bas]))
+
+	func _terrain(r: Rect2, panneaux := true) -> void:
+		draw_rect(r, Color("#3fb950"))
+		for i in 6:
+			if i % 2 == 0:
+				draw_rect(Rect2(r.position.x + i * r.size.x / 6.0, r.position.y, r.size.x / 6.0, r.size.y), Color("#46c357"))
+		var lig := Color(1, 1, 1, 0.8)
+		draw_line(Vector2(r.get_center().x, r.position.y), Vector2(r.get_center().x, r.end.y), lig, 4)
+		draw_arc(r.get_center(), 70, 0, TAU, 48, lig, 4, true)
+		draw_rect(Rect2(r.position.x + 40, r.position.y + 30, 160, r.size.y - 60), lig, false, 4)
+		draw_rect(Rect2(r.end.x - 200, r.position.y + 30, 160, r.size.y - 60), lig, false, 4)
+		if not panneaux:
+			return
+		# panneaux publicitaires fictifs
+		var pubs := ["FANAROUNDTHEWORLD", "PASS SAISON", "ULTRAS", "GO GO GO", "FANZZY"]
+		var f := Ui.police_titre()
+		var x := 0.0
+		var i := 0
+		while x < size.x:
+			var col: Color = [Ui.ROSE, Ui.JAUNE, Ui.BLEU, Ui.VERT, Ui.VIOLET][i % 5]
+			draw_rect(Rect2(x, r.position.y - 26, 300, 26), col)
+			draw_string(f, Vector2(x + 14, r.position.y - 6), pubs[i % pubs.size()], HORIZONTAL_ALIGNMENT_LEFT, -1, 20, Ui.CONTOUR if col == Ui.JAUNE else Ui.BLANC)
+			x += 300
+			i += 1
+
+	func _ecran_geant(r: Rect2) -> void:
+		draw_rect(r.grow(14), Ui.CONTOUR)
+		draw_rect(r, Color("#123a1c"))
+		_terrain(Rect2(r.position + Vector2(0, 40), Vector2(r.size.x, r.size.y - 40)), false)
+		var f := Ui.police_titre()
+		var m: Dictionary = duel.fiche["m"]
+		var txt := "%s %s %s · %s" % [duel.fiche["dom"]["sigle"], Donnees.score_texte(m), duel.fiche["ext"]["sigle"], FicheMatch.statut_court(duel.fiche)]
+		draw_rect(Rect2(r.position, Vector2(r.size.x, 40)), Ui.NUIT)
+		draw_string(f, r.position + Vector2(16, 30), txt, HORIZONTAL_ALIGNMENT_LEFT, r.size.x - 20, 26, Ui.BLANC)
+
+	func _foule(r: Rect2, c1: Color, c2: Color, ferveur: float, rayon: float, devant: bool) -> void:
+		## Des rangées de supporters (têtes + corps) qui sautent selon la ferveur.
+		var rng := RandomNumberGenerator.new()
+		rng.seed = _graine + int(r.position.y)
+		var peaux := [Color("#f2c9a0"), Color("#d9a273"), Color("#a86b3c"), Color("#6b4226"), Color("#ffe0bd")]
+		var pas := rayon * 2.3
+		var rangs := int(r.size.y / (rayon * 2.6))
+		for j in rangs:
+			var y := r.position.y + j * rayon * 2.6 + rayon * 1.2
+			var echelle := 1.0 + (float(j) / maxf(1, rangs - 1)) * (0.5 if devant else 0.2)
+			var x := r.position.x + (pas / 2.0 if j % 2 == 1 else 0.0)
+			while x < r.end.x:
+				var ph := rng.randf() * TAU
+				var actif := rng.randf() < ferveur
+				var saut := 0.0
+				if actif:
+					saut = maxf(0.0, sin(_t * 9.0 + ph)) * rayon * 0.9 * ferveur
+				if devant and _t - _ola_t < 2.0:
+					var front := (_t - _ola_t) * size.x * 0.8
+					saut += maxf(0.0, 1.0 - absf(x - front) / 180.0) * rayon * 3.0
+				var corps: Color = c1 if rng.randf() < 0.75 else c2
+				var p := Vector2(x, y - saut)
+				var rr := rayon * echelle
+				draw_rect(Rect2(p + Vector2(-rr * 0.9, rr * 0.4), Vector2(rr * 1.8, rr * 1.8)), corps.darkened(0.1 if j % 2 == 0 else 0.0))
+				draw_circle(p, rr * 0.75, peaux[rng.randi() % peaux.size()])
+				if actif and saut > rayon * 0.3:
+					# bras levés
+					draw_line(p + Vector2(-rr * 0.8, rr * 0.6), p + Vector2(-rr * 1.3, -rr * 0.6), corps, rr * 0.4)
+					draw_line(p + Vector2(rr * 0.8, rr * 0.6), p + Vector2(rr * 1.3, -rr * 0.6), corps, rr * 0.4)
+				x += pas * echelle
+
+
+## La piste de rythme : les notes glissent vers le cercle de gauche.
+class Piste extends Control:
+	var duel: Duel
+	var _eclat_txt := ""
+	var _eclat_col := Ui.BLANC
+	var _eclat_t := 0.0
+
+	func eclat(t: String, c: Color) -> void:
+		_eclat_txt = t
+		_eclat_col = c
+		_eclat_t = 0.6
+
+	func _process(delta: float) -> void:
+		_eclat_t = maxf(0.0, _eclat_t - delta)
+
+	func _draw() -> void:
+		var r := Rect2(Vector2.ZERO, size)
+		draw_style_box(Ui.boite(Color(0.08, 0.06, 0.2, 0.75), 50, 5), r)
+		var cible := Vector2(90, size.y / 2.0)
+		var tw: float = duel.mods.get("tempoWindow", 1.0)
+		draw_circle(cible, 46, Ui.CONTOUR)
+		draw_circle(cible, 40, Ui.BLANC.darkened(0.1) if _eclat_t <= 0 else _eclat_col)
+		draw_circle(cible, 40 * clampf(tw * 0.55, 0.3, 0.95), Color(0, 0, 0, 0.15))
+		var vitesse := (size.x - cible.x - 40) / Duel.TRAJET_NOTE
+		for t in duel._notes:
+			var x: float = cible.x + (t - duel.temps) * vitesse
+			if x > size.x - 20:
+				continue
+			draw_circle(Vector2(x, cible.y), 34, Ui.CONTOUR)
+			draw_circle(Vector2(x, cible.y), 28, Ui.BLEU)
+			draw_circle(Vector2(x - 8, cible.y - 8), 8, Color(1, 1, 1, 0.6))
+		if _eclat_t > 0:
+			var f := Ui.police_titre()
+			var a := _eclat_t / 0.6
+			draw_string_outline(f, cible + Vector2(70, 18 - (1.0 - a) * 20), _eclat_txt, HORIZONTAL_ALIGNMENT_LEFT, -1, 44, 10, Color(Ui.CONTOUR, a))
+			draw_string(f, cible + Vector2(70, 18 - (1.0 - a) * 20), _eclat_txt, HORIZONTAL_ALIGNMENT_LEFT, -1, 44, Color(_eclat_col, a))
+
+
+## Jauge d'ambiance : bleu (toi) contre rouge (eux).
+class Jauge extends Control:
+	var duel: Duel
+	var _affichee := 0.0
+
+	func _draw() -> void:
+		_affichee = lerpf(_affichee, duel.jauge, 0.15)
+		var r := Rect2(Vector2.ZERO, size)
+		draw_style_box(Ui.boite(Ui.CONTOUR, 24, 0), r)
+		var inner := r.grow(-6)
+		var part := clampf((_affichee + 100.0) / 200.0, 0.02, 0.98)
+		var g := Rect2(inner.position, Vector2(inner.size.x * part, inner.size.y))
+		var d := Rect2(inner.position + Vector2(inner.size.x * part, 0), Vector2(inner.size.x * (1.0 - part), inner.size.y))
+		var sg := Ui.boite(duel._decor.c_nous if duel._decor else Ui.BLEU, 18, 0)
+		sg.corner_radius_top_right = 0
+		sg.corner_radius_bottom_right = 0
+		var sd := Ui.boite(duel._decor.c_eux if duel._decor else Ui.ROUGE, 18, 0)
+		sd.corner_radius_top_left = 0
+		sd.corner_radius_bottom_left = 0
+		draw_style_box(sg, g)
+		draw_style_box(sd, d)
+		draw_rect(Rect2(inner.position + Vector2(0, 4), Vector2(inner.size.x, 8)), Color(1, 1, 1, 0.25))
+		var x := inner.position.x + inner.size.x * part
+		draw_line(Vector2(x, 0), Vector2(x, size.y), Ui.BLANC, 6)
+		draw_line(Vector2(size.x / 2.0, size.y - 10), Vector2(size.x / 2.0, size.y), Ui.BLANC, 3)
+
+
+## Bannière géante du tifo qui monte sur l'écran.
+class Banniere extends Control:
+	var texte := ""
+	var sous := ""
+	var couleur := Ui.BLEU
+	var couleur2 := Ui.JAUNE
+	var _y := 1.0
+
+	func deployer() -> void:
+		visible = true
+		_y = 1.0
+		var tw := create_tween()
+		tw.tween_property(self, "_y", 0.0, 0.5).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+		tw.tween_interval(1.6)
+		tw.tween_property(self, "_y", 1.2, 0.4).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
+		tw.tween_callback(func(): visible = false)
+
+	func _process(_d: float) -> void:
+		if visible:
+			queue_redraw()
+
+	func _draw() -> void:
+		var r := Rect2(Vector2(80, 180 + _y * 900), Vector2(size.x - 160, 560))
+		draw_set_transform(Vector2.ZERO, -0.03, Vector2.ONE)
+		draw_rect(r.grow(10), Ui.CONTOUR)
+		draw_rect(r, couleur)
+		for i in 6:
+			draw_rect(Rect2(r.position.x, r.position.y + i * r.size.y / 6.0, r.size.x, r.size.y / 12.0), Color(couleur2, 0.18))
+		var f := Ui.police_titre()
+		var fs := 140 if texte.length() < 14 else 100
+		var w := f.get_string_size(texte, HORIZONTAL_ALIGNMENT_LEFT, -1, fs).x
+		var p := r.get_center() + Vector2(-w / 2.0, 10)
+		draw_string_outline(f, p, texte, HORIZONTAL_ALIGNMENT_LEFT, -1, fs, 24, Ui.CONTOUR)
+		draw_string(f, p, texte, HORIZONTAL_ALIGNMENT_LEFT, -1, fs, Ui.JAUNE)
+		var w2 := f.get_string_size(sous, HORIZONTAL_ALIGNMENT_LEFT, -1, 60).x
+		draw_string_outline(f, r.get_center() + Vector2(-w2 / 2.0, 120), sous, HORIZONTAL_ALIGNMENT_LEFT, -1, 60, 14, Ui.CONTOUR)
+		draw_string(f, r.get_center() + Vector2(-w2 / 2.0, 120), sous, HORIZONTAL_ALIGNMENT_LEFT, -1, 60, Ui.ROSE)
+		draw_set_transform(Vector2.ZERO, 0, Vector2.ONE)
+
+
+## Flèche de l'ola (0 gauche, 1 haut, 2 droite, 3 bas).
+class Fleche extends Control:
+	var direction := 0
+	var validee := false
+
+	func _draw() -> void:
+		var c := size / 2.0
+		var s := minf(size.x, size.y)
+		draw_style_box(Ui.boite(Ui.VERT if validee else Ui.NUIT_CLAIR, 18, 5), Rect2(Vector2.ZERO, size))
+		var pts := PackedVector2Array([Vector2(0, -0.32), Vector2(0.3, 0.05), Vector2(0.12, 0.05), Vector2(0.12, 0.32),
+			Vector2(-0.12, 0.32), Vector2(-0.12, 0.05), Vector2(-0.3, 0.05)])
+		var angle: float = [-PI / 2.0, 0.0, PI / 2.0, PI][direction]
+		var out := PackedVector2Array()
+		for q in pts:
+			out.append(c + (q * s).rotated(angle))
+		draw_colored_polygon(out, Ui.JAUNE if not validee else Ui.BLANC)
+		out.append(out[0])
+		draw_polyline(out, Ui.CONTOUR, 4, true)

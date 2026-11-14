@@ -1,12 +1,11 @@
 # FANZZY
 
-Ce dossier recevra les FANZZY importés depuis le projet thebestfan.online
-(travail suivi dans une autre tâche).
+Échantillon de 18 FANZZY pour le prototype, repris du projet thebestfan
+(catalogue du 3 novembre 2026) : 3 par famille, chacun avec ses 3 skins.
 
-Rappel : les FANZZY sont **purement cosmétiques**. Ils n'ont aucun effet
-sur les duels d'ambiance ni sur les matchs.
+- `fanzzy.json` : catalogue (famille, série, rareté, histoire, cri, bonus `mods`, skins)
+- `sprites/<id>.webp` : le FANZZY en pied (440 px de haut, fond transparent)
+- `sprites/<id>-buste.webp` : le buste (160 px)
 
-Organisation prévue :
-
-- `sprites/` : images des FANZZY (PNG, fond transparent)
-- `fanzzy.json` : catalogue (identifiant, nom, rareté, source)
+Rappel : la **famille** d'un FANZZY donne son geste en duel et de petits bonus.
+Ses **skins** (variantes) sont **purement cosmétiques**.
