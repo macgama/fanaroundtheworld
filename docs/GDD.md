@@ -24,7 +24,7 @@ et Brawl Stars (style cartoon, parties courtes).
 | Modèle | Jeu payant + PASS saisonnier |
 | Langue | Français d'abord |
 
-## 3. La boucle de jeu (à valider)
+## 3. La boucle de jeu (validée)
 
 1. **Choisir un match** sur la carte du monde, parmi les vrais matchs du calendrier.
 2. **Voyager** jusqu'au stade avec son fan club.
@@ -65,7 +65,8 @@ des bonus ou des malus (exemple : ton équipe marque, ta tribune reçoit un boos
 
 ## 8. Les vraies données et les droits
 
-- Calendriers et résultats réels des championnats.
+- Calendriers et résultats réels, **suivis minute par minute** dès le lancement (buts, cartons, mi-temps influencent le duel en direct).
+- Couverture visée au lancement : tous les championnats de première division de tous les pays, les compétitions continentales et internationales de clubs, et les matchs des équipes nationales.
 - **Aucun nom de club ni logo officiel** : noms fictifs (exemples des maquettes :
   Paris Capitale, Phocéens, Madrid Royal, Catalans, Munich Bavarois, Dortmund Jaunes,
   Milano Diavoli, Interisti), ligues fictives (Ligue Hexagone, Liga Ibérica,
@@ -90,8 +91,7 @@ Maquettes v1 dans [docs/maquettes/](maquettes/) :
 
 ## 10. Questions ouvertes
 
-- Valider la boucle de jeu de la section 3.
 - Durée d'un duel d'ambiance (une mi-temps ? un match complet accéléré ?).
 - Duel contre d'autres joueurs en ligne, ou solo contre l'IA au lancement ?
 - Prix du jeu et prix du PASS.
-- Source des données de matchs réels.
+- Source des données de matchs réels (gratuite, minute par minute, couverture mondiale).
