@@ -10,3 +10,6 @@ Organisation prévue :
 
 - `sprites/` : images des FANZZY (PNG, fond transparent)
 - `fanzzy.json` : catalogue (identifiant, nom, rareté, source)
+
+`demo/` : 18 vignettes utilisées par la démo d'animation
+(`scenes/fanzzy/demo_animations.tscn`, voir `docs/animation-fanzzy.md`).
