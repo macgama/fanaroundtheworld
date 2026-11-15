@@ -862,21 +862,22 @@ class Unite extends Node2D:
 	var recharge := 0.0
 	var actif := true
 	var couleur := Ui.BLEU
-	var corps: FanzzyAnime
+	var corps: Node2D # FanzzyAnime ou Fanzzy3D (même interface)
 	var _secousse := 0.0
 	var _action := &""
 
 	func creer(id: String) -> void:
 		if carte["type"] == "batiment":
 			return
-		corps = FanzzyAnime.creer(id)
-		corps.couleurs_echarpe = PackedColorArray([couleur, Ui.BLANC])
+		corps = Fanzzy3D.creer_corps(id)
+		corps.set(&"couleurs_echarpe", PackedColorArray([couleur, Ui.BLANC]))
 		add_child(corps)
-		var h := corps._rect.size.y if corps._rect.size.y > 0.0 else 900.0
+		var r: Rect2 = corps.get(&"_rect")
+		var h := r.size.y if r.size.y > 0.0 else 900.0
 		var haut := HAUTEUR_UNITE * (1.8 if cle == "mascotte" else 1.0)
 		corps.scale = Vector2.ONE * (haut / h)
-		corps.cap = 1.0 if equipe == 0 else -1.0
-		corps.jouer(&"lever_bras", 0.5)
+		corps.set(&"cap", 1.0 if equipe == 0 else -1.0)
+		corps.call(&"jouer", &"lever_bras", 0.5)
 
 	func avancer(v: Vector2, bouge: bool) -> void:
 		position += v
@@ -884,23 +885,25 @@ class Unite extends Node2D:
 			return
 		if absf(v.x) > 0.05:
 			regarder(v.x)
+		if corps is Fanzzy3D and bouge:
+			(corps as Fanzzy3D).orienter(v)
 		var a := &"courir" if bouge and float(carte["vitesse"]) >= 100.0 else (&"marcher" if bouge else &"")
-		if a != &"" and corps.action != a and corps.action != &"chanter":
-			corps.jouer(a)
-		elif a == &"" and corps.action in [&"courir", &"marcher"]:
-			corps.jouer(&"repos")
+		if a != &"" and corps.get(&"action") != a and corps.get(&"action") != &"chanter":
+			corps.call(&"jouer", a)
+		elif a == &"" and corps.get(&"action") in [&"courir", &"marcher"]:
+			corps.call(&"jouer", &"repos")
 		_secousse = maxf(_secousse - 0.016, 0.0)
 		corps.position.x = sin(_secousse * 60.0) * 5.0 * _secousse * 5.0
 		queue_redraw()
 
 	func regarder(dx: float) -> void:
 		if corps and absf(dx) > 0.01:
-			corps.cap = signf(dx)
+			corps.set(&"cap", signf(dx))
 
 	func chanter() -> void:
 		chants += 1
 		if corps:
-			corps.jouer(&"lancer" if float(carte["portee"]) > 100.0 else &"chanter", 0.45)
+			corps.call(&"jouer", &"lancer" if float(carte["portee"]) > 100.0 else &"chanter", 0.45)
 		else:
 			queue_redraw()
 
@@ -914,7 +917,7 @@ class Unite extends Node2D:
 		actif = false
 		jeu.texte(position + Vector2(0, -110), "va s'asseoir", Ui.GRIS)
 		if corps:
-			corps.jouer(&"depit")
+			corps.call(&"jouer", &"depit")
 		var tw := create_tween()
 		tw.tween_interval(0.5)
 		tw.tween_property(self, "modulate:a", 0.0, 0.5)
@@ -924,7 +927,7 @@ class Unite extends Node2D:
 
 	func fin(victoire: bool) -> void:
 		if corps:
-			corps.jouer(&"celebrer" if victoire else &"depit", 30.0)
+			corps.call(&"jouer", &"celebrer" if victoire else &"depit", 30.0)
 
 	func _draw() -> void:
 		if not actif:

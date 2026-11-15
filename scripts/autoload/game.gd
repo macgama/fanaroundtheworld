@@ -89,11 +89,17 @@ func _ready() -> void:
 ## Options de ligne de commande pour les tests automatiques (après « -- ») :
 ##   --scene=carte|voyage|tribune|duel|arene|poussee|buvette   ouvre directement un écran
 ##   --capture=chemin.png --apres=3      enregistre une capture puis quitte
+##   --equipe=AN1,TR33,GD3               équipe de FANZZY pour cette partie (non sauvegardée)
 func _outils_de_test() -> void:
 	var args := {}
 	for a in OS.get_cmdline_user_args():
 		var kv := a.trim_prefix("--").split("=", true, 1)
 		args[kv[0]] = kv[1] if kv.size() > 1 else ""
+	if args.has("equipe"):
+		var ids: Array = []
+		for id in str(args["equipe"]).split(",", false):
+			ids.append(id)
+		equipe = ids
 	if args.has("scene"):
 		var p := {}
 		if args.has("pays"):

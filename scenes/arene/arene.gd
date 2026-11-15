@@ -610,7 +610,7 @@ class Joueur extends Node2D:
 	var famille := "voix"
 	var couleur := Ui.BLEU
 	var spawn := Vector2.ZERO
-	var corps: FanzzyAnime
+	var corps: Node2D # FanzzyAnime ou Fanzzy3D (même interface)
 	var direction := Vector2.ZERO
 	var visee := Vector2.ZERO
 	var pv := AreneRegles.PV
@@ -632,10 +632,11 @@ class Joueur extends Node2D:
 	var _secousse := 0.0
 
 	func creer_corps(id: String) -> void:
-		corps = FanzzyAnime.creer(id)
-		corps.couleurs_echarpe = PackedColorArray([couleur, Ui.BLANC])
+		corps = Fanzzy3D.creer_corps(id)
+		corps.set(&"couleurs_echarpe", PackedColorArray([couleur, Ui.BLANC]))
 		add_child(corps)
-		var h := corps._rect.size.y if corps._rect.size.y > 0.0 else 900.0
+		var r: Rect2 = corps.get(&"_rect")
+		var h := r.size.y if r.size.y > 0.0 else 900.0
 		corps.scale = Vector2.ONE * (HAUTEUR_FANZZY / h)
 		_cap = 1.0 if equipe == 0 else -1.0
 		_jouer(&"repos")
@@ -662,7 +663,7 @@ class Joueur extends Node2D:
 				munitions = AreneRegles.MUNITIONS
 				invulnerable = 1.2
 				modulate.a = 1.0
-				corps.jouer(&"lever_bras", 0.8)
+				corps.call(&"jouer", &"lever_bras", 0.8)
 			return
 		for k in ["recharge", "etourdi", "ralenti", "sprint", "invulnerable", "recharge_roulade", "_secousse"]:
 			set(k, maxf(get(k) - delta, 0.0))
@@ -678,10 +679,12 @@ class Joueur extends Node2D:
 		# le buste penche dans le sens de la course, l'image se retourne
 		if absf(direction.x) > 0.2:
 			_cap = signf(direction.x)
-		corps.cap = _cap
+		corps.set(&"cap", _cap)
+		if corps is Fanzzy3D:
+			(corps as Fanzzy3D).orienter(direction)
 		corps.scale.x = absf(corps.scale.x) * (-1.0 if _cap < 0.0 and _image_regarde_droite() else 1.0)
-		corps.vitesse_course = 0.8 + 0.6 * vitesse_actuelle()
-		if _action != &"lancer" or corps.action != &"lancer":
+		corps.set(&"vitesse_course", 0.8 + 0.6 * vitesse_actuelle())
+		if _action != &"lancer" or corps.get(&"action") != &"lancer":
 			if etourdi > 0.0:
 				_jouer(&"depit")
 			elif direction.length() > 0.1:
@@ -698,19 +701,19 @@ class Joueur extends Node2D:
 		return false
 
 	func _jouer(a: StringName) -> void:
-		if corps.action != a:
-			corps.jouer(a)
+		if corps.get(&"action") != a:
+			corps.call(&"jouer", a)
 		_action = a
 
 	func lancer(dx: float) -> void:
 		if absf(dx) > 0.05:
 			_cap = signf(dx)
-		corps.cap = _cap
-		corps.jouer(&"lancer")
+		corps.set(&"cap", _cap)
+		corps.call(&"jouer", &"lancer")
 		_action = &"lancer"
 
 	func celebrer_court() -> void:
-		corps.jouer(&"celebrer", 0.6)
+		corps.call(&"jouer", &"celebrer", 0.6)
 		_action = &"lancer"
 
 	func pousser(v: Vector2) -> void:
@@ -732,7 +735,7 @@ class Joueur extends Node2D:
 		banc = AreneRegles.TEMPS_BANC
 		pv = 0.0
 		direction = Vector2.ZERO
-		corps.jouer(&"depit")
+		corps.call(&"jouer", &"depit")
 		create_tween().tween_property(self, "modulate:a", 0.0, 0.6)
 
 	func fin(victoire: bool) -> void:
@@ -741,7 +744,7 @@ class Joueur extends Node2D:
 			banc = 0.0
 			position = spawn
 			modulate.a = 1.0
-		corps.jouer(&"celebrer" if victoire else &"depit", 30.0)
+		corps.call(&"jouer", &"celebrer" if victoire else &"depit", 30.0)
 
 	func _draw() -> void:
 		if banc > 0.0:
