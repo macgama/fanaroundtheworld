@@ -16,6 +16,10 @@ const DOSSIER_CACHE := "user://cache/"
 const PERIODE_LIVE := 60.0
 const PERIODE_CALENDRIER := 30.0 * 60.0
 const STATUTS_EN_JEU := ["LIVE", "HALFTIME"]
+## Un match commencé depuis plus longtemps ne peut plus être en cours.
+const DUREE_MAX_MATCH := 3 * 3600
+## Le live est jugé à jour s'il a été relu il y a moins de 5 minutes.
+const FRAICHEUR_LIVE := 5 * 60
 
 var source := "aucune"          # "en ligne", "cache" ou "exemple"
 var attribution := ""
@@ -26,6 +30,7 @@ var hors_ligne := false
 var _calendrier: Dictionary = {}  # id -> match (fichiers days/)
 var _live: Dictionary = {}        # id -> match (live.json)
 var _fusion: Array = []           # liste triée, recalculée à chaque mise à jour
+var _fusion_par_id: Dictionary = {}
 var _requetes_en_cours := 0
 var _jours_recus: Dictionary = {}
 
@@ -57,9 +62,7 @@ func matchs() -> Array:
 
 
 func match_par_id(id: String) -> Dictionary:
-	if _live.has(id):
-		return _live[id]
-	return _calendrier.get(id, {})
+	return _fusion_par_id.get(id, {})
 
 
 static func en_direct(m: Dictionary) -> bool:
@@ -152,9 +155,15 @@ func _sur_live(d: Dictionary) -> void:
 
 
 func _fusionner() -> void:
-	var tous: Dictionary = _calendrier.duplicate()
+	var tous: Dictionary = {}
+	var maintenant := int(Time.get_unix_time_from_system())
+	var live_a_jour := maintenant - derniere_maj_live < FRAICHEUR_LIVE
+	for id in _calendrier:
+		tous[id] = _corriger_statut(_calendrier[id], live_a_jour, maintenant)
 	for id in _live:
-		tous[id] = _live[id]
+		# Un live.json resté en cache (hors ligne) vieillit comme le calendrier.
+		tous[id] = _live[id] if live_a_jour else _corriger_statut(_live[id], false, maintenant)
+	_fusion_par_id = tous
 	_fusion = tous.values()
 	# Le championnat de chaque club donne son pays (utile pour les coupes d'Europe…).
 	for m in _fusion:
@@ -164,6 +173,19 @@ func _fusionner() -> void:
 			Geo.pays_des_equipes[str(m.get("away", {}).get("id", ""))] = info["pays"]
 	_fusion.sort_custom(func(a, b): return heure_unix(a) < heure_unix(b))
 	mis_a_jour.emit()
+
+
+static func _corriger_statut(m: Dictionary, live_a_jour: bool, maintenant: int) -> Dictionary:
+	## Le calendrier n'est publié que toutes les 3 h : il peut encore dire « en direct »
+	## (ou « à venir ») pour un match fini depuis. Le live fait foi pour les matchs en cours.
+	var s := str(m.get("status", ""))
+	var t := heure_unix(m)
+	var trop_vieux := t > 0 and maintenant - t > DUREE_MAX_MATCH
+	if (s in STATUTS_EN_JEU and (live_a_jour or trop_vieux)) or (s == "SCHEDULED" and trop_vieux):
+		var c := m.duplicate()
+		c["status"] = "UNKNOWN"
+		return c
+	return m
 
 
 # ------------------------------------------------------------------ cache

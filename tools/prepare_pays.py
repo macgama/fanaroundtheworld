@@ -67,8 +67,9 @@ for c in cfg["competitions"]:
     if c["area"] in regions:
         name = c["name"].lower()
         r = c["area"]
-        for mot, reg in [("ofc", "Oceania"), ("oceania", "Oceania"), ("afc", "Asia"), ("asia", "Asia"), ("caf", "Africa"),
-                         ("africa", "Africa"), ("concacaf", "North America"), ("caribbean", "North America"),
+        # « concacaf » avant « caf » : sinon la CONCACAF (qui contient « caf ») tombe en Afrique.
+        for mot, reg in [("ofc", "Oceania"), ("oceania", "Oceania"), ("afc", "Asia"), ("asia", "Asia"),
+                         ("concacaf", "North America"), ("caribbean", "North America"), ("caf", "Africa"), ("africa", "Africa"),
                          ("conmebol", "South America"), ("south america", "South America"), ("uefa", "Europe"), ("euro", "Europe")]:
             if r == "World" and mot in name:
                 r = reg

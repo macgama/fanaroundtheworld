@@ -27,6 +27,7 @@ static var _d: Dictionary = {}
 static var _formes: Dictionary = {}        # cle pays -> Array[PackedVector2Array] (lon, lat)
 static var pays_des_equipes: Dictionary = {}  # id équipe -> cle pays (rempli par Donnees)
 static var _cache_stades: Dictionary = {}
+static var _re_suffixe: RegEx
 
 
 static func _donnees() -> Dictionary:
@@ -69,11 +70,38 @@ static func info_pays(cle: String) -> Dictionary:
 	return _donnees().get("pays", {}).get(cle, {})
 
 
+## Noms de sélections propres au flux API-Football, absents de pays.json.
+const ALIAS_FLUX := {
+	"cape verde islands": "cape verde", "fyr macedonia": "republic of macedonia",
+	"french guyana": "french guiana", "rep. of ireland": "ireland", "türkiye": "turkey",
+	"korea republic": "south korea", "korea dpr": "north korea", "bonaire": "bonaire, sint eustatius and saba",
+	"sint maarten": "sint maarten (dutch part)", "saint martin": "saint martin (french part)",
+	"st. vincent / grenadines": "saint vincent and the grenadines", "chinese taipei": "taiwan",
+}
+
+
+## Sépare « France U20 » en ["France", " U20"] (sélections de jeunes, olympiques, féminines).
+static func _separer_suffixe(nom: String) -> PackedStringArray:
+	if _re_suffixe == null:
+		_re_suffixe = RegEx.create_from_string("^(.*?)( (?:U-?\\d{2}|W|Women|Olympic))$")
+	var res := _re_suffixe.search(nom.strip_edges())
+	if res:
+		return PackedStringArray([res.get_string(1), res.get_string(2)])
+	return PackedStringArray([nom.strip_edges(), ""])
+
+
 static func cle_pays(nom: String) -> String:
-	var k := nom.to_lower().replace("-", " ")
-	if _donnees().get("pays", {}).has(k):
-		return k
-	return _donnees().get("alias", {}).get(k, "")
+	var pays: Dictionary = _donnees().get("pays", {})
+	var alias: Dictionary = _donnees().get("alias", {})
+	var base := _separer_suffixe(nom)[0].to_lower()
+	for k in [base, base.replace("-", " "), base.replace(" & ", " and "), base.replace("st. ", "saint ")]:
+		if pays.has(k):
+			return k
+		if alias.has(k):
+			return alias[k]
+		if ALIAS_FLUX.has(k) and pays.has(ALIAS_FLUX[k]):
+			return ALIAS_FLUX[k]
+	return ""
 
 
 static func nom_pays(cle: String) -> String:
@@ -81,8 +109,9 @@ static func nom_pays(cle: String) -> String:
 
 
 static func nom_pays_fr(nom_anglais: String) -> String:
+	## « France U20 » -> « France U20 », « Denmark U20 » -> « Danemark U20 ».
 	var k := cle_pays(nom_anglais)
-	return nom_pays(k) if k != "" else nom_anglais
+	return nom_pays(k) + _separer_suffixe(nom_anglais)[1] if k != "" else nom_anglais
 
 
 static func continent_de(cle_pays: String) -> String:
