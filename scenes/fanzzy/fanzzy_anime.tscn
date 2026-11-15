@@ -1,8 +1,7 @@
-[gd_scene load_steps=3 format=3]
+[gd_scene load_steps=2 format=3]
 
 [ext_resource type="Script" path="res://scenes/fanzzy/fanzzy_anime.gd" id="1"]
-[ext_resource type="Texture2D" path="res://assets/fanzzy/demo/MT14.webp" id="2"]
 
 [node name="FanzzyAnime" type="Node2D"]
 script = ExtResource("1")
-texture = ExtResource("2")
+fanzzy_id = "MT14"

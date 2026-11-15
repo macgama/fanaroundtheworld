@@ -7,9 +7,9 @@ extends Control
 ##   godot --path . --write-movie demo.avi --fixed-fps 30 --quit-after 1100 \
 ##       res://scenes/fanzzy/demo_animations.tscn
 
-const IDS_BLEUS: PackedStringArray = ["TR32", "AN2", "MT14", "TR31", "MS11", "AN22", "RP8", "SU16", "MT47"]
-const IDS_JAUNES: PackedStringArray = ["BG28", "TR7", "EP9", "MT6", "AN1", "TR27", "OB1", "BG5", "GD17"]
-const GROS_PLANS: PackedStringArray = ["MT14", "TR27", "AN22", "BG5"]
+const IDS_BLEUS: PackedStringArray = ["AN22", "SU16", "MT14", "MT46", "AN57", "SU12", "AN40", "SU15", "AN2"]
+const IDS_JAUNES: PackedStringArray = ["MT6", "MT47", "RP8", "AN1", "GD17", "VP13", "AN19", "GD8", "MT33"]
+const GROS_PLANS: PackedStringArray = ["AN2", "AN57", "GD17", "MT33"]
 
 ## [secondes, légende, action bleus, action jaunes]. "ola" et "but" sont spéciaux.
 const SEQUENCE := [

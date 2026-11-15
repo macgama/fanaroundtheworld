@@ -4,4 +4,4 @@
 
 [node name="TribuneFanzzy" type="Node2D"]
 script = ExtResource("1")
-fanzzy_ids = PackedStringArray("TR32", "AN2", "MT14", "TR31", "MS11", "AN22")
+fanzzy_ids = PackedStringArray("AN22", "SU16", "MT14", "AN2", "AN57", "SU12")

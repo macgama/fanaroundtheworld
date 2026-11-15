@@ -40,11 +40,17 @@ const DOSSIERS_PAR_DEFAUT: PackedStringArray = ["res://assets/fanzzy/sprites", "
 const SHADER := preload("res://scenes/fanzzy/fanzzy_deformation.gdshader")
 const TRANSITION := 0.22 # secondes de fondu entre deux actions
 
+## Identifiant de catalogue : si `texture` est vide, les images sont chargées
+## au lancement (pratique pour poser un FANZZY dans une scène à la main).
+@export var fanzzy_id := ""
+@export var evolution := "e1"
+@export var skin := "base"
 @export var texture: Texture2D:
 	set(v):
 		texture = v
 		_preparer()
-## Images d'expression facultatives : clés = ETATS (+ &"cligne" pour les yeux fermés).
+## Images d'expression facultatives : clés = ETATS, plus &"cligne" (calque des
+## yeux fermés, posé par-dessus l'expression neutre le temps d'un clignement).
 @export var expressions: Dictionary = {}
 ## Action en cours (au lancement : action de départ). Pour en changer, appeler jouer().
 @export var action: StringName = &"repos"
@@ -59,6 +65,7 @@ const TRANSITION := 0.22 # secondes de fondu entre deux actions
 @export var ombre := true
 
 var _corps: MeshInstance2D
+var _paupieres: MeshInstance2D
 var _effets: Node2D
 var _mat: ShaderMaterial
 var _rect := Rect2() # zone utile de l'image, origine aux pieds
@@ -77,45 +84,69 @@ static var _grilles := {}
 static var _rects := {}
 
 
-## Crée un FANZZY à partir de son identifiant de catalogue (ex. &"MT14").
-static func creer(id: String, dossiers: PackedStringArray = DOSSIERS_PAR_DEFAUT) -> FanzzyAnime:
+## Crée un FANZZY à partir de son identifiant de catalogue (ex. "MT14"),
+## de son évolution (e1, e2, e3) et de son skin (base, halloween...).
+static func creer(id: String, evolution := "e1", skin := "base",
+		dossiers: PackedStringArray = DOSSIERS_PAR_DEFAUT) -> FanzzyAnime:
 	var f := FanzzyAnime.new()
 	f.name = id
-	var images := charger_images(id, dossiers)
+	f.fanzzy_id = id
+	f.evolution = evolution
+	f.skin = skin
+	var images := charger_images(id, evolution, skin, dossiers)
 	f.expressions = images
 	f.texture = images.get(&"base", null)
 	return f
 
 
-## Cherche l'image de base et les expressions d'un FANZZY. Formats acceptés :
-## <id>.webp|png, <id>/<etat>.webp|png, <id>_<etat>.webp|png, <id>-<etat>.webp|png.
-static func charger_images(id: String, dossiers: PackedStringArray = DOSSIERS_PAR_DEFAUT) -> Dictionary:
+## Cherche les images d'un FANZZY. Formats acceptés, du plus précis au plus simple :
+## - <id>/<evolution>/<skin>/<etat>.webp (export TheBestFan), puis le skin « base » ;
+## - <id>/<etat>.webp, <id>_<etat>.webp, <id>-<etat>.webp ;
+## - <id>.webp pour l'image seule (vignette), utilisée si aucune expression n'existe.
+## Les expressions partagent le même cadrage ; la vignette, non : quand l'expression
+## « neutre » existe, c'est elle qui sert de base.
+static func charger_images(id: String, evolution := "e1", skin := "base",
+		dossiers: PackedStringArray = DOSSIERS_PAR_DEFAUT) -> Dictionary:
 	var r := {}
-	var noms: Array[StringName] = [&"base"]
+	var noms: Array[StringName] = []
 	noms.append_array(ETATS)
 	noms.append(&"cligne")
 	for etat in noms:
+		var motifs: PackedStringArray = []
 		for d in dossiers:
-			var motifs := ["%s/%s" % [d, id], "%s/%s/base" % [d, id]] if etat == &"base" \
-				else ["%s/%s/%s" % [d, id, etat], "%s/%s_%s" % [d, id, etat], "%s/%s-%s" % [d, id, etat]]
-			var trouve := false
-			for m in motifs:
-				for ext in ["webp", "png"]:
-					var chemin := "%s.%s" % [m, ext]
-					if ResourceLoader.exists(chemin):
-						r[etat] = load(chemin)
-						trouve = true
-						break
-				if trouve:
-					break
-			if trouve:
-				break
-	if not r.has(&"base") and r.has(&"neutre"):
+			motifs.append("%s/%s/%s/%s/%s" % [d, id, evolution, skin, etat])
+			motifs.append("%s/%s/%s/base/%s" % [d, id, evolution, etat])
+			motifs.append("%s/%s/%s" % [d, id, etat])
+			motifs.append("%s/%s_%s" % [d, id, etat])
+			motifs.append("%s/%s-%s" % [d, id, etat])
+		var t := _premier_existant(motifs)
+		if t:
+			r[etat] = t
+	if r.has(&"neutre"):
 		r[&"base"] = r[&"neutre"]
+	else:
+		var motifs: PackedStringArray = []
+		for d in dossiers:
+			motifs.append("%s/%s" % [d, id])
+		var t := _premier_existant(motifs)
+		if t:
+			r[&"base"] = t
 	return r
 
 
+static func _premier_existant(motifs: PackedStringArray) -> Texture2D:
+	for m in motifs:
+		for ext in ["webp", "png"]:
+			var chemin := "%s.%s" % [m, ext]
+			if ResourceLoader.exists(chemin):
+				return load(chemin)
+	return null
+
+
 func _ready() -> void:
+	if texture == null and fanzzy_id != "":
+		expressions = charger_images(fanzzy_id, evolution, skin)
+		texture = expressions.get(&"base", null)
 	_rng.randomize()
 	if decalage == 0.0:
 		decalage = _rng.randf_range(0.0, 0.12)
@@ -161,11 +192,19 @@ func _preparer() -> void:
 		_mat = ShaderMaterial.new()
 		_mat.shader = SHADER
 		_corps.material = _mat
+		# paupières : calque « cligne » (yeux fermés seuls) posé sur le corps
+		_paupieres = MeshInstance2D.new()
+		_paupieres.name = "Paupieres"
+		_paupieres.material = _mat
+		_paupieres.visible = false
+		_corps.add_child(_paupieres)
 	var brut := _zone_utile(texture)
 	# origine entre les pieds : bas de la zone utile, milieu de l'image
 	_rect = Rect2(brut.position.x - texture.get_size().x * 0.5, -brut.size.y, brut.size.x, brut.size.y)
 	_corps.mesh = _grille(texture.get_size(), brut.end.y)
 	_corps.texture = texture
+	_paupieres.mesh = _corps.mesh
+	_paupieres.texture = expressions.get(&"cligne", null)
 	_mat.set_shader_parameter(&"hauteur", _rect.size.y)
 	queue_redraw()
 
@@ -250,14 +289,13 @@ func _process(delta: float) -> void:
 
 
 func _clignement(delta: float) -> void:
-	if not expressions.has(&"cligne") or expression() != &"neutre":
+	if _paupieres.texture == null or expression() != &"neutre":
+		_paupieres.visible = false
 		return
 	_cligne_dans -= delta
-	if _cligne_dans <= 0.0:
-		_corps.texture = expressions[&"cligne"]
-		if _cligne_dans < -0.12:
-			_cligne_dans = _rng.randf_range(2.5, 6.0)
-			_appliquer_expression(expression())
+	_paupieres.visible = _cligne_dans <= 0.0
+	if _cligne_dans < -0.12:
+		_cligne_dans = _rng.randf_range(2.5, 6.0)
 
 
 ## Calcule la pose d'une action à l'instant t. Toutes les valeurs sont des

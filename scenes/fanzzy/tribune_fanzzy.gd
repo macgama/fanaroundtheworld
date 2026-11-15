@@ -4,7 +4,7 @@ extends Node2D
 ## Origine = milieu du bord avant de la tribune (sous la première rangée).
 ##
 ##     var t := TribuneFanzzy.new()
-##     t.fanzzy_ids = ["MT14", "TR32", "AN2"]   # répétés pour remplir
+##     t.fanzzy_ids = ["MT14", "AN22", "AN2"]   # répétés pour remplir
 ##     t.couleurs = [Color("1e6bff"), Color("ffffff")]
 ##     add_child(t)
 ##     t.reagir(&"but")                          # toute la tribune célèbre
