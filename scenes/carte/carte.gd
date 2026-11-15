@@ -192,8 +192,8 @@ func _construire_interface() -> void:
 	bas.set_anchors_preset(Control.PRESET_CENTER_BOTTOM)
 	bas.offset_top = -112
 	bas.offset_bottom = -20
-	bas.offset_left = -800
-	bas.offset_right = 800
+	bas.offset_left = -870
+	bas.offset_right = 870
 	bas.alignment = BoxContainer.ALIGNMENT_CENTER
 	add_child(bas)
 	var b_carte := Ui.bouton("Carte", Ui.JAUNE, 30)
@@ -227,6 +227,11 @@ func _construire_interface() -> void:
 	b_club.tooltip_text = "Membres, cotisations, buvette et écharpes"
 	b_club.pressed.connect(func(): Game.aller(Game.SCENE_CLUB if Game.club_cree() else Game.SCENE_CREATION_CLUB))
 	bas.add_child(b_club)
+	var b_ligne := Ui.bouton("En ligne", Ui.BLEU, 30)
+	b_ligne.custom_minimum_size = Vector2(196, 88)
+	b_ligne.tooltip_text = "Rejoindre un ami ou trouver un adversaire pour un duel d'ambiance"
+	b_ligne.pressed.connect(func(): Game.aller(Game.SCENE_SALON, {"niveau": niveau, "continent": continent, "pays": pays}))
+	bas.add_child(b_ligne)
 	var b_pass := Ui.bouton("PASS", Ui.NUIT_CLAIR, 30)
 	b_pass.custom_minimum_size = Vector2(196, 88)
 	b_pass.disabled = true

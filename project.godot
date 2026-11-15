@@ -7,7 +7,7 @@ config_version=5
 
 config/name="FanAroundTheWorld"
 config/description="Gestion de fan club et voyage autour des vrais matchs de football."
-config/version="0.3.0"
+config/version="0.4.0"
 run/main_scene="res://scenes/main/main.tscn"
 config/features=PackedStringArray("4.5", "GL Compatibility")
 config/icon="res://icon.svg"
@@ -16,6 +16,7 @@ config/icon="res://icon.svg"
 
 Game="*res://scripts/autoload/game.gd"
 Donnees="*res://scripts/autoload/donnees.gd"
+Reseau="*res://scripts/autoload/reseau.gd"
 
 [display]
 
