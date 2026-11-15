@@ -24,7 +24,7 @@ func _ready() -> void:
 	racine.add_child(haut)
 	var titre := Ui.label("TA TRIBUNE", 60, Ui.JAUNE, true, 10)
 	haut.add_child(titre)
-	var st := Ui.label("Trois FANZZY mènent ton duel d'ambiance. Le skin ne change que le look.", 22, Ui.BLANC)
+	var st := Ui.label("Trois FANZZY mènent ton duel. Le skin ne change que le look.", 22, Ui.BLANC)
 	st.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	st.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	haut.add_child(st)
@@ -55,11 +55,18 @@ func _ready() -> void:
 		Game.aller(Game.SCENE_CLUB if vers_club else Game.SCENE_CARTE, p))
 	bas.add_child(retour)
 	if not m.is_empty():
-		var go := Ui.bouton("LANCER LE DUEL !", Ui.JAUNE, 40)
-		Ui.colorer_bouton(go, Ui.JAUNE, true)
-		go.custom_minimum_size = Vector2(520, 96)
-		go.pressed.connect(func(): Game.aller(Game.SCENE_DUEL, p))
-		bas.add_child(go)
+		# trois façons de jouer le duel, avec la même tribune
+		for mode_jeu in [
+			["DUEL D'AMBIANCE", "rythme · 90 s", Game.SCENE_DUEL, Ui.JAUNE],
+			["ARÈNE", "action 3 contre 3 · 2 min", Game.SCENE_ARENE, Ui.ROSE],
+			["POUSSÉE", "cartes et ballon · 3 min", Game.SCENE_POUSSEE, Ui.VERT],
+		]:
+			var go := Ui.bouton("%s\n%s" % [mode_jeu[0], mode_jeu[1]], mode_jeu[3], 30)
+			Ui.colorer_bouton(go, mode_jeu[3], true)
+			go.custom_minimum_size = Vector2(380, 96)
+			var scene: String = mode_jeu[2]
+			go.pressed.connect(func(): Game.aller(scene, p))
+			bas.add_child(go)
 	_construire()
 
 

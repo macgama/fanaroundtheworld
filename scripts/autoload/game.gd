@@ -13,6 +13,8 @@ const SCENE_CARTE := "res://scenes/carte/carte.tscn"
 const SCENE_VOYAGE := "res://scenes/voyage/voyage.tscn"
 const SCENE_TRIBUNE := "res://scenes/tribune/tribune.tscn"
 const SCENE_DUEL := "res://scenes/duel/duel.tscn"
+const SCENE_ARENE := "res://scenes/arene/arene.tscn"
+const SCENE_POUSSEE := "res://scenes/poussee/poussee.tscn"
 const SCENE_BUVETTE := "res://scenes/buvette/buvette.tscn"
 const SCENE_CLUB := "res://scenes/club/club.tscn"
 const SCENE_CREATION_CLUB := "res://scenes/club/creation_club.tscn"
@@ -79,7 +81,7 @@ func _ready() -> void:
 
 
 ## Options de ligne de commande pour les tests automatiques (après « -- ») :
-##   --scene=carte|voyage|tribune|duel|buvette   ouvre directement un écran
+##   --scene=carte|voyage|tribune|duel|arene|poussee|buvette   ouvre directement un écran
 ##   --capture=chemin.png --apres=3      enregistre une capture puis quitte
 func _outils_de_test() -> void:
 	var args := {}
@@ -94,9 +96,14 @@ func _outils_de_test() -> void:
 			p = {"niveau": "continent", "continent": args["continent"]}
 		if args.has("match"):
 			p = {"match_id": args["match"], "camp": "home", "mode": args.get("mode", "stade"), "cout": 0}
+			if args.has("auto"):
+				p["auto"] = true  # Arène / Poussée : ton camp joue tout seul (démo)
 		var scenes := {"carte": SCENE_CARTE, "voyage": SCENE_VOYAGE, "tribune": SCENE_TRIBUNE, "duel": SCENE_DUEL,
+			"arene": SCENE_ARENE, "poussee": SCENE_POUSSEE,
 			"pronos": SCENE_PRONOS, "club": SCENE_CLUB, "creation": SCENE_CREATION_CLUB, "buvette": SCENE_BUVETTE}
 		aller.call_deferred(scenes.get(args["scene"], SCENE_TITRE), p)
+	if args.has("vitesse"):
+		Engine.time_scale = float(args["vitesse"])  # accélère une partie de démo
 	if args.has("capture"):
 		await get_tree().create_timer(float(args.get("apres", "3"))).timeout
 		await RenderingServer.frame_post_draw

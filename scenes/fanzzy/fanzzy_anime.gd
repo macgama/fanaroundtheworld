@@ -40,6 +40,10 @@ const ACTIONS := {
 	&"lever_bras": {"etat": &"joie", "duree": 0.0},
 	&"depit": {"etat": &"depit", "duree": 3.0},
 	&"huer": {"etat": &"colere", "duree": 2.5},
+	# modes Arène et Poussée : vue de dessus en légère 3/4
+	&"marcher": {"etat": &"neutre", "duree": 0.0},
+	&"courir": {"etat": &"pousse", "duree": 0.0},
+	&"lancer": {"etat": &"pousse", "duree": 0.4},
 }
 const ETATS: Array[StringName] = [&"neutre", &"pousse", &"joie", &"depit", &"colere"]
 const DOSSIERS_PAR_DEFAUT: PackedStringArray = ["res://assets/fanzzy/sprites", "res://assets/fanzzy/demo"]
@@ -72,6 +76,11 @@ const DESCENTE := 0.16 # secondes pour baisser les bras avant de changer de pose
 ## Décalage personnel (secondes) pour que la foule ne bouge pas en bloc.
 @export var decalage := 0.0
 @export var ombre := true
+## Direction de la course ou du lancer (-1 = gauche, +1 = droite) : le buste
+## penche de ce côté (marcher, courir, lancer).
+@export_range(-1.0, 1.0) var cap := 1.0
+## Cadence de la course (1 = normale).
+@export_range(0.3, 2.5) var vitesse_course := 1.0
 
 var _corps: MeshInstance2D
 var _paupieres: MeshInstance2D
@@ -499,6 +508,38 @@ func _pose(a: StringName, t: float) -> Dictionary:
 			p.sx *= 1.0 + 0.035 * k
 			p.penche = 0.02 * sin(temps * 1.3) * k + 0.03 * k
 			p.terne = 0.9 * k
+		&"marcher", &"courir":
+			var vite := a == &"courir"
+			var periode := (0.3 if vite else 0.46) / maxf(vitesse_course, 0.3)
+			var c := fposmod(temps / periode, 1.0)
+			var bond := sin(c * PI) # un petit bond par foulée
+			p.saut = (0.06 if vite else 0.025) * h * e * bond
+			var impact := pow(1.0 - c, 6.0) # on s'écrase en touchant le sol
+			p.sy *= 1.0 - 0.06 * e * impact + 0.03 * e * bond
+			p.sx *= 1.0 + 0.04 * e * impact
+			p.penche = (0.09 if vite else 0.04) * cap * e + 0.015 * sin(c * TAU)
+			# bras qui balancent en opposition, une foulée sur deux
+			var bal := sin(fposmod(temps / (periode * 2.0), 1.0) * TAU)
+			dehors_g = 0.22 * e * bal
+			dehors_d = -0.22 * e * bal
+			coude_g = 0.15 * e * bal
+			coude_d = -coude_g
+		&"lancer":
+			# élan en arrière puis détente vers l'avant, bras qui fouette
+			var k := clampf(t / 0.4, 0.0, 1.0)
+			var elan := sin(minf(k / 0.35, 1.0) * PI * 0.5)
+			var detente := smoothstep(0.35, 0.55, k) * (1.0 - smoothstep(0.6, 1.0, k))
+			p.penche = cap * (-0.07 * elan * (1.0 - smoothstep(0.35, 0.5, k)) + 0.12 * detente)
+			p.sy *= 1.0 - 0.05 * elan * (1.0 - k) + 0.04 * detente
+			p.sx *= 1.0 + 0.03 * elan * (1.0 - k)
+			var cote_g := cap < 0.0
+			var bras := -0.35 * elan * (1.0 - k) + 0.45 * detente
+			if cote_g:
+				dehors_g = bras
+				coude_g = 0.3 * detente
+			else:
+				dehors_d = bras
+				coude_d = 0.3 * detente
 		&"huer":
 			p.x = 0.006 * h * sin(temps * 70.0) * e
 			p.penche = 0.05 * e * sin(temps * PI / beat) + 0.008 * sin(temps * 47.0)
