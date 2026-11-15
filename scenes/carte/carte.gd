@@ -192,8 +192,8 @@ func _construire_interface() -> void:
 	bas.set_anchors_preset(Control.PRESET_CENTER_BOTTOM)
 	bas.offset_top = -112
 	bas.offset_bottom = -20
-	bas.offset_left = -580
-	bas.offset_right = 580
+	bas.offset_left = -700
+	bas.offset_right = 700
 	bas.alignment = BoxContainer.ALIGNMENT_CENTER
 	add_child(bas)
 	var b_carte := Ui.bouton("Carte", Ui.JAUNE, 30)
@@ -211,6 +211,11 @@ func _construire_interface() -> void:
 	b_pronos.tooltip_text = "Tes pronostics sur les vrais matchs (gratuits, sans mise)"
 	b_pronos.pressed.connect(func(): Game.aller(Game.SCENE_PRONOS, {"niveau": niveau, "continent": continent, "pays": pays}))
 	bas.add_child(b_pronos)
+	var b_buvette := Ui.bouton("Buvette", Ui.ROSE, 30)
+	b_buvette.custom_minimum_size = Vector2(210, 88)
+	b_buvette.tooltip_text = "Petit boulot : vendeur à la buvette (60 s) pour gagner des Jetons"
+	b_buvette.pressed.connect(func(): Game.aller(Game.SCENE_BUVETTE, {"niveau": niveau, "continent": continent, "pays": pays}))
+	bas.add_child(b_buvette)
 	var b_club := Ui.bouton("Fan Club", Ui.ROSE, 30)
 	b_club.custom_minimum_size = Vector2(210, 88)
 	b_club.tooltip_text = "Membres, cotisations, buvette et écharpes"

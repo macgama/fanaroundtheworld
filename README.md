@@ -35,6 +35,11 @@ et, plus tard, sur mobile.
    - **T** quand le tifo est chargé ;
    - **O** quand l'ola est prête, puis les **flèches** dans l'ordre ;
    - touches de test : **B** simule un but pour ton équipe, **N** un but adverse.
+7. **Buvette** (bouton en bas de la carte) : petit boulot de vendeur, 60 s pour gagner
+   des Jetons. Les FANZZY font la queue avec leur commande :
+   - **1 à 4** (ou clic) : poser une boisson, un hot-dog, des frites, une gaufre ;
+   - **ENTRÉE** ou **ESPACE** : servir · **RETOUR ARRIÈRE** : vider le plateau ;
+   - à 30 s, c'est la mi-temps : le rush. Après 3 services dans la journée, la paye est divisée par deux.
 
 **Le fan club** (bouton *Fan Club* en bas de la carte) :
 
@@ -56,12 +61,13 @@ Supprime ce fichier pour recommencer à zéro.
 
 | Dossier | Contenu |
 | --- | --- |
-| `scenes/` | Scènes Godot (`.tscn`) et leurs scripts, un sous-dossier par écran (`main/`, `carte/`, `voyage/`, `tribune/`, `duel/`, `pronostics/`, `club/`) |
+| `scenes/` | Scènes Godot (`.tscn`) et leurs scripts, un sous-dossier par écran (`main/`, `carte/`, `voyage/`, `tribune/`, `duel/`, `pronostics/`, `club/`, `buvette/`) |
 | `scripts/autoload/` | Scripts globaux chargés au démarrage (`Game` : état du jeu et sauvegarde, `Donnees` : vrais matchs) |
 | `scripts/donnees/` | Noms fictifs (`fiction.gd`), placement sur la carte (`geo.gd`), fiche d'un match |
 | `scripts/jeu/` | Règles du jeu sans écran (pronostics) |
 | `scripts/club/` | Règles du fan club (`fan_club.gd` : membres, cotisations, buvette, écharpes) |
 | `scripts/carte/` | La carte du monde dessinée |
+| `scripts/buvette/` | Règles du petit boulot de buvette (commandes, paye), sans affichage |
 | `scripts/ui/` | Style commun de l'interface (couleurs, boutons, icônes) |
 | `assets/fanzzy/` | Les FANZZY (personnages jouables, avec leurs skins cosmétiques), importés depuis thebestfan.online |
 | `assets/stades/` | Images des stades et des tribunes |
@@ -72,7 +78,7 @@ Supprime ce fichier pour recommencer à zéro.
 | `tools/` | Scripts de préparation des données (carte du monde, repérage des bras des FANZZY) |
 | `mods/` | Format des mods Steam Workshop (noms et couleurs de clubs) |
 | `docs/` | Game design et maquettes |
-| `tests/` | Tests automatiques (`godot --headless --path . --script tests/test_logique.gd`, `tests/test_pronostics.gd`, `tests/test_club.gd`, et le parcours complet : `godot --headless --path . res://tests/test_pronostics_jeu.tscn -- --hors-ligne`) |
+| `tests/` | Tests automatiques (`godot --headless --path . --script tests/test_logique.gd`, `tests/test_pronostics.gd`, `tests/test_club.gd`, `tests/test_buvette.gd`, `tests/test_audio.gd`, et le parcours complet : `godot --headless --path . res://tests/test_pronostics_jeu.tscn -- --hors-ligne`) |
 
 ## Règles du projet
 

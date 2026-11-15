@@ -13,6 +13,7 @@ const SCENE_CARTE := "res://scenes/carte/carte.tscn"
 const SCENE_VOYAGE := "res://scenes/voyage/voyage.tscn"
 const SCENE_TRIBUNE := "res://scenes/tribune/tribune.tscn"
 const SCENE_DUEL := "res://scenes/duel/duel.tscn"
+const SCENE_BUVETTE := "res://scenes/buvette/buvette.tscn"
 const SCENE_CLUB := "res://scenes/club/club.tscn"
 const SCENE_CREATION_CLUB := "res://scenes/club/creation_club.tscn"
 const SCENE_PRONOS := "res://scenes/pronostics/pronostics.tscn"
@@ -31,6 +32,10 @@ var duels_gagnes := 0
 var duels_joues := 0
 ## Jetons : gagnés en jouant, dépensés en billets et trajets (jamais pour des skins).
 var jetons := 150
+## Petit boulot à la buvette : meilleure paye et services faits aujourd'hui.
+var buvette_record := 0
+var buvette_jour := ""
+var buvette_services := 0
 ## Membres, local et caisse du fan club (règles dans FanClub).
 var club: Dictionary = FanClub.vide()
 ## Pronostics sans mise (voir scripts/jeu/pronostics.gd).
@@ -74,7 +79,7 @@ func _ready() -> void:
 
 
 ## Options de ligne de commande pour les tests automatiques (après « -- ») :
-##   --scene=carte|voyage|tribune|duel   ouvre directement un écran
+##   --scene=carte|voyage|tribune|duel|buvette   ouvre directement un écran
 ##   --capture=chemin.png --apres=3      enregistre une capture puis quitte
 func _outils_de_test() -> void:
 	var args := {}
@@ -90,7 +95,7 @@ func _outils_de_test() -> void:
 		if args.has("match"):
 			p = {"match_id": args["match"], "camp": "home", "mode": args.get("mode", "stade"), "cout": 0}
 		var scenes := {"carte": SCENE_CARTE, "voyage": SCENE_VOYAGE, "tribune": SCENE_TRIBUNE, "duel": SCENE_DUEL,
-			"pronos": SCENE_PRONOS, "club": SCENE_CLUB, "creation": SCENE_CREATION_CLUB}
+			"pronos": SCENE_PRONOS, "club": SCENE_CLUB, "creation": SCENE_CREATION_CLUB, "buvette": SCENE_BUVETTE}
 		aller.call_deferred(scenes.get(args["scene"], SCENE_TITRE), p)
 	if args.has("capture"):
 		await get_tree().create_timer(float(args.get("apres", "3"))).timeout
@@ -145,6 +150,20 @@ func depenser(n: int) -> bool:
 func gagner_jetons(n: int) -> void:
 	jetons += n
 	sauver()
+
+
+## Services de buvette déjà faits aujourd'hui (date du système).
+func services_buvette_du_jour() -> int:
+	return buvette_services if buvette_jour == Time.get_date_string_from_system() else 0
+
+
+## Note la fin d'un service de buvette et sa paye.
+func finir_service_buvette(paye: int) -> void:
+	var jour := Time.get_date_string_from_system()
+	buvette_services = services_buvette_du_jour() + 1
+	buvette_jour = jour
+	buvette_record = maxi(buvette_record, paye)
+	gagner_jetons(paye)
 
 
 func a_tampon(cle: String) -> bool:
@@ -368,6 +387,7 @@ func sauver() -> void:
 		"duels_gagnes": duels_gagnes,
 		"duels_joues": duels_joues,
 		"jetons": jetons,
+		"buvette": {"record": buvette_record, "jour": buvette_jour, "services": buvette_services},
 		"club": club,
 		"pronos": pronos,
 		"pronos_finis": pronos_finis,
@@ -395,6 +415,11 @@ func charger() -> void:
 	duels_gagnes = int(d.get("duels_gagnes", 0))
 	duels_joues = int(d.get("duels_joues", 0))
 	jetons = int(d.get("jetons", jetons))
+	var bv: Variant = d.get("buvette", {})
+	if bv is Dictionary:
+		buvette_record = int(bv.get("record", 0))
+		buvette_jour = str(bv.get("jour", ""))
+		buvette_services = int(bv.get("services", 0))
 	club = FanClub.reparer(d.get("club", null))
 	club["membres"] = club["membres"].filter(func(id): return not fanzzy_par_id(str(id)).is_empty())
 	pronos = d.get("pronos", {})
@@ -418,6 +443,9 @@ func reinitialiser() -> void:
 	duels_gagnes = 0
 	duels_joues = 0
 	jetons = 150
+	buvette_record = 0
+	buvette_jour = ""
+	buvette_services = 0
 	club = FanClub.vide()
 	pronos = {}
 	pronos_finis = []
