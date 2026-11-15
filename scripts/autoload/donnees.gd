@@ -35,7 +35,8 @@ var _fusion: Array = []           # liste triée, recalculée à chaque mise à 
 var _fusion_par_id: Dictionary = {}
 var _requetes_en_cours := 0
 var _jours_recus: Dictionary = {}
-var _equipes: Dictionary = {}     # id compétition -> [{id, name}] (teams.json)
+var _equipes: Dictionary = {}     # id compétition -> [{id, name, city?}] (teams.json)
+var _villes: Dictionary = {}      # id d'équipe -> ville du stade (pour repérer les derbys)
 const PERIODE_EQUIPES := 24 * 3600
 
 
@@ -114,6 +115,16 @@ func _sur_equipes(d: Dictionary) -> void:
 func _lire_equipes(d: Variant) -> void:
 	if d is Dictionary and d.get("competitions") is Dictionary:
 		_equipes = d["competitions"]
+		_villes.clear()
+		for comp_id in _equipes:
+			for e in _equipes[comp_id]:
+				if e is Dictionary and str(e.get("city", "")) != "":
+					_villes[str(e.get("id", ""))] = str(e["city"])
+
+
+## Ville du stade de chaque club connu (id -> ville), d'après teams.json.
+func villes() -> Dictionary:
+	return _villes
 
 
 ## Clubs connus d'un pays : liste du relais + clubs vus dans les matchs.
