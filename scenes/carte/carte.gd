@@ -15,7 +15,7 @@ const MAX_LIGNES := 120
 var niveau := "monde"     # "monde", "continent", "pays"
 var continent := ""
 var pays := ""
-var jour_filtre := ""     # "" = toute la semaine, "direct" = en direct, sinon AAAA-MM-JJ
+var jour_filtre := ""     # "" = toute la semaine, "direct" = en direct, "fetes" = événements, sinon AAAA-MM-JJ
 var match_choisi := ""
 var camp := "home"
 var mode_suivi := "stade"
@@ -354,6 +354,8 @@ func _matchs_du_niveau() -> Array:
 func _filtrer_jour(fiches: Array) -> Array:
 	if jour_filtre == "":
 		return fiches
+	if jour_filtre == "fetes":
+		return fiches.filter(func(f): return Game.etat_evenement(f["m"]) != "fini" and not Game.evenement_de(f["m"]).is_empty())
 	if jour_filtre == "direct":
 		return fiches.filter(func(f): return Donnees.en_direct(f["m"]))
 	return fiches.filter(func(f): return FicheMatch.jour_local(f["t"]) == jour_filtre)
@@ -498,14 +500,19 @@ func _construire_liste() -> void:
 	# onglets des jours
 	var jours := {}
 	var nb_direct := 0
+	var nb_fetes := 0
 	for f in fiches:
 		jours[FicheMatch.jour_local(f["t"])] = true
 		if Donnees.en_direct(f["m"]):
 			nb_direct += 1
+		if Game.etat_evenement(f["m"]) != "fini" and not Game.evenement_de(f["m"]).is_empty():
+			nb_fetes += 1
 	var aujourdhui := FicheMatch.jour_local(int(Time.get_unix_time_from_system()))
 	_onglet_jour("Tous", "")
 	if nb_direct > 0:
 		_onglet_jour("Direct %d" % nb_direct, "direct", Ui.ROUGE)
+	if nb_fetes > 0 or jour_filtre == "fetes":
+		_onglet_jour("Fêtes %d" % nb_fetes, "fetes", Ui.VIOLET)
 	var liste_jours := jours.keys()
 	liste_jours.sort()
 	for j in liste_jours:
@@ -596,6 +603,11 @@ func _carte_match(f: Dictionary) -> Control:
 	var pas := Ui.pastille(FicheMatch.statut_court(f), Ui.ROUGE if direct else (Ui.VERT if statut == "SCHEDULED" else Color("#6b6699")), 15)
 	pas.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	droite.add_child(pas)
+	var ev := Game.evenement_de(f["m"])
+	if not ev.is_empty() and Game.etat_evenement(f["m"]) != "fini":
+		var fete := Ui.pastille(str(ev["court"]), Color(ev["couleur"]), 14, bool(ev["sombre"]))
+		fete.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		droite.add_child(fete)
 	if not Game.camps_favoris(f["m"]).is_empty():
 		var fav := Ui.pastille("★ Favori", Ui.JAUNE, 14, true)
 		fav.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -678,6 +690,9 @@ func _afficher_fiche() -> void:
 	eq.add_child(mil)
 	eq.add_child(_bloc_equipe(f["ext"]))
 	v.add_child(eq)
+	var bloc_ev := _bloc_evenement(f)
+	if bloc_ev:
+		v.add_child(bloc_ev)
 
 	v.add_child(_ligne("stade", f["stade"]["nom"], "%s places" % _milliers(f["stade"]["places"])))
 	v.add_child(_ligne("calendrier", "Match réel", "%s · %s" % [FicheMatch.date_texte(f["t"]), FicheMatch.heure_texte(f["t"])]))
@@ -760,6 +775,52 @@ func _afficher_fiche() -> void:
 		go.text = FicheMatch.STATUTS.get(statut, "Indisponible")
 	go.pressed.connect(func(): _partir(f, cout_final))
 	v.add_child(go)
+
+
+# ------------------------------------------------------------------ événement
+
+## Bandeau « Derby de Madrid » : ce qui rend le match spécial et ce qu'il rapporte.
+func _bloc_evenement(f: Dictionary) -> Control:
+	var m: Dictionary = f["m"]
+	var ev := Game.evenement_de(m)
+	if ev.is_empty():
+		return null
+	var etat := Game.etat_evenement(m)
+	var couleur := Color(ev["couleur"])
+	var pan := Ui.panneau(couleur.darkened(0.45) if etat != "fini" else Ui.NUIT_CLAIR, 18, 4)
+	var v := Ui.vbox(4)
+	pan.add_child(v)
+	var h := Ui.hbox(10)
+	h.add_child(Ui.pastille(str(ev["court"]).to_upper(), couleur, 16, bool(ev["sombre"])))
+	var titre := Ui.label(str(ev["titre"]), 24, Ui.BLANC, true, 5)
+	titre.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	titre.clip_text = true
+	titre.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+	h.add_child(titre)
+	v.add_child(h)
+	var texte := str(ev["texte"])
+	if not ev["aussi"].is_empty():
+		texte += " Et aussi : %s." % ", ".join(ev["aussi"])
+	var l := Ui.label(texte, 16, Ui.BLANC)
+	l.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	v.add_child(l)
+	var gains := "Jetons des duels %s" % Evenements.texte_mult(ev)
+	if Game.prime_evenement_gagnee(str(f["id"])):
+		gains += " · prime de la soirée déjà gagnée"
+	else:
+		gains += " · 1er duel : +%d XP PASS, +%d Jetons" % [int(ev["xp_pass"]), int(ev["jetons"])]
+	var quand := ""
+	match etat:
+		"a_venir":
+			quand = "La fête commence dans %s" % _duree(int(f["t"]) - Evenements.AVANT - Game.maintenant())
+		"actif":
+			quand = "C'est la fête : bonus en cours !"
+		_:
+			quand = "La fête est finie"
+			gains = "Plus de bonus sur ce match"
+	v.add_child(Ui.label(gains, 16, Ui.JAUNE, true))
+	v.add_child(Ui.label(quand, 15, Ui.GRIS))
+	return pan
 
 
 # ------------------------------------------------------------------ pronostic
