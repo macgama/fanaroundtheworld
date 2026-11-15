@@ -55,13 +55,28 @@ Les gains (Jetons + XP du fan club) suivent les mêmes règles dans les trois mo
 Chaque carte est jouée par un FANZZY de la famille indiquée dans les règles : les tiens
 d'abord, sinon le catalogue. Le skin reste cosmétique.
 
-## Animation
+## Animation : squelette 2D automatique
 
-Les deux modes réutilisent `FanzzyAnime` (image entière déformée par shader) avec trois
-nouvelles actions : `marcher`, `courir` (petits bonds, buste penché selon `cap`, bras qui
-balancent) et `lancer` (élan puis détente). Ça marche pour tous les FANZZY sans rien
-redessiner. Étape suivante possible : un squelette 2D par silhouette, ou des planches
-d'animation générées, pour des cycles de marche plus riches.
+Les FANZZY sont des images d'une seule pièce (1 664 personnages, 2 610 skins). Plutôt
+que de les redécouper à la main, `SqueletteFanzzy` (`scenes/fanzzy/squelette_fanzzy.gd`)
+lit chaque silhouette au chargement (une dizaine de millisecondes par image) et y retrouve
+les hanches (le vide entre les jambes), les deux jambes, les bords du torse, les épaules
+et les mains (en suivant chaque bras qui pend le long du corps).
+
+`FanzzyAnime` dessine alors la même image en cinq morceaux découpés par le shader,
+façon papier découpé : le corps, deux jambes (derrière) et deux bras (devant), chacun
+tourné autour de son articulation, avec un genou qui se replie et un coude. Les morceaux
+se chevauchent aux articulations, sans étirer l'image. Actions : `marcher`, `courir`,
+`lancer`, `danser`, plus les jambes dans `sauter` et `celebrer`.
+
+- Aucun fichier à produire : chaque nouveau FANZZY ou skin est animé tout seul.
+- Un bras mal lu (cape, parapluie, bras posé sur le ventre) reste immobile ; une
+  silhouette sans jambes visibles (macareux, glacière) garde ses jambes fixes.
+- Contrôle visuel : `godot --headless --path . --script tools/fanzzy/voir_squelettes.gd -- planche.png`
+  (ajouter un dossier d'export `etats/` et un nombre pour vérifier d'autres skins).
+  Sur 45 skins tirés de l'export complet : jambes trouvées 45 fois, bras 66 fois sur 90.
+- Démo : `res://scenes/fanzzy/demo_squelette.tscn`. `squelette_actif = false` rend
+  l'animation d'avant.
 
 ## Tester sans jouer
 
@@ -69,4 +84,4 @@ d'animation générées, pour des cycles de marche plus riches.
     godot --path . -- --scene=poussee --match=ex:1 --auto --vitesse=4
 
 `--auto` fait jouer ton camp par l'IA, `--vitesse` accélère la partie.
-Tests des règles : `godot --headless --path . --script tests/test_modes.gd`.
+Tests : `tests/test_modes.gd` (règles) et `tests/test_squelette.gd` (squelette 2D).

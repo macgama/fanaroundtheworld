@@ -41,9 +41,11 @@ const ACTIONS := {
 	&"depit": {"etat": &"depit", "duree": 3.0},
 	&"huer": {"etat": &"colere", "duree": 2.5},
 	# modes Arène et Poussée : vue de dessus en légère 3/4
+	# (bras le long du corps : le squelette 2D les fait bouger, voir SqueletteFanzzy)
 	&"marcher": {"etat": &"neutre", "duree": 0.0},
-	&"courir": {"etat": &"pousse", "duree": 0.0},
-	&"lancer": {"etat": &"pousse", "duree": 0.4},
+	&"courir": {"etat": &"neutre", "duree": 0.0},
+	&"lancer": {"etat": &"neutre", "duree": 0.45},
+	&"danser": {"etat": &"neutre", "duree": 0.0},
 }
 const ETATS: Array[StringName] = [&"neutre", &"pousse", &"joie", &"depit", &"colere"]
 const DOSSIERS_PAR_DEFAUT: PackedStringArray = ["res://assets/fanzzy/sprites", "res://assets/fanzzy/demo"]
@@ -81,11 +83,17 @@ const DESCENTE := 0.16 # secondes pour baisser les bras avant de changer de pose
 @export_range(-1.0, 1.0) var cap := 1.0
 ## Cadence de la course (1 = normale).
 @export_range(0.3, 2.5) var vitesse_course := 1.0
+## Squelette 2D automatique (jambes et bras qui pivotent). Désactivable pour
+## comparer avec l'animation d'origine.
+@export var squelette_actif := true
+var squelette := {}
 
 var _corps: MeshInstance2D
 var _paupieres: MeshInstance2D
 var _effets: Node2D
 var _mat: ShaderMaterial
+var _morceaux: Array[MeshInstance2D] = [] # jambes (derrière) et bras (devant) du squelette 2D
+var _mats: Array[ShaderMaterial] = []
 var _rect := Rect2() # zone utile de l'image, origine aux pieds
 var _t_action := 0.0
 var _duree := 0.0
@@ -275,16 +283,38 @@ func _preparer() -> void:
 		_paupieres.material = _mat
 		_paupieres.visible = false
 		_corps.add_child(_paupieres)
+		_mats = [_mat]
+		# morceaux du squelette 2D : la même image, découpée par le shader
+		for partie in [1, 2, 3, 4]:
+			var m := MeshInstance2D.new()
+			m.name = ["", "JambeG", "JambeD", "BrasG", "BrasD"][partie]
+			var mat := ShaderMaterial.new()
+			mat.shader = SHADER
+			mat.set_shader_parameter(&"partie", partie)
+			m.material = mat
+			m.show_behind_parent = partie <= 2 # les jambes passent derrière le corps
+			_corps.add_child(m)
+			_morceaux.append(m)
+			_mats.append(mat)
 	var brut := _zone_utile(texture)
 	# origine entre les pieds : bas de la zone utile, milieu de l'image
 	_rect = Rect2(brut.position.x - texture.get_size().x * 0.5, -brut.size.y, brut.size.x, brut.size.y)
 	_pieds_y = brut.end.y
 	_corps.mesh = _grille(texture.get_size(), brut.end.y)
 	_corps.texture = texture
+	for m in _morceaux:
+		m.mesh = _corps.mesh
+		m.texture = texture
 	_paupieres.mesh = _corps.mesh
 	_paupieres.texture = expressions.get(&"cligne", null)
-	_mat.set_shader_parameter(&"hauteur", _rect.size.y)
+	_param(&"hauteur", _rect.size.y)
 	queue_redraw()
+
+
+## Règle un paramètre du shader sur le corps et sur tous ses morceaux.
+func _param(nom: StringName, valeur: Variant) -> void:
+	for m in _mats:
+		m.set_shader_parameter(nom, valeur)
 
 
 ## Zone non transparente de l'image (en pixels de l'image), mise en cache.
@@ -297,14 +327,14 @@ static func _zone_utile(tex: Texture2D) -> Rect2:
 	return _rects[cle]
 
 
-## Grille 20 x 44 partagée par toutes les images de même taille (assez fine
+## Grille 24 x 48 partagée par toutes les images de même taille (assez fine
 ## pour plier les bras).
 static func _grille(taille: Vector2, pieds_y: float) -> ArrayMesh:
 	var cle := "%d_%d_%d" % [taille.x, taille.y, pieds_y]
 	if _grilles.has(cle):
 		return _grilles[cle]
-	var nx := 20
-	var ny := 44
+	var nx := 24
+	var ny := 48
 	var v := PackedVector2Array()
 	var uv := PackedVector2Array()
 	var idx := PackedInt32Array()
@@ -335,6 +365,8 @@ func _appliquer_expression(etat: StringName) -> void:
 	if t == null:
 		t = texture
 	_corps.texture = t
+	for m in _morceaux:
+		m.texture = t
 	# repères des bras, passés dans le repère du maillage (origine aux pieds)
 	_bras = {}
 	var b: Dictionary = expressions.get(&"bras", {}).get(String(etat), {})
@@ -347,10 +379,39 @@ func _appliquer_expression(etat: StringName) -> void:
 				_bras[c] = {"poing": Vector2(b[c].poing[0], b[c].poing[1]) + o, "long": float(b[c].long)}
 	var lg: float = _bras.g.long if _bras.has("g") else 0.0
 	var ld: float = _bras.d.long if _bras.has("d") else 0.0
-	_mat.set_shader_parameter(&"bras_long", Vector2(lg, ld))
+	_param(&"bras_long", Vector2(lg, ld))
+	_appliquer_squelette(t)
 	if not _bras.is_empty():
-		_mat.set_shader_parameter(&"bras_tete", _bras.tete)
-		_mat.set_shader_parameter(&"bras_demi", _bras.demi)
+		_param(&"bras_tete", _bras.tete)
+		_param(&"bras_demi", _bras.demi)
+
+
+## Squelette 2D de l'image affichée (jambes, et bras le long du corps quand
+## ils ne sont pas déjà levés dans cette pose), passé au shader.
+func _appliquer_squelette(t: Texture2D) -> void:
+	squelette = SqueletteFanzzy.de_texture(t) if squelette_actif else {}
+	_param(&"sq_actif", 0.0 if squelette.is_empty() else 1.0)
+	for m in _morceaux:
+		m.visible = not squelette.is_empty()
+	if squelette.is_empty():
+		return
+	_param(&"sq_jambes_on", 1.0 if squelette.detecte.jambes else 0.0)
+	var o := Vector2(-t.get_size().x * 0.5, -_pieds_y)
+	var sq := squelette
+	_param(&"sq_hanche", sq.hanche + o.y)
+	_param(&"sq_entre", sq.entrejambe + o.x)
+	_param(&"sq_jambes", sq.jambes + Vector2(o.x, o.x))
+	_param(&"sq_jambes_ext", sq.jambes_ext + Vector2(o.x, o.x))
+	_param(&"sq_torse", sq.torse + Vector2(o.x, o.x))
+	_param(&"sq_epaule", sq.epaule + Vector2(o.y, o.y))
+	# bras déjà levés dans l'image (joie, pousse) : on ne les replie pas
+	var mains: Vector2 = sq.mains + Vector2(o.y, o.y)
+	# (bras non repéré sur la silhouette : il reste immobile)
+	if _bras.has("g") or not sq.detecte.bras_g:
+		mains.x = -1e6
+	if _bras.has("d") or not sq.detecte.bras_d:
+		mains.y = -1e6
+	_param(&"sq_main", mains)
 
 
 func _process(delta: float) -> void:
@@ -384,14 +445,18 @@ func _process(delta: float) -> void:
 	_p = cible
 	_corps.position = Vector2(_p.x, -_p.saut)
 	_corps.modulate = _p.teinte
-	_mat.set_shader_parameter(&"penche", _p.penche)
-	_mat.set_shader_parameter(&"ecrase", Vector2(_p.sx, _p.sy))
-	_mat.set_shader_parameter(&"onde_amp", _p.onde)
-	_mat.set_shader_parameter(&"onde_phase", _p.onde_phase)
-	_mat.set_shader_parameter(&"eclat", _p.eclat)
-	_mat.set_shader_parameter(&"terne", _p.terne)
-	_mat.set_shader_parameter(&"bras_angle", Vector2(_p.bg, _p.bd))
-	_mat.set_shader_parameter(&"bras_coude", Vector2(_p.cg, _p.cd))
+	_param(&"penche", _p.penche)
+	_param(&"ecrase", Vector2(_p.sx, _p.sy))
+	_param(&"onde_amp", _p.onde)
+	_param(&"onde_phase", _p.onde_phase)
+	_param(&"eclat", _p.eclat)
+	_param(&"terne", _p.terne)
+	_param(&"bras_angle", Vector2(_p.bg, _p.bd))
+	_param(&"bras_coude", Vector2(_p.cg, _p.cd))
+	_param(&"jambe_angle", Vector2(_p.jg, _p.jd))
+	_param(&"jambe_lever", Vector2(_p.lg, _p.ld))
+	_param(&"brasb_angle", Vector2(_p.ag, _p.ad))
+	_param(&"brasb_coude", Vector2(_p.kg, _p.kd))
 	_clignement(delta)
 	_animer_particules(delta)
 	queue_redraw()
@@ -424,6 +489,10 @@ func _pose(a: StringName, t: float) -> Dictionary:
 		# bras levés : rotation à l'épaule et au coude, vers l'extérieur (+)
 		# pour chaque côté ; convertis en angles écran à la fin
 		"bg": 0.0, "bd": 0.0, "cg": 0.0, "cd": 0.0,
+		# squelette 2D : jambes (angle, genou levé) et bras le long du corps
+		# (angle à l'épaule, au coude), en rotation à l'écran (+ = vers -x)
+		"jg": 0.0, "jd": 0.0, "lg": 0.0, "ld": 0.0,
+		"ag": 0.0, "ad": 0.0, "kg": 0.0, "kd": 0.0,
 	}
 	var dehors_g := 0.0
 	var dehors_d := 0.0
@@ -435,6 +504,9 @@ func _pose(a: StringName, t: float) -> Dictionary:
 	p.sy = 1.0 + 0.012 * souffle
 	p.sx = 1.0 - 0.006 * souffle
 	p.penche = 0.012 * sin(temps * 0.9 + decalage * 40.0)
+	# bras qui respirent un peu, même au repos
+	p.ag = 0.03 * souffle
+	p.ad = -0.03 * souffle
 	match a:
 		&"sauter":
 			var c := fposmod(temps / (beat * 2.0), 1.0)
@@ -509,37 +581,69 @@ func _pose(a: StringName, t: float) -> Dictionary:
 			p.penche = 0.02 * sin(temps * 1.3) * k + 0.03 * k
 			p.terne = 0.9 * k
 		&"marcher", &"courir":
+			# cycle de course vu de face, en légère 3/4 : jambes en ciseaux qui
+			# se replient à tour de rôle, bras opposés aux jambes, petits bonds
 			var vite := a == &"courir"
-			var periode := (0.3 if vite else 0.46) / maxf(vitesse_course, 0.3)
+			var periode := (0.36 if vite else 0.56) / maxf(vitesse_course, 0.3)
 			var c := fposmod(temps / periode, 1.0)
-			var bond := sin(c * PI) # un petit bond par foulée
-			p.saut = (0.06 if vite else 0.025) * h * e * bond
-			var impact := pow(1.0 - c, 6.0) # on s'écrase en touchant le sol
-			p.sy *= 1.0 - 0.06 * e * impact + 0.03 * e * bond
-			p.sx *= 1.0 + 0.04 * e * impact
-			p.penche = (0.09 if vite else 0.04) * cap * e + 0.015 * sin(c * TAU)
-			# bras qui balancent en opposition, une foulée sur deux
-			var bal := sin(fposmod(temps / (periode * 2.0), 1.0) * TAU)
-			dehors_g = 0.22 * e * bal
-			dehors_d = -0.22 * e * bal
-			coude_g = 0.15 * e * bal
-			coude_d = -coude_g
+			var s1 := sin(c * TAU)
+			var amp := (1.0 if vite else 0.55) * e
+			p.saut = (0.05 if vite else 0.018) * h * e * absf(sin(c * TAU))
+			var impact := pow(1.0 - fposmod(c * 2.0, 1.0), 6.0)
+			p.sy *= 1.0 - 0.045 * amp * impact
+			p.sx *= 1.0 + 0.03 * amp * impact
+			p.penche = (0.07 if vite else 0.03) * cap * e
+			p.jg = _avant(0.32 * amp * s1)
+			p.jd = _avant(-0.32 * amp * s1)
+			p.lg = 0.22 * amp * maxf(s1, 0.0)
+			p.ld = 0.22 * amp * maxf(-s1, 0.0)
+			p.ag = _avant(-0.3 * amp * s1)
+			p.ad = _avant(0.3 * amp * s1)
+			p.kg = _avant(0.35 * amp * (0.6 + 0.4 * s1))
+			p.kd = _avant(0.35 * amp * (0.6 - 0.4 * s1))
 		&"lancer":
-			# élan en arrière puis détente vers l'avant, bras qui fouette
-			var k := clampf(t / 0.4, 0.0, 1.0)
-			var elan := sin(minf(k / 0.35, 1.0) * PI * 0.5)
-			var detente := smoothstep(0.35, 0.55, k) * (1.0 - smoothstep(0.6, 1.0, k))
-			p.penche = cap * (-0.07 * elan * (1.0 - smoothstep(0.35, 0.5, k)) + 0.12 * detente)
-			p.sy *= 1.0 - 0.05 * elan * (1.0 - k) + 0.04 * detente
-			p.sx *= 1.0 + 0.03 * elan * (1.0 - k)
-			var cote_g := cap < 0.0
-			var bras := -0.35 * elan * (1.0 - k) + 0.45 * detente
-			if cote_g:
-				dehors_g = bras
-				coude_g = 0.3 * detente
+			# élan bras en arrière, détente par-dessus l'épaule, accompagnement
+			var k := clampf(t / 0.45, 0.0, 1.0)
+			var elan := smoothstep(0.0, 0.35, k)
+			var detente := smoothstep(0.35, 0.55, k)
+			var fin := smoothstep(0.6, 1.0, k)
+			# bras qui part en arrière puis fouette devant, à hauteur d'épaule
+			var rot := -0.5 * elan * (1.0 - detente) + 1.2 * detente - 0.75 * fin
+			var coude := 0.9 * elan * (1.0 - detente) + 0.25 * detente * (1.0 - fin)
+			p.penche = cap * (-0.06 * elan * (1.0 - detente) + 0.1 * detente * (1.0 - 0.6 * fin))
+			p.sy *= 1.0 - 0.04 * elan * (1.0 - detente) + 0.03 * detente
+			var avant := _avant(rot)
+			var avant_coude := _avant(coude)
+			if cap >= 0.0:
+				p.ad = avant
+				p.kd = avant_coude
+				p.ag = _avant(0.5 * detente - 0.3 * elan)
 			else:
-				dehors_d = bras
-				coude_d = 0.3 * detente
+				p.ag = avant
+				p.kg = avant_coude
+				p.ad = _avant(0.5 * detente - 0.3 * elan)
+			# pas en avant de la jambe opposée
+			var pas := sin(clampf(k * 1.4, 0.0, 1.0) * PI)
+			if cap >= 0.0:
+				p.jg = _avant(0.25 * pas)
+				p.lg = 0.12 * pas
+			else:
+				p.jd = _avant(0.25 * pas)
+				p.ld = 0.12 * pas
+		&"danser":
+			# petite danse sur le tempo : genoux qui montent, bras qui balancent
+			var c := fposmod(temps / (beat * 2.0), 1.0)
+			var s1 := sin(c * TAU)
+			p.saut = 0.025 * h * e * absf(s1)
+			p.penche = 0.04 * e * s1
+			p.lg = 0.25 * e * maxf(s1, 0.0)
+			p.ld = 0.25 * e * maxf(-s1, 0.0)
+			p.jg = 0.12 * e * maxf(s1, 0.0)
+			p.jd = -0.12 * e * maxf(-s1, 0.0)
+			p.ag = 0.45 * e * (0.6 + 0.4 * s1)
+			p.ad = -0.45 * e * (0.6 - 0.4 * s1)
+			p.kg = 0.5 * e
+			p.kd = -0.5 * e
 		&"huer":
 			p.x = 0.006 * h * sin(temps * 70.0) * e
 			p.penche = 0.05 * e * sin(temps * PI / beat) + 0.008 * sin(temps * 47.0)
@@ -551,6 +655,11 @@ func _pose(a: StringName, t: float) -> Dictionary:
 	p.cg = -coude_g
 	p.cd = coude_d
 	return p
+
+
+## Rotation à l'écran qui envoie un membre « vers l'avant » (sens de `cap`).
+func _avant(a: float) -> float:
+	return -a * (1.0 if cap >= 0.0 else -1.0)
 
 
 ## Angle (vers l'intérieur) qui amène le poing d'un bras au-dessus du centre
@@ -600,6 +709,14 @@ func _saut(p: Dictionary, c: float, hauteur: float, h: float) -> void:
 	elif c < 0.85:
 		var k := (c - 0.15) / 0.7
 		p.saut = h * hauteur * sin(k * PI)
+		# genoux repliés en l'air, bras qui s'ouvrent
+		var air := sin(k * PI)
+		p.lg = 0.18 * air
+		p.ld = 0.18 * air
+		p.jg = 0.08 * air
+		p.jd = -0.08 * air
+		p.ag += 0.3 * air
+		p.ad -= 0.3 * air
 		# étiré en montant et en descendant, rond au sommet
 		var etire := absf(cos(k * PI))
 		p.sy *= 1.0 + 0.06 * etire
