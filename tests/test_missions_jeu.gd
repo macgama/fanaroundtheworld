@@ -57,6 +57,14 @@ func _ready() -> void:
 	Game.noter_duel_favori(m, "home", true, "stade")
 	_verifier("j_ambiance" in terminees, "duel d'ambiance joué")
 
+	var jetons := Game.jetons
+	var g := Game.recuperer_mission("jour", 0)
+	_verifier(Game.jetons == jetons + 15 and Game.xp_pass == 50 and g.get("xp_pass") == 50, "récompense versée")
+	_verifier(Game.recuperer_mission("jour", 0).is_empty() and Game.jetons == jetons + 15, "une seule fois")
+	Game.charger()
+	_verifier(Game.xp_pass == 50 and Game.missions["du_jour"][0]["recuperee"], "sauvegardé")
+	_verifier(Missions.a_recuperer(Game.missions) == 2, "encore 2 récompenses à récupérer")
+
 	# Rejouer le même match : plein tarif 3 fois, puis la moitié des Jetons.
 	var facteurs := []
 	for i in 5:
@@ -66,14 +74,6 @@ func _ready() -> void:
 	var g0 := FinDuel.gains(true, 1.0, "pub")
 	var g1 := FinDuel.enregistrer(true, 1.0, {"id": "test:rejeu", "m": m}, "home", "pub")
 	_verifier(g1["rejoue"] and g1["jetons"] == int(round(g0["jetons"] * 0.5)), "Arène/Poussée : gains réduits (%s)" % str(g1))
-
-	var jetons := Game.jetons
-	var g := Game.recuperer_mission("jour", 0)
-	_verifier(Game.jetons == jetons + 15 and Game.xp_pass == 50 and g.get("xp_pass") == 50, "récompense versée")
-	_verifier(Game.recuperer_mission("jour", 0).is_empty() and Game.jetons == jetons + 15, "une seule fois")
-	Game.charger()
-	_verifier(Game.xp_pass == 50 and Game.missions["du_jour"][0]["recuperee"], "sauvegardé")
-	_verifier(Missions.a_recuperer(Game.missions) == 2, "encore 2 récompenses à récupérer")
 
 	if sauvegarde != "":
 		var f := FileAccess.open(Game.CHEMIN_SAUVEGARDE, FileAccess.WRITE)

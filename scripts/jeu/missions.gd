@@ -23,6 +23,7 @@ extends RefCounted
 ##   buvette        service à la buvette terminé
 ##   recolte        caisse du fan club récoltée
 ##   favori         une équipe favorite a gagné des points (duel ou match suivi)
+##   evenement      duel joué pendant un événement   clé = finale|derby|demi|choc|nations|quart
 
 const NB_JOUR := 3
 const NB_SEMAINE := 3
@@ -37,7 +38,8 @@ const BONUS := {
 ## Modèles de missions. « cle » : seuls les événements avec cette clé comptent.
 ## « distinct » : on compte des clés différentes (ex. 3 pays différents).
 ## « si » : condition pour proposer la mission (club = fan club créé,
-## favoris = au moins une équipe favorite).
+## favoris = au moins une équipe favorite, evenements = un derby, une finale…
+## au calendrier).
 const JOUR := [
 	{"id": "j_suivre1", "evt": "suivre", "n": 1, "titre": "Suis un match", "texte": "Au stade, au pub, sur écran géant ou à la maison.", "jetons": 15, "xp_pass": 50},
 	{"id": "j_suivre3", "evt": "suivre", "n": 3, "titre": "Suis 3 matchs", "texte": "Peu importe où : l'important, c'est de chanter !", "jetons": 25, "xp_pass": 75},
@@ -66,6 +68,7 @@ const SEMAINE := [
 	{"id": "s_prono3", "evt": "prono_bon", "n": 3, "titre": "Devin de la semaine", "texte": "Trouve le bon résultat de 3 matchs.", "jetons": 70, "xp_pass": 250},
 	{"id": "s_buvette5", "evt": "buvette", "n": 5, "titre": "Pilier de la buvette", "texte": "Fais 5 services de vendeur.", "jetons": 60, "xp_pass": 200},
 	{"id": "s_recolte5", "evt": "recolte", "n": 5, "titre": "Trésorier du club", "texte": "Récolte 5 fois la caisse du fan club.", "jetons": 50, "xp_pass": 400, "si": "club"},
+	{"id": "s_fete2", "evt": "evenement", "n": 2, "titre": "Soirs de fête", "texte": "Joue 2 duels sur des matchs spéciaux : derby, finale, Grand Choc…", "jetons": 70, "xp_pass": 250, "si": "evenements"},
 	{"id": "s_favori5", "evt": "favori", "n": 5, "titre": "Fidèle au poste", "texte": "Soutiens 5 fois une de tes équipes favorites.", "jetons": 80, "xp_pass": 500, "si": "favoris"},
 ]
 

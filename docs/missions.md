@@ -47,6 +47,7 @@ des duels, pronos et matchs suivis quand l'écran du PASS sera codé.
 | `buvette` | service de vendeur terminé | Pilier de la buvette |
 | `recolte` | caisse du fan club récoltée | Trésorier du club |
 | `favori` | une équipe favorite gagne des points | Soutiens tes couleurs |
+| `evenement` (clé = finale, derby, demi, choc, nations, quart) | duel joué pendant un événement (voir `docs/evenements.md`) | Soirs de fête |
 
 Ajouter une mission : une ligne dans `Missions.JOUR` ou `Missions.SEMAINE`.
 Ajouter un événement : un appel `Game.noter_mission("evt", "clé")` là où il se produit.

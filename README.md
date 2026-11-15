@@ -63,6 +63,12 @@ et, plus tard, sur mobile.
 et de l'XP de PASS. Une mission du jour peut être changée une fois par jour, et une mission
 terminée mais oubliée est versée automatiquement. Détails dans [docs/missions.md](docs/missions.md).
 
+**Événements** : les derbys, Grand Choc, finales, demi-finales, quarts et matchs des
+grandes compétitions de sélections sont repérés tout seuls dans le calendrier. Pastille sur
+le match, onglet **Fêtes** dans la liste, bandeau dans la fiche. De la veille du match à 6 h
+après, les duels sur ce match rapportent plus de Jetons (×1,25 à ×2) et le premier donne une
+prime d'XP de PASS. Détails dans [docs/evenements.md](docs/evenements.md).
+
 **Mes équipes** (bouton *Équipes* en bas de la carte) : choisis **un club favori par pays**
 et **une équipe nationale** (ou directement depuis la fiche d'un match : *En faire mon club favori*).
 Tes duels, pronos et déplacements pour elles, et les récoltes de ton fan club, leur donnent des
@@ -90,10 +96,10 @@ Supprime ce fichier pour recommencer à zéro.
 
 | Dossier | Contenu |
 | --- | --- |
-| `scenes/` | Scènes Godot (`.tscn`) et leurs scripts, un sous-dossier par écran (`main/`, `carte/`, `voyage/`, `tribune/`, `duel/`, `pronostics/`, `favoris/`, `club/`, `buvette/`) |
+| `scenes/` | Scènes Godot (`.tscn`) et leurs scripts, un sous-dossier par écran (`main/`, `carte/`, `voyage/`, `tribune/`, `duel/`, `pronostics/`, `favoris/`, `classement/`, `club/`, `buvette/`) |
 | `scripts/autoload/` | Scripts globaux chargés au démarrage (`Game` : état du jeu et sauvegarde, `Donnees` : vrais matchs) |
 | `scripts/donnees/` | Noms fictifs (`fiction.gd`), placement sur la carte (`geo.gd`), fiche d'un match |
-| `scripts/jeu/` | Règles du jeu sans écran (pronostics, équipes favorites et popularité) |
+| `scripts/jeu/` | Règles du jeu sans écran (pronostics, équipes favorites et popularité, missions, collection, événements des vrais matchs) |
 | `scripts/club/` | Règles du fan club (`fan_club.gd` : membres, cotisations, buvette, écharpes) |
 | `scripts/carte/` | La carte du monde dessinée |
 | `scripts/buvette/` | Règles du petit boulot de buvette (commandes, paye), sans affichage |
@@ -104,11 +110,11 @@ Supprime ce fichier pour recommencer à zéro.
 | `assets/ui/` | Boutons, cadres, icônes de l'interface |
 | `assets/fonts/` | Polices (libres de droits uniquement) |
 | `assets/audio/` | Chants (`chants/`) et bruitages (`sfx/`) |
-| `data/` | Données JSON : carte (`carte/`), noms fictifs des clubs (`clubs/`), matchs d'exemple hors ligne (`exemple/`) |
+| `data/` | Données JSON : carte (`carte/`), noms fictifs des clubs (`clubs/`), rivalités pour les derbys et Grand Choc (`evenements/`), matchs d'exemple hors ligne (`exemple/`) |
 | `tools/` | Scripts de préparation des données (carte du monde, repérage des bras des FANZZY) |
 | `mods/` | Format des mods Steam Workshop (noms et couleurs de clubs) |
 | `docs/` | Game design et maquettes |
-| `tests/` | Tests automatiques (`godot --headless --path . --script tests/test_logique.gd`, `tests/test_pronostics.gd`, `tests/test_club.gd`, `tests/test_supporters.gd`, `tests/test_buvette.gd`, `tests/test_collection.gd`, `tests/test_audio.gd`, et le parcours complet : `godot --headless --path . res://tests/test_pronostics_jeu.tscn -- --hors-ligne`, le tutoriel : `res://tests/test_tutoriel.tscn -- --hors-ligne`, le tour de tous les écrans (chaque bouton pressé, parties au clavier, pause) : `res://tests/test_ecrans.tscn -- --hors-ligne`) |
+| `tests/` | Tests automatiques (`godot --headless --path . --script tests/test_logique.gd`, `tests/test_pronostics.gd`, `tests/test_club.gd`, `tests/test_supporters.gd`, `tests/test_classement.gd`, `tests/test_buvette.gd`, `tests/test_collection.gd`, `tests/test_evenements.gd`, `tests/test_audio.gd`, et le parcours complet : `godot --headless --path . res://tests/test_pronostics_jeu.tscn -- --hors-ligne`, le tutoriel : `res://tests/test_tutoriel.tscn -- --hors-ligne`, le classement en ligne : `res://tests/test_classement_jeu.tscn -- --hors-ligne`, le tour de tous les écrans (chaque bouton pressé, parties au clavier, pause) : `res://tests/test_ecrans.tscn -- --hors-ligne`) |
 
 ## Règles du projet
 

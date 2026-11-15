@@ -245,7 +245,7 @@
    "status": "SCHEDULED",
    "minute": null,
    "minute_estimated": false,
-   "round": null,
+   "round": "Final",
    "group": null,
    "venue": null,
    "home": {

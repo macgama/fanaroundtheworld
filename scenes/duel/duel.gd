@@ -839,6 +839,7 @@ func _finir() -> void:
 	var pop := Game.noter_duel_favori(fiche["m"], camp, gagne, mode)
 	Game.gagner_jetons(jetons)
 	Game.ajouter_xp(xp)
+	var ev := Game.recompense_evenement(fiche["m"], jetons)
 	if gagne:
 		_decor.confettis(300)
 		for mar in _fanzzy:
@@ -854,8 +855,9 @@ func _finir() -> void:
 	pan.set_anchors_preset(Control.PRESET_CENTER)
 	pan.offset_left = -460
 	pan.offset_right = 460
-	pan.offset_top = -330
-	pan.offset_bottom = 330
+	var demi_h := 330 + 24 * maxi(0, FinDuel.lignes_evenement(ev).size() + (1 if pop > 0 else 0) - 2)
+	pan.offset_top = -demi_h
+	pan.offset_bottom = demi_h
 	add_child(pan)
 	var v := Ui.vbox(12)
 	v.alignment = BoxContainer.ALIGNMENT_CENTER
@@ -876,7 +878,7 @@ func _finir() -> void:
 		["Bonus « ton équipe gagne vraiment »", "x1,3" if equipe_gagne else "non"],
 		["Jetons gagnés" + (" (match rejoué : ÷2)" if rejoue else ""), "+%d" % jetons],
 		["XP du fan club", "+%d" % xp],
-	] + FinDuel.ligne_popularite({"popularite": pop, "equipe": (fiche["dom"] if camp == "home" else fiche["ext"])["nom"]})
+	] + FinDuel.ligne_popularite({"popularite": pop, "equipe": (fiche["dom"] if camp == "home" else fiche["ext"])["nom"]}) + FinDuel.lignes_evenement(ev)
 	for l in lignes:
 		var h := Ui.hbox(10)
 		var a := Ui.label(l[0], 24, Ui.BLANC)
@@ -909,7 +911,7 @@ func _finir() -> void:
 		# test automatique : on écrit le résultat puis on ferme
 		print("RESULTAT duel en_ligne=%s hote=%s jauge=%.2f gagne=%s forfait=%s" % [en_ligne, Reseau.hote if en_ligne else false, jauge, gagne, _forfait])
 		get_tree().create_timer(1.5).timeout.connect(func(): get_tree().quit())
-	pan.pivot_offset = Vector2(460, 330)
+	pan.pivot_offset = Vector2(460, demi_h)
 	pan.scale = Vector2.ONE * 0.6
 	pan.create_tween().tween_property(pan, "scale", Vector2.ONE, 0.35).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
 

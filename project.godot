@@ -27,6 +27,7 @@ Game="*res://scripts/autoload/game.gd"
 Donnees="*res://scripts/autoload/donnees.gd"
 Reseau="*res://scripts/autoload/reseau.gd"
 Tutoriel="*res://scripts/autoload/tutoriel.gd"
+EnLigne="*res://scripts/autoload/en_ligne.gd"
 
 [display]
 
