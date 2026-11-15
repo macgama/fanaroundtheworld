@@ -9,3 +9,6 @@
 
 Rappel : la **famille** d'un FANZZY donne son geste en duel et de petits bonus.
 Ses **skins** (variantes) sont **purement cosmétiques**.
+
+`demo/` : expressions (évolution e1, skin base) de 18 FANZZY utilisées par la démo d'animation
+(`scenes/fanzzy/demo_animations.tscn`, voir `docs/animation-fanzzy.md`).
