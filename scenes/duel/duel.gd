@@ -674,6 +674,7 @@ func _finir() -> void:
 	Game.duels_joues += 1
 	if gagne:
 		Game.duels_gagnes += 1
+	Game.noter_duel_club()  # l'après-match fait tourner la buvette
 	Game.gagner_jetons(jetons)
 	Game.ajouter_xp(xp)
 	if gagne:
