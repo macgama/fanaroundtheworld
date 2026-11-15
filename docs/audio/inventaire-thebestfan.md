@@ -6,12 +6,12 @@ Les **chants** de TheBestFan ne sont pas des fichiers : ce sont des frappes de t
 
 | Famille | Nombre | Origine | Reprise dans FanAroundTheWorld |
 |---|---|---|---|
-| Ambiance | 1 | Artlist  | Non, en attente d'une décision sur la licence Artlist |
-| Ouverture de booster | 12 | Artlist, 27 oct. 2026 | Non, en attente d'une décision sur la licence Artlist |
-| Carte d'action du duel | 39 | Artlist  | Non, en attente d'une décision sur la licence Artlist |
-| Moment | 1 | Artlist (6 oct. 2026) | Non, en attente d'une décision sur la licence Artlist |
-| Signature de club | 21 | Artlist, 25 oct. 2026 | Non, en attente d'une décision sur la licence Artlist |
-| Épreuve du duel | 24 | Artlist  | Non, en attente d'une décision sur la licence Artlist |
+| Ambiance | 1 | Artlist  | Non (décision de Gaël, 15 nov. 2026) |
+| Ouverture de booster | 12 | Artlist, 27 oct. 2026 | Non (décision de Gaël, 15 nov. 2026) |
+| Carte d'action du duel | 39 | Artlist  | Non (décision de Gaël, 15 nov. 2026) |
+| Moment | 1 | Artlist (6 oct. 2026) | Non (décision de Gaël, 15 nov. 2026) |
+| Signature de club | 21 | Artlist, 25 oct. 2026 | Non (décision de Gaël, 15 nov. 2026) |
+| Épreuve du duel | 24 | Artlist  | Non (décision de Gaël, 15 nov. 2026) |
 | Musique | 2 | « The Final Turn », création de Gaël (27 oct. 2026) | Oui, réencodée en Ogg Vorbis (Godot ne lit pas l'Opus) |
 
 ## Détail

@@ -26,8 +26,8 @@ clubs, boosters, rumeur et clameur). Lecture de la licence Artlist au 14 novembr
   sortir pour quelqu'un d'autre.
 - Le dépôt est **public** : y mettre ces fichiers, ce serait les redistribuer.
 
-Ce n'est pas un avis juridique. Pour les reprendre un jour, il faut une réponse
-écrite d'Artlist (ventes ou support) disant qu'un jeu Steam est couvert. Sources :
+**Décision de Gaël (15 novembre 2026) : on garde nos sons calculés, les sons
+Artlist ne sont pas repris.** Ce n'est pas un avis juridique. Sources :
 [licence Artlist](https://artlist.io/help-center/privacy-terms/artlist-license),
 [FAQ IA d'Artlist](https://help.artlist.io/hc/en-us/articles/33210293103005-AI-Image-and-Video-FAQs).
 
