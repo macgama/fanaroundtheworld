@@ -112,6 +112,7 @@ func _outils_de_test() -> void:
 			p["salon"] = args["salon"]  # test en ligne : « hote » ou l'adresse de l'hôte
 			if args.has("auto"):
 				p["auto"] = true
+			p["jeu"] = args.get("jeu", "duel")  # jeu lancé tout seul par l'hôte en test
 		aller.call_deferred(scenes.get(args["scene"], SCENE_TITRE), p)
 	if args.has("vitesse"):
 		Engine.time_scale = float(args["vitesse"])  # accélère une partie de démo
