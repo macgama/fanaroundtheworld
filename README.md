@@ -17,8 +17,13 @@ et, plus tard, sur mobile.
 
 ## Le prototype jouable (v0.3)
 
-1. **Écran titre** : clique sur **JOUER**. La première fois, **crée ton fan club** :
-   nom, deux couleurs, écusson. Tes 3 FANZZY de tribune sont les membres fondateurs.
+1. **Écran d'accueil** : **JOUER** (ou **CONTINUER**), **EN LIGNE**, **OPTIONS** (volumes,
+   plein écran, revoir le tutoriel, recommencer à zéro) et **QUITTER**. La première fois,
+   **crée ton fan club** : nom, deux couleurs, écusson. Tes 3 FANZZY de tribune sont les
+   membres fondateurs. **Tutoriel** : ton premier FANZZY t'accompagne dans une bulle
+   (fan club, QG, équipes favorites, choix du match, prono, lieu, voyage, tribune, premier
+   duel) et un cadre jaune montre le bouton à presser. À la fin : 50 Jetons de bienvenue.
+   Il peut être passé à tout moment (voir `scripts/autoload/tutoriel.gd`).
 2. **Carte du monde** : les vrais matchs de la semaine (de la veille à J+7), relus
    toutes les 30 min, et le live relu chaque minute. Clique sur un continent, puis sur
    un pays. À gauche, la liste des matchs (filtre par jour ou « Direct »). Molette pour
@@ -103,7 +108,7 @@ Supprime ce fichier pour recommencer à zéro.
 | `tools/` | Scripts de préparation des données (carte du monde, repérage des bras des FANZZY) |
 | `mods/` | Format des mods Steam Workshop (noms et couleurs de clubs) |
 | `docs/` | Game design et maquettes |
-| `tests/` | Tests automatiques (`godot --headless --path . --script tests/test_logique.gd`, `tests/test_pronostics.gd`, `tests/test_club.gd`, `tests/test_supporters.gd`, `tests/test_buvette.gd`, `tests/test_collection.gd`, `tests/test_audio.gd`, et le parcours complet : `godot --headless --path . res://tests/test_pronostics_jeu.tscn -- --hors-ligne`) |
+| `tests/` | Tests automatiques (`godot --headless --path . --script tests/test_logique.gd`, `tests/test_pronostics.gd`, `tests/test_club.gd`, `tests/test_supporters.gd`, `tests/test_buvette.gd`, `tests/test_collection.gd`, `tests/test_audio.gd`, et le parcours complet : `godot --headless --path . res://tests/test_pronostics_jeu.tscn -- --hors-ligne`, le tutoriel : `res://tests/test_tutoriel.tscn -- --hors-ligne`) |
 
 ## Règles du projet
 
