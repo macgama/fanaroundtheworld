@@ -1,0 +1,32 @@
+# Godot 4
+.godot/
+.import/
+*.translation
+export_presets.cfg
+export_credentials.cfg
+
+# Builds
+build/
+exports/
+*.exe
+*.pck
+*.apk
+*.aab
+*.x86_64
+
+# Mono / C#
+.mono/
+data_*/
+mono_crash.*.json
+
+# Blender
+*.blend1
+*.blend2
+
+# Système et éditeurs
+.DS_Store
+Thumbs.db
+desktop.ini
+.vscode/
+.idea/
+*.tmp
