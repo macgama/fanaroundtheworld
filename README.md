@@ -35,6 +35,15 @@ et, plus tard, sur mobile.
    - **T** quand le tifo est chargé ;
    - **O** quand l'ola est prête, puis les **flèches** dans l'ordre ;
    - touches de test : **B** simule un but pour ton équipe, **N** un but adverse.
+
+   Deux autres façons de jouer le duel, avec la même tribune (voir `docs/modes-de-jeu.md`) :
+   - **Arène** (2 min) : 3 FANZZY contre 3, vue de dessus. **ZQSD** ou flèches pour bouger,
+     la souris pour viser, **clic** pour lancer un ballon de confettis, **clic droit** ou **E**
+     pour le super de la famille, **TAB** pour changer de FANZZY. Tiens le mégaphone au
+     centre pour remplir ta banderole.
+   - **Poussée** (3 min) : pose des supporters avec tes cartes (**clic** sur une carte ou
+     **1 à 4**, puis clic dans ta moitié). Ils poussent le ballon et chantent devant la
+     tribune d'en face. Un but ou la tribune conquise, et c'est gagné.
 7. **Buvette** (bouton en bas de la carte) : petit boulot de vendeur, 60 s pour gagner
    des Jetons. Les FANZZY font la queue avec leur commande :
    - **1 à 4** (ou clic) : poser une boisson, un hot-dog, des frites, une gaufre ;

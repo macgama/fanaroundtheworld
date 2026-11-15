@@ -299,3 +299,19 @@ class Icone extends Control:
 		var f := Ui.police_titre()
 		var w := f.get_string_size(t, HORIZONTAL_ALIGNMENT_LEFT, -1, int(fs)).x
 		draw_string(f, centre + Vector2(-w / 2.0, fs * 0.36), t, HORIZONTAL_ALIGNMENT_LEFT, -1, int(fs), col)
+
+
+## Couleur adverse assez différente de la tienne pour qu'on s'y retrouve
+## (deux bleus proches deviennent bleu contre rose).
+static func couleur_distincte(nous: Color, eux: Color) -> Color:
+	var d := Vector3(nous.r - eux.r, nous.g - eux.g, nous.b - eux.b).length()
+	var dh := absf(nous.h - eux.h)
+	dh = minf(dh, 1.0 - dh)
+	var meme_teinte := dh < 0.12 and nous.s > 0.3 and eux.s > 0.3
+	if d >= 0.45 and not meme_teinte:
+		return eux
+	for c in [Ui.ROSE, Ui.JAUNE, Ui.VERT]:
+		var h := absf(nous.h - c.h)
+		if Vector3(nous.r - c.r, nous.g - c.g, nous.b - c.b).length() >= 0.45 and minf(h, 1.0 - h) >= 0.12:
+			return c
+	return Ui.ROUGE
