@@ -1,4 +1,4 @@
-[gd_resource type="AudioBusLayout" load_steps=3 format=3]
+[gd_resource type="AudioBusLayout" format=3 uid="uid://etlb6gutmoew"]
 
 [sub_resource type="AudioEffectHardLimiter" id="AudioEffectHardLimiter_maitre"]
 resource_name = "HardLimiter"
@@ -10,7 +10,6 @@ threshold = -14.0
 ratio = 3.0
 
 [resource]
-bus/0/volume_db = 0.0
 bus/0/effect/0/effect = SubResource("AudioEffectHardLimiter_maitre")
 bus/0/effect/0/enabled = true
 bus/1/name = &"Musique"
