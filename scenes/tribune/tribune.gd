@@ -63,10 +63,16 @@ func _ready() -> void:
 		]:
 			var go := Ui.bouton("%s\n%s" % [mode_jeu[0], mode_jeu[1]], mode_jeu[3], 30)
 			Ui.colorer_bouton(go, mode_jeu[3], true)
-			go.custom_minimum_size = Vector2(380, 96)
+			go.custom_minimum_size = Vector2(330, 96)
 			var scene: String = mode_jeu[2]
 			go.pressed.connect(func(): Game.aller(scene, p))
 			bas.add_child(go)
+		# le duel d'ambiance contre un vrai joueur (ami ou adversaire en ligne)
+		var en_ligne := Ui.bouton("CONTRE UN JOUEUR\nami ou en ligne", Ui.BLEU, 30)
+		en_ligne.custom_minimum_size = Vector2(330, 96)
+		en_ligne.tooltip_text = "Duel d'ambiance contre un ami ou un autre joueur, sur ce match"
+		en_ligne.pressed.connect(func(): Game.aller(Game.SCENE_SALON, p))
+		bas.add_child(en_ligne)
 	_construire()
 
 

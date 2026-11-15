@@ -22,6 +22,7 @@ const SCENE_CLUB := "res://scenes/club/club.tscn"
 const SCENE_CREATION_CLUB := "res://scenes/club/creation_club.tscn"
 const SCENE_PRONOS := "res://scenes/pronostics/pronostics.tscn"
 const SCENE_FAVORIS := "res://scenes/favoris/favoris.tscn"
+const SCENE_SALON := "res://scenes/salon/salon.tscn"
 
 ## Paramètres passés d'un écran à l'autre (match choisi, camp supporté…).
 var params: Dictionary = {}
@@ -105,7 +106,12 @@ func _outils_de_test() -> void:
 				p["auto"] = true  # Arène / Poussée : ton camp joue tout seul (démo)
 		var scenes := {"carte": SCENE_CARTE, "voyage": SCENE_VOYAGE, "tribune": SCENE_TRIBUNE, "duel": SCENE_DUEL,
 			"arene": SCENE_ARENE, "poussee": SCENE_POUSSEE,
-			"pronos": SCENE_PRONOS, "favoris": SCENE_FAVORIS, "club": SCENE_CLUB, "creation": SCENE_CREATION_CLUB, "buvette": SCENE_BUVETTE}
+			"pronos": SCENE_PRONOS, "favoris": SCENE_FAVORIS, "club": SCENE_CLUB, "creation": SCENE_CREATION_CLUB, "buvette": SCENE_BUVETTE,
+			"salon": SCENE_SALON}
+		if args.has("salon"):
+			p["salon"] = args["salon"]  # test en ligne : « hote » ou l'adresse de l'hôte
+			if args.has("auto"):
+				p["auto"] = true
 		aller.call_deferred(scenes.get(args["scene"], SCENE_TITRE), p)
 	if args.has("vitesse"):
 		Engine.time_scale = float(args["vitesse"])  # accélère une partie de démo

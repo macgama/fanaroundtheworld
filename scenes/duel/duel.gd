@@ -8,6 +8,8 @@ extends Control
 ## La jauge d'ambiance dit qui domine. Le vrai score du match donne un bonus,
 ## et un vrai but pendant le duel fait exploser la tribune.
 ## Touches de test : B = simuler un but pour toi, N = but adverse.
+## En ligne (Game.params["en_ligne"]) : l'adversaire est un vrai joueur. Chacun joue sa
+## piste chez lui, et la jauge est partagée (l'hôte fait foi, voir Protocole.JaugePartagee).
 
 const DUREE := 90.0
 const BPM := 112.0
@@ -53,6 +55,16 @@ var _score_vu := Vector2i(-1, -1)
 # bonus des FANZZY (multiplicatifs)
 var mods := {}
 
+# --- en ligne
+var en_ligne := false
+var _jp: Protocole.JaugePartagee
+var _adv_pret := false
+var _moi_pret := false
+var _t_etat := 0.0
+var _attente_fin := false
+var _forfait := false
+var _depart_envoye := false
+
 # nœuds
 var _decor: Decor
 var _piste: Piste
@@ -76,7 +88,8 @@ var _sons: Dictionary = {}
 
 func _ready() -> void:
 	var p: Dictionary = Game.params
-	var m := Donnees.match_par_id(str(p.get("match_id", "")))
+	en_ligne = bool(p.get("en_ligne", false)) and Reseau.connecte()
+	var m: Dictionary = p.get("match", {}) if en_ligne else Donnees.match_par_id(str(p.get("match_id", "")))
 	if m.is_empty():
 		Game.aller(Game.SCENE_CARTE)
 		return
@@ -88,7 +101,10 @@ func _ready() -> void:
 	_construire()
 	_calculer_bonus_score(true)
 	Donnees.mis_a_jour.connect(func(): _calculer_bonus_score(false))
-	_compte_a_rebours()
+	if en_ligne:
+		_preparer_en_ligne()
+	else:
+		_compte_a_rebours()
 
 
 # ------------------------------------------------------------------ FANZZY
@@ -180,7 +196,8 @@ func _construire() -> void:
 	n1.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
 	noms.add_child(n1)
 	noms.add_child(Ui.label("DUEL D'AMBIANCE", 40, Ui.JAUNE, true, 10))
-	var n2 := Ui.label(("TRIBUNE " + eux["nom"]).to_upper(), 30, Ui.BLANC, true, 8)
+	var nom_eux: String = Reseau.adversaire.get("nom", eux["nom"]) if en_ligne else "TRIBUNE " + eux["nom"]
+	var n2 := Ui.label(nom_eux.to_upper(), 30, Ui.BLANC, true, 8)
 	n2.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	n2.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 	n2.clip_text = true
@@ -366,17 +383,10 @@ func _process(delta: float) -> void:
 		for mar in _fanzzy:
 			mar.battement()
 
-	# pression adverse continue (plus forte quand ils lancent un chant)
-	var pression := 0.95 + 0.06 * FicheMatch.ambiance_prevue(fiche)
-	if temps > _prochain_chant_adverse and _chant_adverse_fin < temps:
-		_chant_adverse_fin = temps + 3.5
-		_prochain_chant_adverse = temps + randf_range(10.0, 15.0)
-		_annonce("Ils lancent un chant ! Réponds plus fort !", Ui.ROUGE)
-		_decor.secousse_eux = 1.0
-	if temps < _chant_adverse_fin:
-		pression *= 3.0
-	jauge -= pression * delta * 1.6 / float(mods["holdBonus"])
-	jauge = clampf(jauge, -100.0, 100.0)
+	if en_ligne:
+		_tick_en_ligne(delta)
+	else:
+		_pression_ia(delta)
 
 	# ola
 	if temps >= _ola_prete_a and _ola_sequence.is_empty():
@@ -395,11 +405,28 @@ func _process(delta: float) -> void:
 	if auto:
 		_jouer_tout_seul()
 	if temps >= DUREE:
-		_finir()
+		if en_ligne and not Reseau.hote:
+			_attendre_fin()
+		else:
+			_finir()
+
+
+## Hors ligne : la tribune d'en face (IA) pousse en continu, plus fort quand elle chante.
+func _pression_ia(delta: float) -> void:
+	var pression := 0.95 + 0.06 * FicheMatch.ambiance_prevue(fiche)
+	if temps > _prochain_chant_adverse and _chant_adverse_fin < temps:
+		_chant_adverse_fin = temps + 3.5
+		_prochain_chant_adverse = temps + randf_range(10.0, 15.0)
+		_annonce("Ils lancent un chant ! Réponds plus fort !", Ui.ROUGE)
+		_decor.secousse_eux = 1.0
+	if temps < _chant_adverse_fin:
+		pression *= 3.0
+	jauge -= pression * delta * 1.6 / float(mods["holdBonus"])
+	jauge = clampf(jauge, -100.0, 100.0)
 
 
 ## Mode démo / test (option « --auto ») : la tribune joue toute seule, avec quelques erreurs.
-var auto := "--auto" in OS.get_cmdline_user_args()
+var auto := "--auto" in OS.get_cmdline_user_args() or bool(Game.params.get("auto", false))
 
 
 func _jouer_tout_seul() -> void:
@@ -473,11 +500,12 @@ func _chant() -> void:
 		biens += 1
 		_piste.eclat("BIEN", Ui.VERT)
 		_jouer("clap", -4.0)
-	jauge = clampf(jauge + gain * mult * 0.9, -100.0, 100.0)
+	_pousser(gain * mult * 0.9)
 	points += int(gain * mult * 10.0)
 	charge_tifo = minf(100.0, charge_tifo + 3.2 * float(mods["parryBonus"]))
 	_fanzzy[0].sauter(0.9)
 	if combo % 10 == 0:
+		_signaler("combo")
 		_decor.confettis(40)
 		_fanzzy[1].sauter(1.0)
 		_fanzzy[2].sauter(1.0)
@@ -491,7 +519,7 @@ func _rate(appui: bool) -> void:
 	var cout := 1.0 if appui else 1.4
 	if mods["backfire"]:
 		cout *= 1.5
-	jauge = clampf(jauge - cout, -100.0, 100.0)
+	_pousser(-cout)
 	_piste.eclat("RATÉ", Ui.ROUGE)
 	_fanzzy[0].trembler()
 	_maj_combo()
@@ -510,7 +538,8 @@ func _tifo() -> void:
 	charge_tifo = 0.0
 	tifos += 1
 	var gain := 14.0 * _bonus_score
-	jauge = clampf(jauge + gain, -100.0, 100.0)
+	_pousser(gain)
+	_signaler("tifo")
 	points += int(gain * 25)
 	_jouer("foule", 0.0)
 	_banniere.deployer()
@@ -568,7 +597,8 @@ func _ola_finir(reussie: bool) -> void:
 	if reussie:
 		olas += 1
 		var gain := 12.0 * _bonus_score
-		jauge = clampf(jauge + gain, -100.0, 100.0)
+		_pousser(gain)
+		_signaler("ola")
 		points += int(gain * 25)
 		_decor.lancer_ola()
 		_jouer("foule", -3.0)
@@ -576,6 +606,7 @@ func _ola_finir(reussie: bool) -> void:
 			_fanzzy[i].sauter(1.2, i * 0.12)
 		_annonce("OLA RÉUSSIE ! +%d" % int(gain), Ui.JAUNE)
 	else:
+		_signaler("ola_ratee")
 		_annonce("Ola ratée… la tribune s'est emmêlée", Ui.GRIS)
 		for mar in _fanzzy:
 			mar.trembler()
@@ -583,14 +614,14 @@ func _ola_finir(reussie: bool) -> void:
 
 func _but(pour_nous: bool) -> void:
 	if pour_nous:
-		jauge = clampf(jauge + 15.0, -100.0, 100.0)
+		_pousser(15.0)
 		_annonce("BUT !!! La tribune explose", Ui.VERT)
 		_decor.confettis(200)
 		_jouer("foule", 3.0)
 		for mar in _fanzzy:
 			mar.sauter(1.6)
 	else:
-		jauge = clampf(jauge - 10.0, -100.0, 100.0)
+		_pousser(-10.0)
 		_annonce("But adverse… relance la tribune !", Ui.ROUGE)
 		_decor.secousse_eux = 1.0
 		for mar in _fanzzy:
@@ -659,13 +690,136 @@ func _maj_score_reel() -> void:
 	_lbl_score_reel.text = "%s %s %s" % [fiche["dom"]["sigle"], sc, fiche["ext"]["sigle"]]
 
 
+# ------------------------------------------------------------------ en ligne
+
+func _pousser(d: float) -> void:
+	if en_ligne:
+		if termine or _attente_fin:
+			return
+		var m := _jp.local(d)
+		jauge = _jp.jauge
+		if not m.is_empty():
+			Reseau.envoyer(m)
+	else:
+		jauge = clampf(jauge + d, -100.0, 100.0)
+
+
+## Montre chez l'adversaire ce que ta tribune vient de faire.
+func _signaler(e: String) -> void:
+	if en_ligne and not termine:
+		Reseau.envoyer(Protocole.msg("evt", {"e": e}))
+
+
+func _preparer_en_ligne() -> void:
+	_jp = Protocole.JaugePartagee.new(Reseau.hote)
+	Reseau.message.connect(_sur_message)
+	Reseau.adversaire_parti.connect(_sur_adversaire_parti)
+	_lbl_info.text = "En attente de %s…" % Reseau.adversaire.get("nom", "l'adversaire")
+	_moi_pret = true
+	Reseau.envoyer(Protocole.msg("pret"))
+	_verifier_depart()
+
+
+func _verifier_depart() -> void:
+	# l'hôte lance quand les deux écrans sont prêts ; l'invité attend « depart »
+	if Reseau.hote and _moi_pret and _adv_pret and not _depart_envoye:
+		_depart_envoye = true
+		Reseau.envoyer(Protocole.msg("depart"))
+		_lbl_info.text = "Duel contre %s : chante plus fort qu'eux !" % Reseau.adversaire.get("nom", "un vrai joueur")
+		_calculer_bonus_score(true)
+		_compte_a_rebours()
+
+
+func _sur_message(m: Dictionary) -> void:
+	match m["t"]:
+		"pret":
+			_adv_pret = true
+			if not Reseau.hote:
+				Reseau.envoyer(Protocole.msg("pret"))  # l'hôte est arrivé après : on le redit
+			_verifier_depart()
+		"depart":
+			if not Reseau.hote and not _depart_envoye:
+				_depart_envoye = true
+				_lbl_info.text = "Duel contre %s : chante plus fort qu'eux !" % Reseau.adversaire.get("nom", "un vrai joueur")
+				_calculer_bonus_score(true)
+				_compte_a_rebours()
+		"pousse":
+			if Reseau.hote and not termine:
+				_jp.distant(m)
+				jauge = _jp.jauge
+		"etat":
+			if not Reseau.hote and not termine:
+				_jp.recaler(m)
+				jauge = _jp.jauge
+		"fin":
+			if not Reseau.hote:
+				jauge = _jp.finale(m)
+				_attente_fin = false
+				_finir()
+		"evt":
+			_effet_adverse(str(m["e"]))
+
+
+func _effet_adverse(e: String) -> void:
+	if termine:
+		return
+	var nom: String = Reseau.adversaire.get("nom", "En face")
+	match e:
+		"tifo":
+			_annonce("%s déploie son tifo !" % nom, Ui.ROUGE)
+			_decor.secousse_eux = 1.0
+		"ola":
+			_annonce("%s réussit une ola !" % nom, Ui.ROUGE)
+			_decor.secousse_eux = 1.0
+		"combo":
+			_decor.secousse_eux = 0.6
+		"ola_ratee":
+			_annonce("En face, l'ola s'emmêle !", Ui.VERT)
+
+
+## Toutes les 0,1 s, l'hôte envoie la jauge (et le dernier geste reçu) à l'invité.
+func _tick_en_ligne(delta: float) -> void:
+	if not Reseau.hote:
+		return
+	_t_etat -= delta
+	if _t_etat <= 0.0:
+		_t_etat = 0.1
+		Reseau.envoyer_vite(_jp.etat(temps))
+
+
+## Invité : son temps est écoulé, il attend la jauge finale de l'hôte (3 s au plus).
+func _attendre_fin() -> void:
+	if _attente_fin or termine:
+		return
+	_attente_fin = true
+	_lbl_info.text = "Coup de sifflet… on compte les voix"
+	await get_tree().create_timer(3.0).timeout
+	if not termine:
+		_finir()
+
+
+func _sur_adversaire_parti() -> void:
+	if termine:
+		return
+	_annonce("L'adversaire a quitté le duel", Ui.JAUNE)
+	_forfait = pret  # parti avant le coup d'envoi : pas de victoire
+	if not pret:
+		Game.aller(Game.SCENE_SALON, Game.params)
+		return
+	_finir()
+
+
 # ------------------------------------------------------------------ fin
 
 func _finir() -> void:
+	if termine:
+		return
 	termine = true
 	_notes.clear()
 	_panneau_ola.visible = false
-	var gagne := jauge > 0.0
+	if en_ligne and Reseau.hote and not _forfait:
+		Reseau.envoyer(Protocole.msg("fin", {"j": _jp.jauge}))
+	var gagne := jauge > 0.0 or _forfait
 	var b := _buts(fiche["m"])
 	var equipe_gagne := b.x >= 0 and b.x > b.y and str(fiche["m"].get("status", "")) in ["LIVE", "HALFTIME", "FINISHED"]
 	var gain_mode: float = Game.MODES_SUIVI.get(mode, {}).get("gain", 1.0)
@@ -699,7 +853,12 @@ func _finir() -> void:
 	var v := Ui.vbox(12)
 	v.alignment = BoxContainer.ALIGNMENT_CENTER
 	pan.add_child(v)
-	var t := Ui.label("VICTOIRE D'AMBIANCE !" if gagne else "LA TRIBUNE D'EN FACE A GAGNÉ…", 50 if gagne else 38, Ui.JAUNE if gagne else Ui.ROSE, true, 10)
+	var titre_fin := "VICTOIRE D'AMBIANCE !" if gagne else "LA TRIBUNE D'EN FACE A GAGNÉ…"
+	if _forfait:
+		titre_fin = "VICTOIRE : L'ADVERSAIRE EST PARTI"
+	elif en_ligne and not gagne:
+		titre_fin = "%s A GAGNÉ…" % str(Reseau.adversaire.get("nom", "L'ADVERSAIRE")).to_upper()
+	var t := Ui.label(titre_fin, 50 if gagne else 38, Ui.JAUNE if gagne else Ui.ROSE, true, 10)
 	t.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	v.add_child(t)
 	var lignes := [
@@ -723,14 +882,26 @@ func _finir() -> void:
 	var retour := Ui.bouton("Retour à la carte", Ui.BLEU, 30)
 	retour.custom_minimum_size = Vector2(380, 90)
 	var p: Dictionary = Game.params
-	retour.pressed.connect(func(): Game.aller(Game.SCENE_CARTE, {"niveau": p.get("niveau", "monde"), "continent": p.get("continent", ""), "pays": p.get("pays", "")}))
+	retour.pressed.connect(func():
+		if en_ligne:
+			Reseau.quitter()
+		Game.aller(Game.SCENE_CARTE, {"niveau": p.get("niveau", "monde"), "continent": p.get("continent", ""), "pays": p.get("pays", "")}))
 	hb.add_child(retour)
-	var rejouer := Ui.bouton("Rejouer", Ui.VERT, 30)
+	var rejouer := Ui.bouton("Revanche" if en_ligne else "Rejouer", Ui.VERT, 30)
 	Ui.colorer_bouton(rejouer, Ui.VERT, true)
 	rejouer.custom_minimum_size = Vector2(260, 90)
-	rejouer.pressed.connect(func(): Game.aller(Game.SCENE_DUEL, p))
+	if en_ligne:
+		# retour au salon, toujours connecté : l'hôte relance quand les deux sont prêts
+		rejouer.disabled = not Reseau.connecte()
+		rejouer.pressed.connect(func(): Game.aller(Game.SCENE_SALON, {"match_id": p.get("match_id", ""), "camp": p.get("camp", "home"), "mode": p.get("mode", "stade")}))
+	else:
+		rejouer.pressed.connect(func(): Game.aller(Game.SCENE_DUEL, p))
 	hb.add_child(rejouer)
 	v.add_child(hb)
+	if "--quitter" in OS.get_cmdline_user_args():
+		# test automatique : on écrit le résultat puis on ferme
+		print("RESULTAT duel en_ligne=%s hote=%s jauge=%.2f gagne=%s forfait=%s" % [en_ligne, Reseau.hote if en_ligne else false, jauge, gagne, _forfait])
+		get_tree().create_timer(1.5).timeout.connect(func(): get_tree().quit())
 	pan.pivot_offset = Vector2(460, 330)
 	pan.scale = Vector2.ONE * 0.6
 	pan.create_tween().tween_property(pan, "scale", Vector2.ONE, 0.35).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)

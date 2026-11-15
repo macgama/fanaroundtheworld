@@ -44,6 +44,9 @@ et, plus tard, sur mobile.
    - **Poussée** (3 min) : pose des supporters avec tes cartes (**clic** sur une carte ou
      **1 à 4**, puis clic dans ta moitié). Ils poussent le ballon et chantent devant la
      tribune d'en face. Un but ou la tribune conquise, et c'est gagné.
+   **Contre un vrai joueur** : bouton **CONTRE UN JOUEUR** dans *Ta tribune*, ou **En ligne**
+   sur la carte. Un ami sur le même réseau trouve ton salon tout seul (ou tape ton adresse IP) ;
+   avec Steam, invitation d'amis et recherche d'adversaire (voir `docs/multijoueur.md`).
 7. **Buvette** (bouton en bas de la carte) : petit boulot de vendeur, 60 s pour gagner
    des Jetons. Les FANZZY font la queue avec leur commande :
    - **1 à 4** (ou clic) : poser une boisson, un hot-dog, des frites, une gaufre ;
@@ -84,6 +87,7 @@ Supprime ce fichier pour recommencer à zéro.
 | `scripts/club/` | Règles du fan club (`fan_club.gd` : membres, cotisations, buvette, écharpes) |
 | `scripts/carte/` | La carte du monde dessinée |
 | `scripts/buvette/` | Règles du petit boulot de buvette (commandes, paye), sans affichage |
+| `scripts/reseau/` | Règles du jeu en ligne (messages, jauge partagée) ; le transport est l'autoload `Reseau` |
 | `scripts/ui/` | Style commun de l'interface (couleurs, boutons, icônes) |
 | `assets/fanzzy/` | Les FANZZY (personnages jouables, avec leurs skins cosmétiques), importés depuis thebestfan.online |
 | `assets/stades/` | Images des stades et des tribunes |
