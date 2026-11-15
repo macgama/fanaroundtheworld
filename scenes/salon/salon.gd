@@ -90,6 +90,10 @@ func _ready() -> void:
 	var salon := str(p.get("salon", ""))
 	if salon == "hote":
 		Reseau.creer_salon_lan()
+	elif salon == "steam":
+		Reseau.creer_salon_steam(false)  # test : salon d'amis Steam
+	elif salon == "steam-trouver":
+		Reseau.trouver_adversaire_steam()
 	elif not salon.is_empty():
 		Reseau.rejoindre_lan(salon)
 	if Reseau.hote:
@@ -129,6 +133,8 @@ func _maj() -> void:
 	if not is_inside_tree():
 		return
 	_statut.text = Reseau.statut
+	if "--journal" in OS.get_cmdline_user_args():
+		print("SALON [%s%s] %s" % [Reseau.transport, " hôte" if Reseau.hote else "", Reseau.statut])
 	_remplir_carte(_carte_moi, Game.fan_club_nom, Game.couleurs_club(), Game.equipe.map(func(id): return Game.skin_de(str(id))), "Toi · niveau %d" % Game.niveau())
 	var adv := Reseau.adversaire
 	if adv.is_empty():
