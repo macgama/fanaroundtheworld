@@ -18,12 +18,56 @@ skins, à la main. On anime donc l'image entière :
 - des **accessoires dessinés** : écharpe aux couleurs du club, notes de
   musique, confettis, nuage de pluie, symboles de colère, étincelles ;
 - le **changement d'expression et de pose** (neutre, pousse, joie, depit,
-  colere), plus le clignement des yeux.
+  colere), plus le clignement des yeux ;
+- des **bras qui bougent vraiment** dans les poses bras levés (voir plus bas).
 
-Avantage : chaque nouveau FANZZY ou skin est animé sans aucun travail.
-Limite : entre deux poses, les bras ne bougent pas en continu (on passe d'une
-image à l'autre). Si un FANZZY phare mérite mieux, on pourra lui faire plus tard un rig Skeleton2D dédié avec la même interface
-(`jouer(action)`).
+Avantage : chaque nouveau FANZZY ou skin est animé sans travail à la main.
+Si un FANZZY phare mérite mieux, on pourra lui faire plus tard un rig
+Skeleton2D dédié avec la même interface (`jouer(action)`).
+
+## Bras qui bougent
+
+Les poses `joie` (deux bras levés) et `pousse` (un bras levé) sont pliées
+autour des épaules par le shader : le bras tourne à l'épaule, l'avant-bras
+tourne un peu plus (effet « bras caoutchouc » cartoon). Rien ne bouge sous les
+épaules ni dans la bande de la tête, et comme c'est une déformation continue
+de l'image, il n'y a ni trou ni découpe visible.
+
+Pour savoir où sont la tête, les épaules et les poings, on analyse les images
+une fois pour toutes :
+
+```sh
+python3 tools/fanzzy/analyser_bras.py assets/fanzzy/demo        # échantillon du dépôt
+python3 tools/fanzzy/analyser_bras.py /chemin/vers/etats --jobs 8
+```
+
+L'outil écrit un `bras.json` à côté des expressions de chaque skin (yeux du
+calque `cligne`, tête retrouvée dans la pose, silhouette sans la tête : ce qui
+monte au-dessus des yeux, ce sont les bras). Sans `bras.json`, le FANZZY garde
+l'animation d'avant (bras fixes dans la pose).
+
+![Bras qui bougent](animation-fanzzy-bras.gif)
+
+Ce que ça donne :
+
+- **agiter l'écharpe** : bras levés, l'écharpe aux couleurs du club tendue
+  entre les deux poings (derrière la tête), les bras balancent ensemble de
+  gauche à droite et les pans flottent ;
+- **lever les bras** (nouvelle action) : les bras montent depuis le côté,
+  puis restent en V avec les poings qui tremblent ;
+- **applaudir** : les mains se rejoignent au-dessus de la tête sur le tempo ;
+- **célébrer** : poings levés en alternance ; **sauter** : les bras battent
+  avec le saut ;
+- **chanter** / **encourager** (pose `pousse`) : le bras levé suit le
+  balancement, ou frappe sur le temps ;
+- à chaque changement de pose, les bras levés retombent sur le côté avant de
+  changer d'image, et remontent dans la nouvelle pose.
+
+Limites : l'analyse se fait sur la silhouette, sans IA. Sur les FANZZY très
+peu humains (objets, véhicules) ou quand un chapeau très large touche les
+bras, un bras peut ne pas être repéré (il reste alors fixe) ou entraîner un
+bout de chapeau avec lui. Les bras baissés de la pose `neutre` ne bougent pas
+(ils sont collés au corps).
 
 ## Actions
 
@@ -31,9 +75,10 @@ image à l'autre). Si un FANZZY phare mérite mieux, on pourra lui faire plus ta
 |---|---|---|---|
 | `repos` | neutre | boucle | respiration, léger balancement |
 | `chanter` | pousse | boucle | balancement en rythme, notes de musique |
-| `agiter_echarpe` | pousse | boucle | écharpe du club au-dessus de la tête |
-| `applaudir` | joie | boucle | petits rebonds et étincelles à chaque clap |
-| `encourager` | pousse | boucle | coups de poing sur le temps |
+| `lever_bras` | joie | boucle | bras qui montent, poings qui tremblent |
+| `agiter_echarpe` | joie (sinon pousse) | boucle | écharpe tendue entre les poings, bras qui balancent |
+| `applaudir` | joie | boucle | mains qui se rejoignent au-dessus de la tête, étincelles |
+| `encourager` | pousse | boucle | poing levé sur le temps |
 | `sauter` | joie | boucle | sauts cartoon (écrasé, étiré) |
 | `celebrer` | joie | 3 s | grands sauts, éclat, confettis |
 | `depit` | depit | 3 s | s'affaisse, se ternit, nuage de pluie |
@@ -82,7 +127,8 @@ Pour le duel d'ambiance, il suffit de brancher les événements du duel sur
 
 1. les expressions au format de l'export TheBestFan :
    `<id>/<evolution>/<skin>/<etat>.webp`, avec `etat` parmi `neutre`, `pousse`,
-   `joie`, `depit`, `colere` et `cligne` (yeux fermés, facultatif). Si le skin
+   `joie`, `depit`, `colere` et `cligne` (yeux fermés, facultatif), plus
+   `bras.json` (repères des bras, voir plus haut). Si le skin
    n'a pas l'expression, celle du skin `base` est prise ;
 2. formats simples acceptés aussi : `<id>/<etat>.webp`, `<id>_<etat>.webp`,
    `<id>-<etat>.webp` ;
@@ -106,13 +152,13 @@ séquence tourne en boucle ; les boutons du haut testent chaque action.
 Pour en faire une vidéo :
 
 ```sh
-godot --path . --write-movie demo.avi --fixed-fps 30 --quit-after 985 \
+godot --path . --write-movie demo.avi --fixed-fps 30 --quit-after 1130 \
     res://scenes/fanzzy/demo_animations.tscn
 ```
 
 ## Performances
 
-Chaque FANZZY = une grille de 6 x 18 cases (partagée entre images de même
+Chaque FANZZY = une grille de 20 x 44 cases (partagée entre images de même
 taille) et un matériau. Une tribune de 18 FANZZY tourne sans problème en rendu
 Compatibilité. Pour de très grandes foules (plusieurs centaines), il faudra
 passer les rangées du fond en sprites simples sans shader.

@@ -52,7 +52,7 @@ Supprime ce fichier pour recommencer à zéro.
 | `assets/fonts/` | Polices (libres de droits uniquement) |
 | `assets/audio/` | Chants (`chants/`) et bruitages (`sfx/`) |
 | `data/` | Données JSON : carte (`carte/`), noms fictifs des clubs (`clubs/`), matchs d'exemple hors ligne (`exemple/`) |
-| `tools/` | Scripts de préparation des données (carte du monde) |
+| `tools/` | Scripts de préparation des données (carte du monde, repérage des bras des FANZZY) |
 | `mods/` | Format des mods Steam Workshop (noms et couleurs de clubs) |
 | `docs/` | Game design et maquettes |
 | `tests/` | Tests automatiques (`godot --headless --path . --script tests/test_logique.gd`) |

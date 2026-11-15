@@ -11,6 +11,11 @@ extends Node2D
 ## nuage) et on change d'expression (neutre, pousse, joie, depit, colere)
 ## quand les images d'expression sont disponibles.
 ##
+## Les bras levés des poses `joie` et `pousse` bougent vraiment : l'outil
+## tools/fanzzy/analyser_bras.py repère têtes, épaules et poings (bras.json),
+## et le shader plie l'image autour des épaules (agiter l'écharpe, applaudir
+## au-dessus de la tête, poings levés, bras qui montent en début d'action).
+##
 ## Origine du nœud = entre les pieds. Tout est en pixels de l'image d'origine :
 ## on règle la taille à l'écran avec `scale`.
 ##
@@ -32,6 +37,7 @@ const ACTIONS := {
 	&"applaudir": {"etat": &"joie", "duree": 0.0},
 	&"encourager": {"etat": &"pousse", "duree": 0.0},
 	&"celebrer": {"etat": &"joie", "duree": 3.0},
+	&"lever_bras": {"etat": &"joie", "duree": 0.0},
 	&"depit": {"etat": &"depit", "duree": 3.0},
 	&"huer": {"etat": &"colere", "duree": 2.5},
 }
@@ -39,6 +45,8 @@ const ETATS: Array[StringName] = [&"neutre", &"pousse", &"joie", &"depit", &"col
 const DOSSIERS_PAR_DEFAUT: PackedStringArray = ["res://assets/fanzzy/sprites", "res://assets/fanzzy/demo"]
 const SHADER := preload("res://scenes/fanzzy/fanzzy_deformation.gdshader")
 const TRANSITION := 0.22 # secondes de fondu entre deux actions
+const LEVER_BRAS := 0.8 # angle (radians, vers l'extérieur) des bras qui se lèvent ou retombent
+const DESCENTE := 0.16 # secondes pour baisser les bras avant de changer de pose
 
 ## Identifiant de catalogue : si `texture` est vide, les images sont chargées
 ## au lancement (pratique pour poser un FANZZY dans une scène à la main).
@@ -50,7 +58,8 @@ const TRANSITION := 0.22 # secondes de fondu entre deux actions
 		texture = v
 		_preparer()
 ## Images d'expression facultatives : clés = ETATS, plus &"cligne" (calque des
-## yeux fermés, posé par-dessus l'expression neutre le temps d'un clignement).
+## yeux fermés, posé par-dessus l'expression neutre le temps d'un clignement)
+## et &"bras" (contenu de bras.json : repères des bras levés par pose).
 @export var expressions: Dictionary = {}
 ## Action en cours (au lancement : action de départ). Pour en changer, appeler jouer().
 @export var action: StringName = &"repos"
@@ -79,6 +88,11 @@ var _emission := 0.0
 var _cligne_dans := 3.0
 var _rng := RandomNumberGenerator.new()
 var _dernier_battement := -1
+var _derriere: Node2D # écharpe tendue entre les poings, dessinée derrière le corps
+var _bras := {} # repères des bras de la pose affichée (vide = bras immobiles)
+var _pieds_y := 0.0
+var _descente := 0.0 # > 0 : les bras retombent avant de passer à _etat_suivant
+var _etat_suivant: StringName
 
 static var _grilles := {}
 static var _rects := {}
@@ -122,6 +136,9 @@ static func charger_images(id: String, evolution := "e1", skin := "base",
 		var t := _premier_existant(motifs)
 		if t:
 			r[etat] = t
+	var bras := _lire_bras(id, evolution, skin, dossiers)
+	if not bras.is_empty():
+		r[&"bras"] = bras
 	if r.has(&"neutre"):
 		r[&"base"] = r[&"neutre"]
 	else:
@@ -132,6 +149,19 @@ static func charger_images(id: String, evolution := "e1", skin := "base",
 		if t:
 			r[&"base"] = t
 	return r
+
+
+## Repères des bras (bras.json, voir tools/fanzzy/analyser_bras.py).
+static func _lire_bras(id: String, evolution: String, skin: String,
+		dossiers: PackedStringArray) -> Dictionary:
+	for d in dossiers:
+		for s in [skin, "base"]:
+			var chemin := "%s/%s/%s/%s/bras.json" % [d, id, evolution, s]
+			if FileAccess.file_exists(chemin):
+				var v = JSON.parse_string(FileAccess.get_file_as_string(chemin))
+				if v is Dictionary:
+					return v
+	return {}
 
 
 static func _premier_existant(motifs: PackedStringArray) -> Texture2D:
@@ -165,17 +195,50 @@ func jouer(nouvelle: StringName, duree := -1.0, delai := 0.0) -> void:
 	if delai > 0.0:
 		get_tree().create_timer(delai).timeout.connect(jouer.bind(nouvelle, duree, 0.0))
 		return
+	var avant := expression()
 	_p_depart = _p.duplicate()
 	_fondu = 0.0
 	action = nouvelle
 	_t_action = 0.0
 	_duree = ACTIONS[nouvelle]["duree"] if duree < 0.0 else duree
-	_appliquer_expression(ACTIONS[nouvelle]["etat"])
+	var etat := expression()
+	if _descente > 0.0:
+		_etat_suivant = etat # les bras sont déjà en train de retomber
+		return
+	if etat != avant and not _bras.is_empty() and _descente <= 0.0:
+		# bras levés qui retombent d'abord, puis changement de pose
+		_descente = DESCENTE
+		_etat_suivant = etat
+		return
+	_changer_pose(etat, etat != avant)
+
+
+func _changer_pose(etat: StringName, lever: bool) -> void:
+	_appliquer_expression(etat)
+	if lever and not _bras.is_empty():
+		# les bras arrivent de côté et montent pendant le fondu
+		_p_depart.bg = -LEVER_BRAS if _bras.has("g") else 0.0
+		_p_depart.bd = LEVER_BRAS if _bras.has("d") else 0.0
+		_p_depart.cg = 0.0
+		_p_depart.cd = 0.0
 
 
 ## Expression actuellement affichée (utile pour le duel).
 func expression() -> StringName:
-	return ACTIONS[action]["etat"]
+	return _etat_action(action)
+
+
+## Pose utilisée par une action. Agiter l'écharpe se fait bras levés (joie)
+## quand les deux bras ont été repérés, sinon d'une main (pousse).
+func _etat_action(a: StringName) -> StringName:
+	if a == &"agiter_echarpe" and _a_deux_bras(&"joie"):
+		return &"joie"
+	return ACTIONS[a]["etat"]
+
+
+func _a_deux_bras(etat: StringName) -> bool:
+	var b: Dictionary = expressions.get(&"bras", {}).get(String(etat), {})
+	return b.has("g") and b.has("d") and expressions.has(etat)
 
 
 func _preparer() -> void:
@@ -189,6 +252,11 @@ func _preparer() -> void:
 		_effets.name = "Effets"
 		add_child(_effets)
 		_effets.draw.connect(_dessiner_effets)
+		_derriere = Node2D.new()
+		_derriere.name = "Derriere"
+		add_child(_derriere)
+		move_child(_derriere, 0) # derrière le corps
+		_derriere.draw.connect(_dessiner_derriere)
 		_mat = ShaderMaterial.new()
 		_mat.shader = SHADER
 		_corps.material = _mat
@@ -201,6 +269,7 @@ func _preparer() -> void:
 	var brut := _zone_utile(texture)
 	# origine entre les pieds : bas de la zone utile, milieu de l'image
 	_rect = Rect2(brut.position.x - texture.get_size().x * 0.5, -brut.size.y, brut.size.x, brut.size.y)
+	_pieds_y = brut.end.y
 	_corps.mesh = _grille(texture.get_size(), brut.end.y)
 	_corps.texture = texture
 	_paupieres.mesh = _corps.mesh
@@ -219,13 +288,14 @@ static func _zone_utile(tex: Texture2D) -> Rect2:
 	return _rects[cle]
 
 
-## Grille 6 x 18 partagée par toutes les images de même taille.
+## Grille 20 x 44 partagée par toutes les images de même taille (assez fine
+## pour plier les bras).
 static func _grille(taille: Vector2, pieds_y: float) -> ArrayMesh:
 	var cle := "%d_%d_%d" % [taille.x, taille.y, pieds_y]
 	if _grilles.has(cle):
 		return _grilles[cle]
-	var nx := 6
-	var ny := 18
+	var nx := 20
+	var ny := 44
 	var v := PackedVector2Array()
 	var uv := PackedVector2Array()
 	var idx := PackedInt32Array()
@@ -256,6 +326,22 @@ func _appliquer_expression(etat: StringName) -> void:
 	if t == null:
 		t = texture
 	_corps.texture = t
+	# repères des bras, passés dans le repère du maillage (origine aux pieds)
+	_bras = {}
+	var b: Dictionary = expressions.get(&"bras", {}).get(String(etat), {})
+	if t != texture and not b.is_empty() and expressions.get(etat) == t:
+		var o := Vector2(-t.get_size().x * 0.5, -_pieds_y)
+		_bras.tete = Vector2(b.cx, b.epaule) + o
+		_bras.demi = float(b.demi)
+		for c in ["g", "d"]:
+			if b.has(c):
+				_bras[c] = {"poing": Vector2(b[c].poing[0], b[c].poing[1]) + o, "long": float(b[c].long)}
+	var lg: float = _bras.g.long if _bras.has("g") else 0.0
+	var ld: float = _bras.d.long if _bras.has("d") else 0.0
+	_mat.set_shader_parameter(&"bras_long", Vector2(lg, ld))
+	if not _bras.is_empty():
+		_mat.set_shader_parameter(&"bras_tete", _bras.tete)
+		_mat.set_shader_parameter(&"bras_demi", _bras.demi)
 
 
 func _process(delta: float) -> void:
@@ -273,6 +359,19 @@ func _process(delta: float) -> void:
 		for c in cible:
 			if _p_depart.has(c) and typeof(cible[c]) == TYPE_FLOAT:
 				cible[c] = lerpf(_p_depart[c], cible[c], k)
+	if _descente > 0.0:
+		_descente -= delta
+		var k := smoothstep(0.0, 1.0, 1.0 - _descente / DESCENTE)
+		cible.bg = lerpf(cible.bg, -LEVER_BRAS if _bras.has("g") else 0.0, k)
+		cible.bd = lerpf(cible.bd, LEVER_BRAS if _bras.has("d") else 0.0, k)
+		cible.cg = lerpf(cible.cg, 0.0, k)
+		cible.cd = lerpf(cible.cd, 0.0, k)
+		if _descente <= 0.0:
+			_p = cible
+			_p_depart = cible.duplicate()
+			_fondu = 0.0
+			_changer_pose(_etat_suivant, true)
+			cible = _p_depart.duplicate()
 	_p = cible
 	_corps.position = Vector2(_p.x, -_p.saut)
 	_corps.modulate = _p.teinte
@@ -282,10 +381,13 @@ func _process(delta: float) -> void:
 	_mat.set_shader_parameter(&"onde_phase", _p.onde_phase)
 	_mat.set_shader_parameter(&"eclat", _p.eclat)
 	_mat.set_shader_parameter(&"terne", _p.terne)
+	_mat.set_shader_parameter(&"bras_angle", Vector2(_p.bg, _p.bd))
+	_mat.set_shader_parameter(&"bras_coude", Vector2(_p.cg, _p.cd))
 	_clignement(delta)
 	_animer_particules(delta)
 	queue_redraw()
 	_effets.queue_redraw()
+	_derriere.queue_redraw()
 
 
 func _clignement(delta: float) -> void:
@@ -310,7 +412,15 @@ func _pose(a: StringName, t: float) -> Dictionary:
 		"x": 0.0, "saut": 0.0, "penche": 0.0, "sx": 1.0, "sy": 1.0,
 		"onde": 0.0, "onde_phase": temps * 3.0, "eclat": 0.0, "terne": 0.0,
 		"teinte": Color.WHITE, "echarpe": 0.0,
+		# bras levés : rotation à l'épaule et au coude, vers l'extérieur (+)
+		# pour chaque côté ; convertis en angles écran à la fin
+		"bg": 0.0, "bd": 0.0, "cg": 0.0, "cd": 0.0,
 	}
+	var dehors_g := 0.0
+	var dehors_d := 0.0
+	var coude_g := 0.0
+	var coude_d := 0.0
+	var bat := sin(temps * TAU / beat)
 	# respiration de fond, toujours présente
 	var souffle := sin(temps * TAU * 0.35)
 	p.sy = 1.0 + 0.012 * souffle
@@ -318,33 +428,71 @@ func _pose(a: StringName, t: float) -> Dictionary:
 	p.penche = 0.012 * sin(temps * 0.9 + decalage * 40.0)
 	match a:
 		&"sauter":
-			_saut(p, fposmod(temps / (beat * 2.0), 1.0), 0.14 * e, h)
+			var c := fposmod(temps / (beat * 2.0), 1.0)
+			_saut(p, c, 0.14 * e, h)
+			# bras qui battent : ouverts à l'appel, serrés en l'air
+			var b := 0.28 * e * cos(c * TAU)
+			dehors_g = b
+			dehors_d = b
+			coude_g = 0.2 * e * sin(c * TAU)
+			coude_d = coude_g
 		&"celebrer":
 			_saut(p, fposmod(temps / (beat * 1.5), 1.0), 0.22 * e, h)
 			p.penche += 0.06 * e * sin(temps * TAU / (beat * 3.0))
 			p.onde = 0.025 * e
 			p.onde_phase = temps * 14.0
 			p.eclat = 0.5 + 0.5 * sin(temps * 9.0)
+			# poings levés en alternance
+			dehors_g = 0.3 * e * sin(temps * TAU / beat)
+			dehors_d = -dehors_g
+			coude_g = 0.35 * e * sin(temps * TAU / beat - 0.9)
+			coude_d = -coude_g
 		&"chanter":
 			var bal := sin(temps * PI / beat) # un balancement toutes les deux mesures
 			p.penche = 0.05 * e * bal
 			p.sy *= 1.0 + 0.03 * e * absf(sin(temps * PI / beat))
 			p.x = 0.015 * h * e * bal
+			# le bras levé suit le balancement
+			dehors_g = -0.2 * e * bal
+			dehors_d = 0.2 * e * bal
+			coude_g = -0.15 * e * sin(temps * PI / beat - 0.7)
+			coude_d = -coude_g
 		&"agiter_echarpe":
 			p.sy *= 1.0 + 0.025 * e * absf(sin(temps * TAU / beat))
 			p.penche = 0.025 * e * sin(temps * TAU / beat)
 			p.echarpe = 1.0
+			# les deux bras balancent ensemble de gauche à droite
+			dehors_g = -0.32 * e * bat
+			dehors_d = 0.32 * e * bat
+			coude_g = -0.3 * e * sin(temps * TAU / beat - 1.1)
+			coude_d = -coude_g
 		&"applaudir":
 			var choc := pow(1.0 - fposmod(temps / (beat * 0.5), 1.0), 3.0)
 			p.sy *= 1.0 - 0.035 * e * choc
 			p.sx *= 1.0 + 0.03 * e * choc
 			p.saut = 0.015 * h * e * (1.0 - choc)
+			# mains qui se rejoignent au-dessus de la tête sur chaque clap
+			var claque := pow(1.0 - absf(fposmod(temps / (beat * 0.5) + 0.5, 1.0) - 0.5) * 2.0, 2.0)
+			dehors_g = -_bras_claque("g") * claque * minf(e, 1.0)
+			dehors_d = -_bras_claque("d") * claque * minf(e, 1.0)
 		&"encourager":
 			var poing := pow(sin(ph * PI), 6.0) # coup de poing sur le temps
 			p.sy *= 1.0 + 0.06 * e * poing
 			p.sx *= 1.0 - 0.03 * e * poing
 			p.penche = 0.03 * e * sin(temps * PI / beat)
 			p.saut = 0.03 * h * e * poing
+			# poing levé qui frappe sur le temps
+			dehors_g = 0.35 * e * (poing - 0.4)
+			dehors_d = dehors_g
+			coude_g = 0.4 * e * (poing - 0.4)
+			coude_d = coude_g
+		&"lever_bras":
+			# bras en V, poings qui tremblent de joie
+			p.sy *= 1.0 + 0.02 * e * absf(sin(temps * TAU / beat))
+			dehors_g = 0.06 * e * sin(temps * 17.0)
+			dehors_d = 0.06 * e * sin(temps * 17.0 + 1.3)
+			coude_g = 0.12 * e * sin(temps * 17.0 + 0.8)
+			coude_d = 0.12 * e * sin(temps * 17.0 + 2.1)
 		&"depit":
 			var k := smoothstep(0.0, 0.6, t)
 			p.sy *= 1.0 - 0.07 * k
@@ -356,7 +504,50 @@ func _pose(a: StringName, t: float) -> Dictionary:
 			p.penche = 0.05 * e * sin(temps * PI / beat) + 0.008 * sin(temps * 47.0)
 			p.sy *= 1.0 + 0.02 * e * absf(sin(temps * TAU / beat))
 			p.teinte = Color(1.0, 0.82, 0.8)
+	# + = vers l'extérieur ; à l'écran, le bras gauche part vers -x
+	p.bg = -dehors_g
+	p.bd = dehors_d
+	p.cg = -coude_g
+	p.cd = coude_d
 	return p
+
+
+## Angle (vers l'intérieur) qui amène le poing d'un bras au-dessus du centre
+## de la tête : sert à applaudir bras levés.
+func _bras_claque(c: String) -> float:
+	if not _bras.has(c):
+		return 0.0
+	var cote := -1.0 if c == "g" else 1.0
+	var pivot: Vector2 = _bras.tete + Vector2(cote * _bras.demi * 1.55, 0)
+	var v: Vector2 = _bras[c].poing - pivot
+	var cible := Vector2(_bras.tete.x + cote * _bras.demi * 0.25, _bras[c].poing.y) - pivot
+	return clampf(absf(v.angle_to(cible)), 0.0, 0.6)
+
+
+## Même pliage que le shader (bras puis buste) pour placer un accessoire
+## sur un point de l'image, par exemple l'écharpe dans les poings.
+func _deformer(q: Vector2) -> Vector2:
+	if not _bras.is_empty():
+		for c in ["g", "d"]:
+			if not _bras.has(c):
+				continue
+			var cote := -1.0 if c == "g" else 1.0
+			var tete: Vector2 = _bras.tete
+			var demi: float = _bras.demi
+			var lg: float = _bras[c].long
+			var wx := smoothstep(demi * 0.95, demi * 1.55, (q.x - tete.x) * cote)
+			var monte := tete.y - q.y
+			var wy := smoothstep(0.0, lg * 0.3, monte)
+			var wc := smoothstep(lg * 0.4, lg * 0.8, monte)
+			var a: float = ((_p.bg if c == "g" else _p.bd) * wy + (_p.cg if c == "g" else _p.cd) * wc) * wx
+			var pivot := Vector2(tete.x + cote * demi * 1.55, tete.y)
+			q = pivot + (q - pivot).rotated(a)
+	var h := _rect.size.y
+	var t := clampf(-q.y / h, 0.0, 1.0)
+	q.x += _p.penche * h * t * t
+	q.y += absf(_p.penche) * h * t * t * 0.25
+	q.x += sin(_p.onde_phase + t * 2.5 * TAU) * _p.onde * h * 0.5 * t * t
+	return q * Vector2(_p.sx, _p.sy) + Vector2(_p.x, -_p.saut)
 
 
 ## Saut cartoon : on s'écrase, on décolle en s'étirant, on atterrit en s'écrasant.
@@ -395,12 +586,66 @@ func _draw() -> void:
 func _dessiner_effets() -> void:
 	if _corps == null:
 		return
-	if _p.get("echarpe", 0.0) > 0.0:
+	if _p.get("echarpe", 0.0) > 0.0 and not _echarpe_tendue():
 		_dessiner_echarpe()
 	if action == &"depit":
 		_dessiner_nuage(smoothstep(0.2, 0.8, _t_action))
 	for q in _particules:
 		_dessiner_particule(q)
+
+
+func _echarpe_tendue() -> bool:
+	return _bras.has("g") and _bras.has("d")
+
+
+## Écharpe tendue entre les deux poings levés, derrière la tête : elle suit
+## les bras, se creuse au milieu et ses pans flottent.
+func _dessiner_derriere() -> void:
+	if _corps == null or _p.get("echarpe", 0.0) <= 0.0 or not _echarpe_tendue():
+		return
+	var h := _rect.size.y
+	var temps := Time.get_ticks_msec() / 1000.0 + decalage
+	var a := _deformer(_bras.g.poing + Vector2(0, h * 0.012))
+	var b := _deformer(_bras.d.poing + Vector2(0, h * 0.012))
+	var ep := h * 0.05
+	var n := 16
+	var haut := PackedVector2Array()
+	var bas := PackedVector2Array()
+	var normale := (b - a).orthogonal().normalized()
+	if normale.y > 0.0:
+		normale = -normale
+	for i in n + 1:
+		var u := float(i) / n
+		var creux := sin(u * PI) * (h * 0.035 + sin(temps * 8.0 - u * 5.0) * h * 0.012 * energie)
+		var m := a.lerp(b, u) + Vector2(0, creux)
+		haut.append(m + normale * ep * 0.5)
+		bas.append(m - normale * ep * 0.5)
+	var c1 := couleurs_echarpe[0] if couleurs_echarpe.size() > 0 else Color.WHITE
+	var c2 := couleurs_echarpe[1] if couleurs_echarpe.size() > 1 else c1.lightened(0.6)
+	var contour := Color(0.08, 0.06, 0.12)
+	var d := _derriere
+	# pans qui pendent sous chaque poing
+	for k in 2:
+		var p0: Vector2 = a if k == 0 else b
+		var dir := -1.0 if k == 0 else 1.0
+		var flot := sin(temps * 7.0 + k * 2.0) * h * 0.025 * energie
+		var pend := PackedVector2Array([
+			p0 + Vector2(-ep * 0.45, 0), p0 + Vector2(ep * 0.45, 0),
+			p0 + Vector2(ep * 0.45 + flot + dir * h * 0.02, h * 0.2),
+			p0 + Vector2(-ep * 0.45 + flot + dir * h * 0.02, h * 0.2)])
+		d.draw_colored_polygon(pend, c1 if k == 0 else c2)
+		d.draw_polyline(pend + PackedVector2Array([pend[0]]), contour, 3.0)
+		for f in 4:
+			var fx := pend[3].lerp(pend[2], (f + 0.5) / 4.0)
+			d.draw_line(fx, fx + Vector2(0, h * 0.025), c2 if k == 0 else c1, 4.0)
+	for i in n:
+		d.draw_colored_polygon(PackedVector2Array([haut[i], haut[i + 1], bas[i + 1], bas[i]]),
+			c1 if (i / 2) % 2 == 0 else c2)
+	var bord := haut.duplicate()
+	for i in range(n, -1, -1):
+		bord.append(bas[i])
+	bord.append(haut[0])
+	d.draw_polyline(bord, contour, 4.0)
 
 
 func _haut_tete() -> Vector2:
