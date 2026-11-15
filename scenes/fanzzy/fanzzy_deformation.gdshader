@@ -13,7 +13,36 @@ uniform float onde_freq = 2.5;     // nombre de vagues sur la hauteur
 uniform float eclat = 0.0;         // 0..1 éclaircit (célébration)
 uniform float terne = 0.0;         // 0..1 désature et assombrit (dépit)
 
+// Bras levés (poses joie / pousse), repérés par tools/fanzzy/analyser_bras.py.
+// Chaque bras est plié autour de son épaule : rien ne bouge sous l'épaule ni
+// dans la bande de la tête, la rotation monte en douceur vers le poing.
+// Angles en radians à l'écran (+ = le haut du bras part vers la droite).
+uniform vec2 bras_tete = vec2(0.0, -600.0); // x du centre de la tête, y des épaules
+uniform float bras_demi = 50.0;             // demi-largeur de la tête
+uniform vec2 bras_long = vec2(0.0);         // longueur du bras gauche, droit (0 = pas de bras)
+uniform vec2 bras_angle = vec2(0.0);        // rotation à l'épaule (gauche, droit)
+uniform vec2 bras_coude = vec2(0.0);        // rotation en plus pour l'avant-bras
+
+vec2 plier_bras(vec2 p, float cote, float longueur, float angle, float coude) {
+	if (longueur <= 0.0) {
+		return p;
+	}
+	float dehors = (p.x - bras_tete.x) * cote;
+	float wx = smoothstep(bras_demi * 0.95, bras_demi * 1.55, dehors);
+	float monte = bras_tete.y - p.y;
+	float wy = smoothstep(0.0, longueur * 0.3, monte);
+	float wc = smoothstep(longueur * 0.4, longueur * 0.8, monte);
+	float a = (angle * wy + coude * wc) * wx;
+	vec2 pivot = vec2(bras_tete.x + cote * bras_demi * 1.55, bras_tete.y);
+	vec2 v = p - pivot;
+	float c = cos(a);
+	float s = sin(a);
+	return pivot + vec2(v.x * c - v.y * s, v.x * s + v.y * c);
+}
+
 void vertex() {
+	VERTEX = plier_bras(VERTEX, -1.0, bras_long.x, bras_angle.x, bras_coude.x);
+	VERTEX = plier_bras(VERTEX, 1.0, bras_long.y, bras_angle.y, bras_coude.y);
 	float t = clamp(-VERTEX.y / hauteur, 0.0, 1.0); // 0 aux pieds, 1 en haut
 	float t2 = t * t;
 	VERTEX.x += penche * hauteur * t2;

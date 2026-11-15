@@ -4,7 +4,7 @@ extends Control
 ## permettent de tester chaque action à la main.
 ##
 ## Pour enregistrer une vidéo :
-##   godot --path . --write-movie demo.avi --fixed-fps 30 --quit-after 1100 \
+##   godot --path . --write-movie demo.avi --fixed-fps 30 --quit-after 1130 \
 ##       res://scenes/fanzzy/demo_animations.tscn
 
 const IDS_BLEUS: PackedStringArray = ["AN22", "SU16", "MT14", "MT46", "AN57", "SU12", "AN40", "SU15", "AN2"]
@@ -14,10 +14,11 @@ const GROS_PLANS: PackedStringArray = ["AN2", "AN57", "GD17", "MT33"]
 ## [secondes, légende, action bleus, action jaunes]. "ola" et "but" sont spéciaux.
 const SEQUENCE := [
 	[3.0, "Repos : respiration et petits balancements", &"repos", &"repos"],
-	[4.0, "Chanter : balancement en rythme, notes de musique", &"chanter", &"chanter"],
-	[4.0, "Agiter l'écharpe aux couleurs du club", &"agiter_echarpe", &"agiter_echarpe"],
-	[3.0, "Applaudir sur le tempo", &"applaudir", &"applaudir"],
-	[3.0, "Encourager : coups de poing sur le temps", &"encourager", &"encourager"],
+	[3.0, "Lever les bras : ils montent, les poings tremblent", &"lever_bras", &"lever_bras"],
+	[4.5, "Agiter l'écharpe : tendue entre les poings, bras qui balancent", &"agiter_echarpe", &"agiter_echarpe"],
+	[3.5, "Applaudir au-dessus de la tête, sur le tempo", &"applaudir", &"applaudir"],
+	[3.5, "Chanter : le bras levé suit le balancement", &"chanter", &"chanter"],
+	[3.0, "Encourager : poing levé sur le temps", &"encourager", &"encourager"],
 	[4.5, "La ola traverse les deux tribunes", &"ola", &"ola"],
 	[4.0, "BUT ! Célébration d'un côté, dépit de l'autre", &"celebrer", &"depit"],
 	[3.0, "Les visiteurs huent l'arbitre", &"repos", &"huer"],
