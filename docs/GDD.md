@@ -155,6 +155,15 @@ Pas de boutique en argent réel en plus du PASS pour le moment.
 
 Prototype : 150 Jetons au départ, coût du billet et du trajet, gains à la fin du duel.
 
+Premier petit boulot jouable : **vendeur à la buvette** (60 s). Les FANZZY font la queue
+avec une commande (boisson, hot-dog, frites, gaufre) et une jauge de patience. Commande
+juste : 1 Jeton (+1 par tranche de 3 articles), +1 de pourboire si le service est rapide,
++1 toutes les 5 commandes justes d'affilée. Erreur ou client lassé : rien et la série
+repart à zéro. À 30 s, la mi-temps : le rush (commandes plus grosses, moins de patience).
+Un bon service rapporte autour de 25 à 45 Jetons, moins qu'un bon duel au stade ; au-delà
+de 3 services dans la journée, la paye est divisée par deux pour que le petit boulot
+complète les duels sans les remplacer. Chaque client servi donne aussi 2 XP au fan club.
+
 ## 8. Le PASS saisonnier
 
 - Inspiré des passes saisonniers des jeux free-to-play : paliers gagnés avec l'XP.

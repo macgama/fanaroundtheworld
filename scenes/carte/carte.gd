@@ -183,8 +183,8 @@ func _construire_interface() -> void:
 	bas.set_anchors_preset(Control.PRESET_CENTER_BOTTOM)
 	bas.offset_top = -112
 	bas.offset_bottom = -20
-	bas.offset_left = -470
-	bas.offset_right = 470
+	bas.offset_left = -590
+	bas.offset_right = 590
 	bas.alignment = BoxContainer.ALIGNMENT_CENTER
 	add_child(bas)
 	var b_carte := Ui.bouton("Carte", Ui.JAUNE, 30)
@@ -197,6 +197,11 @@ func _construire_interface() -> void:
 	b_tribune.tooltip_text = "Choisir les FANZZY de ta tribune et leurs skins"
 	b_tribune.pressed.connect(func(): Game.aller(Game.SCENE_TRIBUNE, {"retour": "carte", "niveau": niveau, "continent": continent, "pays": pays}))
 	bas.add_child(b_tribune)
+	var b_buvette := Ui.bouton("Buvette", Ui.ROSE, 30)
+	b_buvette.custom_minimum_size = Vector2(210, 88)
+	b_buvette.tooltip_text = "Petit boulot : vendeur à la buvette (60 s) pour gagner des Jetons"
+	b_buvette.pressed.connect(func(): Game.aller(Game.SCENE_BUVETTE, {"niveau": niveau, "continent": continent, "pays": pays}))
+	bas.add_child(b_buvette)
 	for t in ["Fan Club", "PASS"]:
 		var b := Ui.bouton(t, Ui.NUIT_CLAIR, 30)
 		b.custom_minimum_size = Vector2(210, 88)
