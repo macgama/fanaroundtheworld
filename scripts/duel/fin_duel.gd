@@ -33,9 +33,18 @@ static func enregistrer(gagne: bool, perf: float, fiche: Dictionary, camp: Strin
 	if gagne:
 		Game.duels_gagnes += 1
 	Game.noter_duel_club()
+	g["popularite"] = Game.noter_duel_favori(fiche.get("m", {}), camp, gagne, mode_suivi)
+	g["equipe"] = fiche.get("dom" if camp == "home" else "ext", {}).get("nom", "")
 	Game.gagner_jetons(g["jetons"])
 	Game.ajouter_xp(g["xp"])
 	return g
+
+
+## Ligne « Popularité » du panneau de fin, ou [] si l'équipe n'est pas un favori.
+static func ligne_popularite(g: Dictionary) -> Array:
+	if int(g.get("popularite", 0)) <= 0:
+		return []
+	return [["Popularité · %s (favori)" % g.get("equipe", ""), "+%d" % int(g["popularite"])]]
 
 
 ## Panneau de fin : titre, lignes [libellé, valeur], boutons Retour / Rejouer.

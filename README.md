@@ -50,6 +50,13 @@ et, plus tard, sur mobile.
    - **ENTRÉE** ou **ESPACE** : servir · **RETOUR ARRIÈRE** : vider le plateau ;
    - à 30 s, c'est la mi-temps : le rush. Après 3 services dans la journée, la paye est divisée par deux.
 
+**Mes équipes** (bouton *Équipes* en bas de la carte) : choisis **un club favori par pays**
+et **une équipe nationale** (ou directement depuis la fiche d'un match : *En faire mon club favori*).
+Tes duels, pronos et déplacements pour elles, et les récoltes de ton fan club, leur donnent des
+**points de popularité**. Le classement des équipes les plus suivies (clubs du monde, par pays,
+sélections) mélange tes points et ceux des autres supporters, simulés en attendant le jeu en ligne.
+Un favori peut changer une fois par semaine. Détails dans [docs/equipes-favorites.md](docs/equipes-favorites.md).
+
 **Le fan club** (bouton *Fan Club* en bas de la carte) :
 
 - **Recruter** des FANZZY : gratuit, mais le nombre de places dépend du niveau du club
@@ -70,10 +77,10 @@ Supprime ce fichier pour recommencer à zéro.
 
 | Dossier | Contenu |
 | --- | --- |
-| `scenes/` | Scènes Godot (`.tscn`) et leurs scripts, un sous-dossier par écran (`main/`, `carte/`, `voyage/`, `tribune/`, `duel/`, `pronostics/`, `club/`, `buvette/`) |
+| `scenes/` | Scènes Godot (`.tscn`) et leurs scripts, un sous-dossier par écran (`main/`, `carte/`, `voyage/`, `tribune/`, `duel/`, `pronostics/`, `favoris/`, `club/`, `buvette/`) |
 | `scripts/autoload/` | Scripts globaux chargés au démarrage (`Game` : état du jeu et sauvegarde, `Donnees` : vrais matchs) |
 | `scripts/donnees/` | Noms fictifs (`fiction.gd`), placement sur la carte (`geo.gd`), fiche d'un match |
-| `scripts/jeu/` | Règles du jeu sans écran (pronostics) |
+| `scripts/jeu/` | Règles du jeu sans écran (pronostics, équipes favorites et popularité) |
 | `scripts/club/` | Règles du fan club (`fan_club.gd` : membres, cotisations, buvette, écharpes) |
 | `scripts/carte/` | La carte du monde dessinée |
 | `scripts/buvette/` | Règles du petit boulot de buvette (commandes, paye), sans affichage |
@@ -87,7 +94,7 @@ Supprime ce fichier pour recommencer à zéro.
 | `tools/` | Scripts de préparation des données (carte du monde, repérage des bras des FANZZY) |
 | `mods/` | Format des mods Steam Workshop (noms et couleurs de clubs) |
 | `docs/` | Game design et maquettes |
-| `tests/` | Tests automatiques (`godot --headless --path . --script tests/test_logique.gd`, `tests/test_pronostics.gd`, `tests/test_club.gd`, `tests/test_buvette.gd`, `tests/test_audio.gd`, et le parcours complet : `godot --headless --path . res://tests/test_pronostics_jeu.tscn -- --hors-ligne`) |
+| `tests/` | Tests automatiques (`godot --headless --path . --script tests/test_logique.gd`, `tests/test_pronostics.gd`, `tests/test_club.gd`, `tests/test_supporters.gd`, `tests/test_buvette.gd`, `tests/test_audio.gd`, et le parcours complet : `godot --headless --path . res://tests/test_pronostics_jeu.tscn -- --hors-ligne`) |
 
 ## Règles du projet
 
