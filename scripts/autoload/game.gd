@@ -4,6 +4,8 @@ extends Node
 ## sa tribune de FANZZY et la navigation entre les écrans.
 
 signal pronostics_resolus(liste: Array)
+## Une équipe favorite a gagné des points de popularité (pour les petites annonces).
+signal popularite_gagnee(cle: String, points: int, raison: String)
 
 const VERSION := "0.3.0"
 const CHEMIN_SAUVEGARDE := "user://sauvegarde.json"
@@ -19,6 +21,7 @@ const SCENE_BUVETTE := "res://scenes/buvette/buvette.tscn"
 const SCENE_CLUB := "res://scenes/club/club.tscn"
 const SCENE_CREATION_CLUB := "res://scenes/club/creation_club.tscn"
 const SCENE_PRONOS := "res://scenes/pronostics/pronostics.tscn"
+const SCENE_FAVORIS := "res://scenes/favoris/favoris.tscn"
 
 ## Paramètres passés d'un écran à l'autre (match choisi, camp supporté…).
 var params: Dictionary = {}
@@ -46,6 +49,8 @@ var pronos_finis: Array = []       # derniers pronostics résolus (les plus réc
 var serie_pronos := 0              # bons résultats d'affilée
 var meilleure_serie := 0
 const MAX_HISTORIQUE_PRONOS := 40
+## Équipes favorites (un club par pays + une sélection) et popularité (voir Supporters).
+var supporters: Dictionary = Supporters.vide()
 
 ## Où suivre le match. Au stade : billet + trajet, tampon du stade, plus de Jetons.
 const MODES_SUIVI := {
@@ -100,7 +105,7 @@ func _outils_de_test() -> void:
 				p["auto"] = true  # Arène / Poussée : ton camp joue tout seul (démo)
 		var scenes := {"carte": SCENE_CARTE, "voyage": SCENE_VOYAGE, "tribune": SCENE_TRIBUNE, "duel": SCENE_DUEL,
 			"arene": SCENE_ARENE, "poussee": SCENE_POUSSEE,
-			"pronos": SCENE_PRONOS, "club": SCENE_CLUB, "creation": SCENE_CREATION_CLUB, "buvette": SCENE_BUVETTE}
+			"pronos": SCENE_PRONOS, "favoris": SCENE_FAVORIS, "club": SCENE_CLUB, "creation": SCENE_CREATION_CLUB, "buvette": SCENE_BUVETTE}
 		aller.call_deferred(scenes.get(args["scene"], SCENE_TITRE), p)
 	if args.has("vitesse"):
 		Engine.time_scale = float(args["vitesse"])  # accélère une partie de démo
@@ -131,6 +136,10 @@ func xp_dans_niveau() -> float:
 func ajouter_xp(n: int) -> void:
 	xp += n
 	sauver()
+
+
+func gain_suivi(mode: String) -> float:
+	return float(MODES_SUIVI.get(mode, {}).get("gain", 1.0))
 
 
 func cout_suivi(mode: String, distance_km: float) -> int:
@@ -225,6 +234,7 @@ func renvoyer(id: String) -> bool:
 
 func recolter_caisse() -> int:
 	var n := FanClub.recolter(club, maintenant())
+	_annoncer(Supporters.noter_club(supporters, n, maintenant()), "club")
 	gagner_jetons(n)
 	return n
 
@@ -317,6 +327,9 @@ func resoudre_pronostics() -> void:
 		serie_pronos = int(r["serie"])
 		meilleure_serie = maxi(meilleure_serie, serie_pronos)
 		jetons += int(r["jetons"])
+		var pop := Supporters.noter_prono(supporters, p, r, maintenant)
+		p["popularite"] = pop
+		_annoncer(pop, "prono")
 		pronos.erase(id)
 		pronos_finis.push_front(p)
 		resolus.append(p)
@@ -327,6 +340,54 @@ func resoudre_pronostics() -> void:
 	pronos_finis = pronos_finis.slice(0, MAX_HISTORIQUE_PRONOS)
 	sauver()
 	pronostics_resolus.emit(resolus)
+
+
+# ---------------------------------------------------------------- équipes favorites
+
+func choisir_club_favori(pays: String, id: String) -> bool:
+	var ok := Supporters.choisir_club(supporters, pays, id, maintenant())
+	if ok:
+		sauver()
+	return ok
+
+
+func retirer_club_favori(pays: String) -> bool:
+	var ok := Supporters.retirer_club(supporters, pays, maintenant())
+	if ok:
+		sauver()
+	return ok
+
+
+func choisir_nation_favorite(pays: String) -> bool:
+	var ok := Supporters.choisir_nation(supporters, pays, maintenant())
+	if ok:
+		sauver()
+	return ok
+
+
+## Camps du match tenus par une de tes équipes favorites.
+func camps_favoris(m: Dictionary) -> Array:
+	return Supporters.camps_favoris(supporters, m)
+
+
+## Fin d'un duel (tous modes) : points pour l'équipe soutenue si c'est un favori.
+func noter_duel_favori(m: Dictionary, camp: String, gagne: bool, mode_suivi: String) -> int:
+	var n := Supporters.noter_duel(supporters, m, camp, gagne, gain_suivi(mode_suivi), maintenant())
+	_annoncer(n, "duel", Supporters.cle_equipe(m.get(camp, {}), Fiction.est_selection(m)))
+	return n
+
+
+## Départ pour suivre un match (stade, écran, pub, maison).
+func noter_suivi_favori(m: Dictionary, camp: String, mode_suivi: String) -> int:
+	var n := Supporters.noter_suivi(supporters, m, camp, mode_suivi, maintenant())
+	_annoncer(n, "suivi", Supporters.cle_equipe(m.get(camp, {}), Fiction.est_selection(m)))
+	return n
+
+
+func _annoncer(points: int, raison: String, cle := "") -> void:
+	if points > 0:
+		sauver()
+		popularite_gagnee.emit(cle, points, raison)
 
 
 # ---------------------------------------------------------------- FANZZY
@@ -400,6 +461,7 @@ func sauver() -> void:
 		"pronos_finis": pronos_finis,
 		"serie_pronos": serie_pronos,
 		"meilleure_serie": meilleure_serie,
+		"supporters": supporters,
 	}
 	var f := FileAccess.open(CHEMIN_SAUVEGARDE, FileAccess.WRITE)
 	if f:
@@ -433,6 +495,7 @@ func charger() -> void:
 	pronos_finis = d.get("pronos_finis", [])
 	serie_pronos = int(d.get("serie_pronos", 0))
 	meilleure_serie = int(d.get("meilleure_serie", 0))
+	supporters = Supporters.reparer(d.get("supporters", null))
 	# Un FANZZY retiré du catalogue ne doit pas casser la tribune.
 	for i in equipe.size():
 		if fanzzy_par_id(str(equipe[i])).is_empty():
@@ -458,4 +521,5 @@ func reinitialiser() -> void:
 	pronos_finis = []
 	serie_pronos = 0
 	meilleure_serie = 0
+	supporters = Supporters.vide()
 	equipe = equipe_par_defaut()

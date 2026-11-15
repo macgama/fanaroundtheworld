@@ -3,7 +3,9 @@ extends Node
 ##
 ## Lit les fichiers publiés par le relais macgama/fanaroundtheworld-data :
 ##  - index.json puis days/AAAA-MM-JJ.json : calendrier, de la veille à J+7 (toutes les 3 h) ;
-##  - live.json : matchs en cours, relu chaque minute.
+##  - live.json : matchs en cours, relu chaque minute ;
+##  - teams.json : clubs de chaque championnat (relu une fois par jour au plus),
+##    pour choisir son club favori même s'il ne joue pas cette semaine.
 ## Un match a le même `id` partout : la version live remplace celle du calendrier.
 ## Tout est gardé en cache (user://cache) pour jouer hors ligne. Sans réseau ni
 ## cache, un petit jeu d'exemple (data/exemple) permet quand même de tester.
@@ -33,6 +35,8 @@ var _fusion: Array = []           # liste triée, recalculée à chaque mise à 
 var _fusion_par_id: Dictionary = {}
 var _requetes_en_cours := 0
 var _jours_recus: Dictionary = {}
+var _equipes: Dictionary = {}     # id compétition -> [{id, name}] (teams.json)
+const PERIODE_EQUIPES := 24 * 3600
 
 
 func _ready() -> void:
@@ -53,6 +57,7 @@ func _ready() -> void:
 	if not OS.has_feature("hors_ligne") and not "--hors-ligne" in OS.get_cmdline_user_args():
 		rafraichir_calendrier()
 		rafraichir_live()
+		rafraichir_equipes()
 
 
 # ------------------------------------------------------------------ lecture
@@ -93,7 +98,57 @@ func rafraichir_live() -> void:
 	_requete(URL_LIVE + "?t=%d" % int(Time.get_unix_time_from_system() / 30), _sur_live)
 
 
-func _requete(url: String, rappel: Callable) -> void:
+func rafraichir_equipes() -> void:
+	var t := FileAccess.get_modified_time(DOSSIER_CACHE + "teams.json")
+	if t > 0 and Time.get_unix_time_from_system() - t < PERIODE_EQUIPES:
+		return
+	_requete(URL_BASE + "teams.json", _sur_equipes, true)
+
+
+func _sur_equipes(d: Dictionary) -> void:
+	_ecrire_cache("teams.json", d)
+	_lire_equipes(d)
+	mis_a_jour.emit()
+
+
+func _lire_equipes(d: Variant) -> void:
+	if d is Dictionary and d.get("competitions") is Dictionary:
+		_equipes = d["competitions"]
+
+
+## Clubs connus d'un pays : liste du relais + clubs vus dans les matchs.
+## Renvoie [{id, name}] (name = vrai nom, jamais affiché : utiliser Fiction).
+func clubs_du_pays(pays: String) -> Array:
+	var vus: Dictionary = {}
+	for comp_id in _equipes:
+		if str(Geo.info_competition(comp_id).get("pays", "")) == pays:
+			for e in _equipes[comp_id]:
+				vus[str(e.get("id", ""))] = e
+	for id in Geo.pays_des_equipes:
+		if Geo.pays_des_equipes[id] == pays and not vus.has(id):
+			vus[id] = {"id": id, "name": ""}
+	vus.erase("")
+	return vus.values()
+
+
+## Pays qui ont au moins un club connu.
+func pays_avec_clubs() -> Array:
+	var p: Dictionary = {}
+	for comp_id in _equipes:
+		var k := str(Geo.info_competition(comp_id).get("pays", ""))
+		if k != "" and not _equipes[comp_id].is_empty():
+			p[k] = true
+	for id in Geo.pays_des_equipes:
+		p[Geo.pays_des_equipes[id]] = true
+	return p.keys()
+
+
+## Pour les tests : remplace la liste des clubs.
+func injecter_equipes(d: Dictionary) -> void:
+	_lire_equipes(d)
+
+
+func _requete(url: String, rappel: Callable, discret := false) -> void:
 	var r := HTTPRequest.new()
 	r.timeout = 20.0
 	add_child(r)
@@ -104,6 +159,8 @@ func _requete(url: String, rappel: Callable) -> void:
 		en_chargement = _requetes_en_cours > 0
 		r.queue_free()
 		if res != HTTPRequest.RESULT_SUCCESS or code != 200:
+			if discret:
+				return  # fichier facultatif : ne change pas l'état « hors ligne »
 			hors_ligne = true
 			push_warning("Données : échec %s (résultat %d, code %d)" % [url, res, code])
 			mis_a_jour.emit()
@@ -216,6 +273,7 @@ func _charger_cache() -> void:
 			if d is Dictionary:
 				for m in d.get("matches", []):
 					_calendrier[str(m["id"])] = m
+	_lire_equipes(_lire_json(DOSSIER_CACHE + "teams.json"))
 	var live: Variant = _lire_json(DOSSIER_CACHE + "live.json")
 	if live is Dictionary:
 		for m in live.get("matches", []):

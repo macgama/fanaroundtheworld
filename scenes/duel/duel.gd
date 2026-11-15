@@ -675,6 +675,7 @@ func _finir() -> void:
 	if gagne:
 		Game.duels_gagnes += 1
 	Game.noter_duel_club()  # l'après-match fait tourner la buvette
+	var pop := Game.noter_duel_favori(fiche["m"], camp, gagne, mode)
 	Game.gagner_jetons(jetons)
 	Game.ajouter_xp(xp)
 	if gagne:
@@ -709,7 +710,7 @@ func _finir() -> void:
 		["Bonus « ton équipe gagne vraiment »", "x1,3" if equipe_gagne else "non"],
 		["Jetons gagnés", "+%d" % jetons],
 		["XP du fan club", "+%d" % xp],
-	]
+	] + FinDuel.ligne_popularite({"popularite": pop, "equipe": (fiche["dom"] if camp == "home" else fiche["ext"])["nom"]})
 	for l in lignes:
 		var h := Ui.hbox(10)
 		var a := Ui.label(l[0], 24, Ui.BLANC)

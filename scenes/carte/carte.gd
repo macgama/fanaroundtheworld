@@ -192,37 +192,43 @@ func _construire_interface() -> void:
 	bas.set_anchors_preset(Control.PRESET_CENTER_BOTTOM)
 	bas.offset_top = -112
 	bas.offset_bottom = -20
-	bas.offset_left = -700
-	bas.offset_right = 700
+	bas.offset_left = -800
+	bas.offset_right = 800
 	bas.alignment = BoxContainer.ALIGNMENT_CENTER
 	add_child(bas)
 	var b_carte := Ui.bouton("Carte", Ui.JAUNE, 30)
 	Ui.colorer_bouton(b_carte, Ui.JAUNE, true)
-	b_carte.custom_minimum_size = Vector2(210, 88)
+	b_carte.custom_minimum_size = Vector2(196, 88)
 	b_carte.pressed.connect(func(): _aller_monde())
 	bas.add_child(b_carte)
 	var b_tribune := Ui.bouton("FANZZY", Ui.VIOLET, 30)
-	b_tribune.custom_minimum_size = Vector2(210, 88)
+	b_tribune.custom_minimum_size = Vector2(196, 88)
 	b_tribune.tooltip_text = "Choisir les FANZZY de ta tribune et leurs skins"
 	b_tribune.pressed.connect(func(): Game.aller(Game.SCENE_TRIBUNE, {"retour": "carte", "niveau": niveau, "continent": continent, "pays": pays}))
 	bas.add_child(b_tribune)
 	var b_pronos := Ui.bouton("Pronos", Ui.ROSE, 30)
-	b_pronos.custom_minimum_size = Vector2(210, 88)
+	b_pronos.custom_minimum_size = Vector2(196, 88)
 	b_pronos.tooltip_text = "Tes pronostics sur les vrais matchs (gratuits, sans mise)"
 	b_pronos.pressed.connect(func(): Game.aller(Game.SCENE_PRONOS, {"niveau": niveau, "continent": continent, "pays": pays}))
 	bas.add_child(b_pronos)
 	var b_buvette := Ui.bouton("Buvette", Ui.ROSE, 30)
-	b_buvette.custom_minimum_size = Vector2(210, 88)
+	b_buvette.custom_minimum_size = Vector2(196, 88)
 	b_buvette.tooltip_text = "Petit boulot : vendeur à la buvette (60 s) pour gagner des Jetons"
 	b_buvette.pressed.connect(func(): Game.aller(Game.SCENE_BUVETTE, {"niveau": niveau, "continent": continent, "pays": pays}))
 	bas.add_child(b_buvette)
+	var b_fav := Ui.bouton("Équipes", Ui.VERT, 30)
+	Ui.colorer_bouton(b_fav, Ui.VERT, true)
+	b_fav.custom_minimum_size = Vector2(196, 88)
+	b_fav.tooltip_text = "Tes équipes favorites et le classement des plus suivies"
+	b_fav.pressed.connect(func(): Game.aller(Game.SCENE_FAVORIS, {"niveau": niveau, "continent": continent, "pays": pays}))
+	bas.add_child(b_fav)
 	var b_club := Ui.bouton("Fan Club", Ui.ROSE, 30)
-	b_club.custom_minimum_size = Vector2(210, 88)
+	b_club.custom_minimum_size = Vector2(196, 88)
 	b_club.tooltip_text = "Membres, cotisations, buvette et écharpes"
 	b_club.pressed.connect(func(): Game.aller(Game.SCENE_CLUB if Game.club_cree() else Game.SCENE_CREATION_CLUB))
 	bas.add_child(b_club)
 	var b_pass := Ui.bouton("PASS", Ui.NUIT_CLAIR, 30)
-	b_pass.custom_minimum_size = Vector2(210, 88)
+	b_pass.custom_minimum_size = Vector2(196, 88)
 	b_pass.disabled = true
 	b_pass.tooltip_text = "Bientôt"
 	bas.add_child(b_pass)
@@ -560,6 +566,10 @@ func _carte_match(f: Dictionary) -> Control:
 	var pas := Ui.pastille(FicheMatch.statut_court(f), Ui.ROUGE if direct else (Ui.VERT if statut == "SCHEDULED" else Color("#6b6699")), 15)
 	pas.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	droite.add_child(pas)
+	if not Game.camps_favoris(f["m"]).is_empty():
+		var fav := Ui.pastille("★ Favori", Ui.JAUNE, 14, true)
+		fav.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		droite.add_child(fav)
 	if Game.pronos.has(str(f["id"])):
 		var pr: Dictionary = Game.pronos[str(f["id"])]
 		var tag := Ui.pastille("Prono %d-%d" % [int(pr["dom"]), int(pr["ext"])], Ui.ROSE, 14)
@@ -577,6 +587,10 @@ func _carte_match(f: Dictionary) -> Control:
 func _choisir_match(id: String) -> void:
 	match_choisi = id
 	camp = "home"
+	# Ton équipe favorite est choisie d'office (tu peux toujours changer de camp).
+	var favs := Game.camps_favoris(Donnees.match_par_id(id))
+	if favs.size() == 1:
+		camp = favs[0]
 	var pr := Game.prono_de(id)
 	_prono_dom = int(pr.get("dom", 1))
 	_prono_ext = int(pr.get("ext", 0))
@@ -645,9 +659,10 @@ func _afficher_fiche() -> void:
 	# camp supporté
 	v.add_child(Ui.label("Tu supportes", 22, Ui.BLANC, true))
 	var hc := Ui.hbox(10)
+	var favs := Game.camps_favoris(m)
 	for cote in ["home", "away"]:
 		var e: Dictionary = f["dom"] if cote == "home" else f["ext"]
-		var b := Ui.bouton(e["nom"], Ui.BLEU if camp == cote else Ui.NUIT_CLAIR, 20)
+		var b := Ui.bouton(("★ " if cote in favs else "") + e["nom"], Ui.BLEU if camp == cote else Ui.NUIT_CLAIR, 20)
 		b.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		b.clip_text = true
 		b.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
@@ -657,6 +672,7 @@ func _afficher_fiche() -> void:
 			_afficher_fiche())
 		hc.add_child(b)
 	v.add_child(hc)
+	v.add_child(_bloc_favori(f))
 
 	# où suivre le match
 	v.add_child(Ui.label("Où suivre le match ?", 22, Ui.BLANC, true))
@@ -862,6 +878,7 @@ func _sur_pronos_resolus(liste: Array) -> void:
 func _partir(f: Dictionary, cout: int) -> void:
 	if not Game.depenser(cout):
 		return
+	Game.noter_suivi_favori(f["m"], camp, mode_suivi)
 	var p := {
 		"match_id": f["id"], "camp": camp, "mode": mode_suivi, "cout": cout,
 		"niveau": niveau, "continent": continent, "pays": pays,
@@ -870,6 +887,52 @@ func _partir(f: Dictionary, cout: int) -> void:
 		Game.aller(Game.SCENE_VOYAGE, p)
 	else:
 		Game.aller(Game.SCENE_TRIBUNE, p)
+
+
+## Sous « Tu supportes » : popularité gagnée, ou bouton pour en faire un favori.
+func _bloc_favori(f: Dictionary) -> Control:
+	var m: Dictionary = f["m"]
+	var sel := Fiction.est_selection(m)
+	var e: Dictionary = m.get(camp, {})
+	var nom: String = (f["dom"] if camp == "home" else f["ext"])["nom"]
+	var cle := Supporters.cle_equipe(e, sel)
+	var s := Game.supporters
+	if cle == "":
+		return Ui.label("Équipe de jeunes : pas de favori possible ici.", 16, Ui.GRIS)
+	if Supporters.est_favori(s, cle):
+		var pts := "+%d (stade) · " % Supporters.POINTS_SUIVI["stade"] if mode_suivi == "stade" else ""
+		var l := Ui.label("★ Ton équipe favorite : %sduel gagné +%d de popularité" % [pts, Supporters.points_duel(true, Game.gain_suivi(mode_suivi))], 16, Ui.JAUNE)
+		l.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		return l
+	var pays := Geo.cle_pays(str(e.get("name", ""))) if sel else str(Geo.pays_des_equipes.get(str(e.get("id", "")), ""))
+	if pays == "":
+		return Control.new()
+	var t := Game.maintenant()
+	var attente := Supporters.attente_nation(s, t) if sel else Supporters.attente_club(s, pays, t)
+	var actuel := ""
+	if sel and not s["nation"].is_empty():
+		actuel = Geo.nom_pays(str(s["nation"]["pays"]))
+	elif not sel and Supporters.club_du_pays(s, pays) != "":
+		actuel = Fiction.equipe({"id": Supporters.club_du_pays(s, pays)})["nom"]
+	var texte := "★ En faire mon équipe nationale" if sel else "★ En faire mon club favori (%s)" % Geo.nom_pays(pays)
+	var b := Ui.bouton(texte, Ui.VIOLET, 18)
+	b.tooltip_text = ("Remplace %s. " % actuel if actuel != "" else "") + "Tes duels, pronos et déplacements lui rapporteront de la popularité."
+	if attente > 0:
+		b.disabled = true
+		b.text = "Changement de favori possible dans %s" % _duree(attente)
+	b.pressed.connect(func():
+		var ok := Game.choisir_nation_favorite(pays) if sel else Game.choisir_club_favori(pays, str(e.get("id", "")))
+		if ok:
+			_rafraichir(false)
+			_afficher_fiche())
+	return b
+
+
+static func _duree(secondes: int) -> String:
+	var j := secondes / 86400
+	if j >= 1:
+		return "%d j" % j
+	return "%d h" % maxi(1, secondes / 3600)
 
 
 func _bloc_equipe(e: Dictionary) -> Control:
