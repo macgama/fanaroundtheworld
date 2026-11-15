@@ -57,7 +57,8 @@ static func vide() -> Dictionary:
 		"jour": "",         # date du compteur journalier
 		"du_jour": {},      # clé équipe -> points donnés aujourd'hui
 		"suivis": [],       # matchs déjà comptés comme « suivis »
-		"a_envoyer": [],    # file pour le futur classement en ligne
+		"a_envoyer": [],    # file envoyée au classement en ligne (autoload EnLigne)
+		"envoye": {},       # clé équipe -> points déjà comptés par le serveur
 	}
 
 

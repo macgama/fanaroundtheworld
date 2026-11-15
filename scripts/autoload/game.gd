@@ -27,6 +27,7 @@ const SCENE_FAVORIS := "res://scenes/favoris/favoris.tscn"
 const SCENE_SALON := "res://scenes/salon/salon.tscn"
 const SCENE_MISSIONS := "res://scenes/missions/missions.tscn"
 const SCENE_COLLECTION := "res://scenes/collection/collection.tscn"
+const SCENE_CLASSEMENT := "res://scenes/classement/classement.tscn"
 
 ## Paramètres passés d'un écran à l'autre (match choisi, camp supporté…).
 var params: Dictionary = {}
@@ -121,7 +122,7 @@ func _outils_de_test() -> void:
 		var scenes := {"carte": SCENE_CARTE, "voyage": SCENE_VOYAGE, "tribune": SCENE_TRIBUNE, "duel": SCENE_DUEL,
 			"arene": SCENE_ARENE, "poussee": SCENE_POUSSEE,
 			"pronos": SCENE_PRONOS, "missions": SCENE_MISSIONS, "favoris": SCENE_FAVORIS, "club": SCENE_CLUB, "creation": SCENE_CREATION_CLUB, "buvette": SCENE_BUVETTE,
-			"salon": SCENE_SALON, "collection": SCENE_COLLECTION}
+			"salon": SCENE_SALON, "collection": SCENE_COLLECTION, "classement": SCENE_CLASSEMENT}
 		if args.has("onglet"):
 			p["onglet"] = args["onglet"]  # collection : « carnet » ou « album »
 		if args.has("salon"):

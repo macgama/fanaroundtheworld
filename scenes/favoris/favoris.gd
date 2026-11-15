@@ -3,7 +3,8 @@ extends Control
 ## classement des équipes les plus suivies.
 ## Tes duels, pronos, déplacements et ton fan club donnent des points de
 ## popularité à tes favoris (règles dans scripts/jeu/supporters.gd).
-## Les autres supporters sont simulés en attendant le classement en ligne.
+## Les autres supporters viennent du classement en ligne (autoload EnLigne),
+## ou sont simulés hors ligne.
 
 const TOP := 30
 const ONGLETS := [["clubs", "Clubs du monde"], ["pays", "Clubs du pays"], ["nations", "Sélections"]]
@@ -72,6 +73,7 @@ func _ready() -> void:
 
 	_construire_choix()
 	Donnees.mis_a_jour.connect(_remplir)
+	EnLigne.mis_a_jour.connect(_remplir)
 	var p: Dictionary = Game.params
 	if str(p.get("pays", "")) != "":
 		_pays_classement = str(p["pays"])
@@ -101,7 +103,11 @@ static func info(cle: String) -> Dictionary:
 	return e
 
 
+## Points des autres supporters : ceux du classement en ligne quand le serveur
+## a répondu, sinon les supporters simulés.
 static func communaute(equipes: Array) -> Dictionary:
+	if EnLigne.a_des_donnees() and not EnLigne.equipes.is_empty():
+		return EnLigne.communaute()
 	var t := Game.maintenant()
 	var c := {}
 	for e in equipes:
@@ -280,7 +286,9 @@ func _remplir_droite() -> void:
 				_remplir_droite())
 			_droite.add_child(ob)
 			equipes = _clubs(_pays_classement)
-	var note := Ui.label("Les autres supporters sont simulés en attendant le classement en ligne.", 15, Ui.GRIS)
+	var en_ligne := not EnLigne.equipes.is_empty()
+	var note := Ui.label("Points de tous les joueurs, classement en ligne." if en_ligne
+		else "Hors ligne : les autres supporters sont simulés en attendant le classement en ligne.", 15, Ui.GRIS)
 	_droite.add_child(note)
 
 	var sc := ScrollContainer.new()

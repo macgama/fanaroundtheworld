@@ -24,16 +24,5 @@ Plafond : 200 points par équipe et par jour. Les Jetons du joueur ne changent p
 ## Le classement
 
 Trois vues : clubs du monde, clubs d'un pays, sélections. Score = points des autres supporters +
-tes points. Les autres supporters sont **simulés** pour l'instant (`Supporters.base_communaute` :
-une base stable par équipe, plus forte pour les clubs connus et les grandes nations, qui grandit chaque jour).
-
-## Passage en ligne (plus tard)
-
-Tout est déjà rangé pour être partagé :
-
-- chaque point gagné est noté dans `Game.supporters.a_envoyer` (`{equipe, points, raison, t}`) ;
-  il suffira de l'envoyer au serveur (par exemple un Worker Cloudflare avec le compte Steam du joueur)
-  puis de vider la file ;
-- le serveur publie un `popularite.json` (clé d'équipe → points de tous les joueurs) qui remplace
-  `base_communaute` dans `Supporters.classement(equipes, communaute, joueur)` ;
-- les clés d'équipe sont les mêmes partout : `af:85` pour un club, `nation:france` pour une sélection.
+tes points. Les autres supporters viennent du **classement en ligne** (voir [classement.md](classement.md)) ;
+sans réseau, ils sont simulés (`Supporters.base_communaute`).
