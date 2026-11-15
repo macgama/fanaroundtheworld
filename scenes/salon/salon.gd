@@ -219,8 +219,11 @@ func _remplir_carte(pan: PanelContainer, nom: String, couleurs: Array, skins: Ar
 	v.add_child(hz)
 	for s in skins:
 		var chemin := "res://assets/fanzzy/sprites/%s.webp" % s
-		var img := TextureRect.new()
-		img.texture = load(chemin) if not str(s).is_empty() and ResourceLoader.exists(chemin) else null
+		# FANZZY en 3D qui bouge (attente) quand son modèle existe, sinon l'image fixe
+		var img: TextureRect = Fanzzy3D.vignette(str(s)) if not str(s).is_empty() else null
+		if img == null:
+			img = TextureRect.new()
+			img.texture = load(chemin) if not str(s).is_empty() and ResourceLoader.exists(chemin) else null
 		img.custom_minimum_size = Vector2(150, 220)
 		img.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		img.size_flags_vertical = Control.SIZE_EXPAND_FILL
