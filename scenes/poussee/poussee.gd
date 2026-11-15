@@ -695,6 +695,8 @@ func _sur_message(m: Dictionary) -> void:
 				var res := -int(m["res"])
 				var textes := {"but": "BUUUUT !", "temps": "FIN DU TEMPS !", "forfait": "L'ADVERSAIRE EST PARTI !",
 					"tribune": "TRIBUNE CONQUISE !" if res > 0 else "ILS ONT CONQUIS TA TRIBUNE…"}
+				if m["r"] == "tribune":
+					tribune[1 if res > 0 else 0] = 0.0  # le dernier instantané a pu partir juste avant
 				en_cours = true
 				_finir(res, textes[m["r"]])
 
