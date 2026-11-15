@@ -38,7 +38,7 @@ des duels, pronos et matchs suivis quand l'écran du PASS sera codé.
 
 | Événement | Où | Exemples |
 |---|---|---|
-| `suivre` (clé = stade, ecran, pub, maison) | départ depuis la fiche d'un match | Suis 3 matchs, Abonné du virage |
+| `suivre` (clé = stade, ecran, pub, maison) | arrivée au stade, ou premier duel lancé depuis *Ta tribune* ; un même match ne compte qu'une fois | Suis 3 matchs, Abonné du virage |
 | `suivre_pays` (clé = pays) | idem | Tour du monde (3 pays différents) |
 | `nouveau_stade` | premier tampon d'un stade | Visite un nouveau stade |
 | `duel_joue` / `duel_gagne` (clé = duel, arene, poussee) | fin de partie, hors ligne et en ligne | Gagne un duel, Touche-à-tout |

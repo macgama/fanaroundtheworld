@@ -301,6 +301,10 @@ func _commandes_joueur(_delta: float) -> void:
 func _unhandled_input(ev: InputEvent) -> void:
 	if not en_cours or termine:
 		return
+	if ev.is_action_pressed("ui_cancel"):
+		FinDuel.pause(self, en_ligne)
+		get_viewport().set_input_as_handled()
+		return
 	if ev is InputEventMouseButton:
 		var mb := ev as InputEventMouseButton
 		if mb.button_index == MOUSE_BUTTON_LEFT:
@@ -879,7 +883,7 @@ func _finir() -> void:
 		["Ballons qui ont touché", str(touches[0])],
 		["Alliés nettoyés", str(nettoyes[0])],
 		["Bonus « ton équipe gagne vraiment »", "x1,3" if g["equipe_gagne"] else "non"],
-		["Jetons gagnés", "+%d" % g["jetons"]],
+		["Jetons gagnés" + (" (match rejoué : ÷2)" if g["rejoue"] else ""), "+%d" % g["jetons"]],
 		["XP du fan club", "+%d" % g["xp"]],
 	] + FinDuel.ligne_popularite(g), Game.SCENE_SALON if en_ligne and Reseau.connecte() else Game.SCENE_ARENE)
 
@@ -1207,7 +1211,10 @@ class HudBas extends Node2D:
 		draw_string(f, Vector2(x + 52, 32), t, HORIZONTAL_ALIGNMENT_LEFT, -1, 24, Ui.JAUNE if pret else Ui.BLANC)
 		if "roulade" in arene.actions:
 			var tr := "roulade prête" if j.recharge_roulade <= 0.0 else "roulade %.1f s" % j.recharge_roulade
-			draw_string(f, Vector2(x + 52, -10), tr, HORIZONTAL_ALIGNMENT_LEFT, -1, 20, Ui.GRIS)
+			# après le nom du FANZZY (les noms longs le chevauchaient)
+			var xr := maxf(x + 52, f.get_string_size(str(j.z.get("nom", "")).to_upper(), HORIZONTAL_ALIGNMENT_LEFT, -1, 26).x + 24)
+			draw_string_outline(f, Vector2(xr, -10), tr, HORIZONTAL_ALIGNMENT_LEFT, -1, 20, 6, Ui.CONTOUR)
+			draw_string(f, Vector2(xr, -10), tr, HORIZONTAL_ALIGNMENT_LEFT, -1, 20, Ui.BLANC if j.recharge_roulade <= 0.0 else Ui.GRIS)
 		var c: float = arene.charge_tir()
 		if c > 0.0:
 			draw_rect(Rect2(0, 48, 120 * c, 8), Ui.JAUNE if c >= 1.0 else Ui.BLANC)

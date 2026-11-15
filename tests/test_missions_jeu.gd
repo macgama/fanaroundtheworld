@@ -40,6 +40,12 @@ func _ready() -> void:
 	Game.noter_suivi_favori(m, "home", "stade")
 	_verifier("j_suivre1" in terminees, "match suivi")
 	_verifier(Game.missions["de_la_semaine"][2]["vus"] == ["france"], "pays du match noté (%s)" % str(Game.missions["de_la_semaine"][2]["vus"]))
+	# Le même match suivi une 2e fois (même gratuit, à la maison) ne fait pas avancer « Suis 3 matchs ».
+	var suivre3 := _mission("jour", "j_suivre3")
+	Game.missions["du_jour"].append(suivre3)
+	Game.noter_suivi_favori(m, "home", "maison")
+	_verifier(suivre3["progres"] == 0, "un même match ne compte qu'une fois (%d)" % suivre3["progres"])
+	Game.missions["du_jour"].erase(suivre3)
 	_verifier(Game.tamponner("stade:test-mission", {"nom": "Test"}), "premier tampon")
 	_verifier("s_stade" in terminees, "nouveau stade")
 	Game.tamponner("stade:test-mission", {"nom": "Test"})
@@ -50,6 +56,16 @@ func _ready() -> void:
 	_verifier(Game.missions["de_la_semaine"][1]["progres"] == 1, "service de buvette")
 	Game.noter_duel_favori(m, "home", true, "stade")
 	_verifier("j_ambiance" in terminees, "duel d'ambiance joué")
+
+	# Rejouer le même match : plein tarif 3 fois, puis la moitié des Jetons.
+	var facteurs := []
+	for i in 5:
+		facteurs.append(Game.noter_duel_match("test:rejeu"))
+	_verifier(facteurs == [1.0, 1.0, 1.0, 0.5, 0.5], "rejouer le même match (%s)" % str(facteurs))
+	_verifier(Game.noter_duel_match("test:autre") == 1.0, "un autre match repart à plein tarif")
+	var g0 := FinDuel.gains(true, 1.0, "pub")
+	var g1 := FinDuel.enregistrer(true, 1.0, {"id": "test:rejeu", "m": m}, "home", "pub")
+	_verifier(g1["rejoue"] and g1["jetons"] == int(round(g0["jetons"] * 0.5)), "Arène/Poussée : gains réduits (%s)" % str(g1))
 
 	var jetons := Game.jetons
 	var g := Game.recuperer_mission("jour", 0)

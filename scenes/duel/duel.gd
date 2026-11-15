@@ -448,6 +448,10 @@ func _pendant_ola(t: float) -> bool:
 func _unhandled_input(ev: InputEvent) -> void:
 	if termine or not pret:
 		return
+	if ev.is_action_pressed("ui_cancel"):
+		FinDuel.pause(self, en_ligne)
+		get_viewport().set_input_as_handled()
+		return
 	if ev is InputEventKey and ev.pressed and not ev.echo:
 		var k := (ev as InputEventKey).keycode
 		if not _ola_sequence.is_empty():
@@ -824,6 +828,9 @@ func _finir() -> void:
 	var equipe_gagne := b.x >= 0 and b.x > b.y and str(fiche["m"].get("status", "")) in ["LIVE", "HALFTIME", "FINISHED"]
 	var gain_mode: float = Game.MODES_SUIVI.get(mode, {}).get("gain", 1.0)
 	var jetons := int(round((10.0 + points / 60.0 + (15.0 if gagne else 0.0)) * gain_mode * (1.3 if equipe_gagne else 1.0)))
+	var rejoue := Game.noter_duel_match(str(fiche.get("id", fiche["m"].get("id", "")))) < 1.0
+	if rejoue:
+		jetons = int(round(jetons * 0.5))  # même match rejoué en boucle
 	var xp := 40 + points / 40 + (40 if gagne else 0)
 	Game.duels_joues += 1
 	if gagne:
@@ -867,7 +874,7 @@ func _finir() -> void:
 		["Meilleur combo", "x%d" % combo_max],
 		["Tifos / Olas", "%d / %d" % [tifos, olas]],
 		["Bonus « ton équipe gagne vraiment »", "x1,3" if equipe_gagne else "non"],
-		["Jetons gagnés", "+%d" % jetons],
+		["Jetons gagnés" + (" (match rejoué : ÷2)" if rejoue else ""), "+%d" % jetons],
 		["XP du fan club", "+%d" % xp],
 	] + FinDuel.ligne_popularite({"popularite": pop, "equipe": (fiche["dom"] if camp == "home" else fiche["ext"])["nom"]})
 	for l in lignes:

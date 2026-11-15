@@ -6,6 +6,15 @@ et personne ne se bagarre. Un supporter « battu » va s'asseoir ou se secouer a
 Les gains (Jetons + XP du fan club) suivent les mêmes règles dans les trois modes :
 `scripts/duel/fin_duel.gd`.
 
+- **Rejouer le même match** : les 3 premiers duels d'un match paient plein tarif, ensuite
+  les Jetons sont divisés par deux (l'XP ne change pas). Compteur : `Game.duels_par_match`.
+- **Échap** pendant une partie : pause contre l'IA (Reprendre / Abandonner). En ligne, le jeu
+  continue et « Abandonner » donne la victoire par forfait à l'adversaire. Abandonner ne
+  rapporte rien.
+- **Billet** : au stade, le voyage tamponne le stade, donc le billet n'est plus remboursé.
+  Pour l'écran géant, le pub ou la maison, le match compte comme suivi (missions, popularité)
+  au lancement du premier duel ; repartir de *Ta tribune* avant rembourse le billet.
+
 | Mode | Genre | Durée | Victoire |
 |---|---|---|---|
 | Duel d'ambiance | rythme | 90 s | jauge d'ambiance |

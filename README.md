@@ -108,7 +108,7 @@ Supprime ce fichier pour recommencer à zéro.
 | `tools/` | Scripts de préparation des données (carte du monde, repérage des bras des FANZZY) |
 | `mods/` | Format des mods Steam Workshop (noms et couleurs de clubs) |
 | `docs/` | Game design et maquettes |
-| `tests/` | Tests automatiques (`godot --headless --path . --script tests/test_logique.gd`, `tests/test_pronostics.gd`, `tests/test_club.gd`, `tests/test_supporters.gd`, `tests/test_buvette.gd`, `tests/test_collection.gd`, `tests/test_audio.gd`, et le parcours complet : `godot --headless --path . res://tests/test_pronostics_jeu.tscn -- --hors-ligne`, le tutoriel : `res://tests/test_tutoriel.tscn -- --hors-ligne`) |
+| `tests/` | Tests automatiques (`godot --headless --path . --script tests/test_logique.gd`, `tests/test_pronostics.gd`, `tests/test_club.gd`, `tests/test_supporters.gd`, `tests/test_buvette.gd`, `tests/test_collection.gd`, `tests/test_audio.gd`, et le parcours complet : `godot --headless --path . res://tests/test_pronostics_jeu.tscn -- --hors-ligne`, le tutoriel : `res://tests/test_tutoriel.tscn -- --hors-ligne`, le tour de tous les écrans (chaque bouton pressé, parties au clavier, pause) : `res://tests/test_ecrans.tscn -- --hors-ligne`) |
 
 ## Règles du projet
 

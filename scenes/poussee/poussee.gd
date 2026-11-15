@@ -298,8 +298,11 @@ func _unhandled_input(ev: InputEvent) -> void:
 		if k >= KEY_1 and k <= KEY_4:
 			_selectionner(k - KEY_1)
 		elif k == KEY_ESCAPE:
-			selection = -1
-			_maj_main()
+			if selection >= 0:
+				selection = -1
+				_maj_main()
+			else:
+				FinDuel.pause(self, en_ligne)
 	elif ev is InputEventMouseButton and ev.pressed:
 		var mb := ev as InputEventMouseButton
 		if mb.button_index == MOUSE_BUTTON_RIGHT:
@@ -841,7 +844,7 @@ func _finir(res: int, pourquoi: String) -> void:
 		["Tribune adverse", "%d %%" % int(100.0 * maxf(tribune[1], 0.0) / PousseeRegles.TRIBUNE_PV)],
 		["Cartes jouées", str(posees[0])],
 		["Bonus « ton équipe gagne vraiment »", "x1,3" if g["equipe_gagne"] else "non"],
-		["Jetons gagnés", "+%d" % g["jetons"]],
+		["Jetons gagnés" + (" (match rejoué : ÷2)" if g["rejoue"] else ""), "+%d" % g["jetons"]],
 		["XP du fan club", "+%d" % g["xp"]],
 	] + FinDuel.ligne_popularite(g), Game.SCENE_SALON if en_ligne and Reseau.connecte() else Game.SCENE_POUSSEE)
 

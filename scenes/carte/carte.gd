@@ -908,11 +908,17 @@ func _sur_pronos_resolus(liste: Array) -> void:
 func _partir(f: Dictionary, cout: int) -> void:
 	if not Game.depenser(cout):
 		return
-	Game.noter_suivi_favori(f["m"], camp, mode_suivi)
 	var p := {
 		"match_id": f["id"], "camp": camp, "mode": mode_suivi, "cout": cout,
 		"niveau": niveau, "continent": continent, "pays": pays,
 	}
+	if mode_suivi == "stade":
+		# Le voyage est fait (tampon du stade) : le match est suivi, le billet n'est plus remboursé.
+		Game.noter_suivi_favori(f["m"], camp, mode_suivi)
+		p["cout"] = 0
+	else:
+		# Noté au coup d'envoi du premier duel (Ta tribune) : repartir avant rembourse le billet.
+		p["suivi_a_noter"] = true
 	if mode_suivi == "stade":
 		Game.aller(Game.SCENE_VOYAGE, p)
 	else:

@@ -61,6 +61,9 @@ var missions: Dictionary = Missions.vide()
 var xp_pass := 0
 ## Carnet de voyage et album des FANZZY : primes réclamées, FANZZY et skins vus en duel (voir Collection).
 var collection: Dictionary = Collection.vide()
+## Duels joués par match (id -> nombre) : rejouer le même match en boucle rapporte moins.
+var duels_par_match: Dictionary = {}
+const DUELS_PLEIN_TARIF := 3
 
 ## Où suivre le match. Au stade : billet + trajet, tampon du stade, plus de Jetons.
 const MODES_SUIVI := {
@@ -180,6 +183,19 @@ func depenser(n: int) -> bool:
 	jetons -= n
 	sauver()
 	return true
+
+
+## Note un duel joué sur ce match et renvoie le multiplicateur de Jetons :
+## plein tarif pour les 3 premiers, puis la moitié (l'XP ne change pas).
+func noter_duel_match(match_id: String) -> float:
+	if match_id == "":
+		return 1.0
+	var n := int(duels_par_match.get(match_id, 0)) + 1
+	duels_par_match.erase(match_id)
+	duels_par_match[match_id] = n  # en dernier : les plus anciens partent d'abord
+	while duels_par_match.size() > 60:
+		duels_par_match.erase(duels_par_match.keys()[0])
+	return 1.0 if n <= DUELS_PLEIN_TARIF else 0.5
 
 
 func gagner_jetons(n: int) -> void:
@@ -418,8 +434,13 @@ func noter_duel_favori(m: Dictionary, camp: String, gagne: bool, mode_suivi: Str
 func noter_suivi_favori(m: Dictionary, camp: String, mode_suivi: String) -> int:
 	var n := Supporters.noter_suivi(supporters, m, camp, mode_suivi, maintenant())
 	_annoncer(n, "suivi", Supporters.cle_equipe(m.get(camp, {}), Fiction.est_selection(m)))
-	noter_mission("suivre", mode_suivi)
-	noter_mission("suivre_pays", str(Geo.lieu_match(m).get("pays", "")))
+	# Un même match suivi deux fois ne compte qu'une fois pour « Suis 3 matchs ».
+	var id := str(m.get("id", ""))
+	if id != "" and not id in missions["matchs_suivis"]:
+		missions["matchs_suivis"].append(id)
+		missions["matchs_suivis"] = missions["matchs_suivis"].slice(-60)
+		noter_mission("suivre", mode_suivi)
+		noter_mission("suivre_pays", str(Geo.lieu_match(m).get("pays", "")))
 	if n > 0:
 		noter_mission("favori")
 	return n
@@ -629,6 +650,7 @@ func sauver() -> void:
 		"missions": missions,
 		"xp_pass": xp_pass,
 		"collection": collection,
+		"duels_par_match": duels_par_match,
 	}
 	var f := FileAccess.open(CHEMIN_SAUVEGARDE, FileAccess.WRITE)
 	if f:
@@ -666,6 +688,8 @@ func charger() -> void:
 	missions = Missions.reparer(d.get("missions", null))
 	xp_pass = int(d.get("xp_pass", 0))
 	collection = Collection.reparer(d.get("collection", null))
+	var dm: Variant = d.get("duels_par_match", {})
+	duels_par_match = dm if dm is Dictionary else {}
 	# Un FANZZY retiré du catalogue ne doit pas casser la tribune.
 	for i in equipe.size():
 		if fanzzy_par_id(str(equipe[i])).is_empty():
@@ -695,4 +719,5 @@ func reinitialiser() -> void:
 	missions = Missions.vide()
 	xp_pass = 0
 	collection = Collection.vide()
+	duels_par_match = {}
 	equipe = equipe_par_defaut()

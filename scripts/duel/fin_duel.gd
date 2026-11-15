@@ -28,6 +28,9 @@ static func equipe_gagne(fiche: Dictionary, camp: String) -> bool:
 static func enregistrer(gagne: bool, perf: float, fiche: Dictionary, camp: String, mode_suivi: String) -> Dictionary:
 	var eg := equipe_gagne(fiche, camp)
 	var g := gains(gagne, perf, mode_suivi, eg)
+	g["rejoue"] = Game.noter_duel_match(str(fiche.get("id", fiche.get("m", {}).get("id", "")))) < 1.0
+	if g["rejoue"]:
+		g["jetons"] = int(round(g["jetons"] * 0.5))
 	g["equipe_gagne"] = eg
 	Game.duels_joues += 1
 	if gagne:
@@ -92,3 +95,74 @@ static func panneau(parent: Control, titre: String, gagne: bool, lignes: Array, 
 	pan.scale = Vector2(0.6, 0.6)
 	pan.pivot_offset = Vector2(460, 300)
 	pan.create_tween().tween_property(pan, "scale", Vector2.ONE, 0.35).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+
+
+## Échap pendant une partie : pause (contre l'IA) ou « Quitter la partie ? » (en ligne,
+## où le jeu continue). Abandonner ramène à la carte, sans gains ; en ligne,
+## l'adversaire gagne par forfait. Renvoie le panneau (ou null s'il était déjà ouvert : il se ferme).
+static func pause(parent: Control, en_ligne: bool) -> Control:
+	var deja := parent.get_node_or_null("PausePartie")
+	if deja:
+		_reprendre(deja)
+		return null
+	var voile := VoilePause.new()
+	voile.name = "PausePartie"
+	voile.color = Color(0.05, 0.03, 0.15, 0.65)
+	voile.set_anchors_preset(Control.PRESET_FULL_RECT)
+	voile.process_mode = Node.PROCESS_MODE_ALWAYS
+	voile.mouse_filter = Control.MOUSE_FILTER_STOP
+	parent.add_child(voile)
+	var pan := Ui.panneau()
+	pan.set_anchors_preset(Control.PRESET_CENTER)
+	pan.offset_left = -360
+	pan.offset_right = 360
+	pan.offset_top = -170
+	pan.offset_bottom = 170
+	voile.add_child(pan)
+	var v := Ui.vbox(16)
+	v.alignment = BoxContainer.ALIGNMENT_CENTER
+	pan.add_child(v)
+	var t := Ui.label("Quitter la partie ?" if en_ligne else "PAUSE", 46, Ui.JAUNE, true, 10)
+	t.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	v.add_child(t)
+	var st := Ui.label("La partie continue pendant ce temps. Ton adversaire gagnera par forfait." if en_ligne
+		else "Abandonner ne rapporte ni Jetons ni XP.", 22, Ui.BLANC)
+	st.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	st.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	v.add_child(st)
+	var hb := Ui.hbox(16)
+	hb.alignment = BoxContainer.ALIGNMENT_CENTER
+	var reprendre := Ui.bouton("Reprendre", Ui.VERT, 30)
+	Ui.colorer_bouton(reprendre, Ui.VERT, true)
+	reprendre.custom_minimum_size = Vector2(260, 84)
+	reprendre.pressed.connect(func(): _reprendre(voile))
+	hb.add_child(reprendre)
+	var abandon := Ui.bouton("Abandonner", Ui.ROSE, 30)
+	abandon.custom_minimum_size = Vector2(260, 84)
+	abandon.pressed.connect(func():
+		var tree := voile.get_tree()
+		tree.paused = false
+		if en_ligne:
+			Reseau.quitter()
+		var p: Dictionary = Game.params
+		Game.aller(Game.SCENE_CARTE, {"niveau": p.get("niveau", "monde"), "continent": p.get("continent", ""), "pays": p.get("pays", "")}))
+	hb.add_child(abandon)
+	v.add_child(hb)
+	if not en_ligne:
+		parent.get_tree().paused = true
+	reprendre.grab_focus.call_deferred()
+	return voile
+
+
+static func _reprendre(voile: Node) -> void:
+	if is_instance_valid(voile):
+		voile.get_tree().paused = false
+		voile.queue_free()
+
+
+## Le voile de la pause : Échap le referme (il reçoit les touches même jeu en pause).
+class VoilePause extends ColorRect:
+	func _unhandled_input(ev: InputEvent) -> void:
+		if ev.is_action_pressed("ui_cancel"):
+			get_viewport().set_input_as_handled()
+			FinDuel._reprendre(self)

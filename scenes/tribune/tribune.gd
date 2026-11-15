@@ -65,15 +65,28 @@ func _ready() -> void:
 			Ui.colorer_bouton(go, mode_jeu[3], true)
 			go.custom_minimum_size = Vector2(330, 96)
 			var scene: String = mode_jeu[2]
-			go.pressed.connect(func(): Game.aller(scene, p))
+			go.pressed.connect(func():
+				_noter_suivi(m, p)
+				Game.aller(scene, p))
 			bas.add_child(go)
 		# le duel d'ambiance contre un vrai joueur (ami ou adversaire en ligne)
 		var en_ligne := Ui.bouton("CONTRE UN JOUEUR\nami ou en ligne", Ui.BLEU, 30)
 		en_ligne.custom_minimum_size = Vector2(330, 96)
 		en_ligne.tooltip_text = "Duel d'ambiance contre un ami ou un autre joueur, sur ce match"
-		en_ligne.pressed.connect(func(): Game.aller(Game.SCENE_SALON, p))
+		en_ligne.pressed.connect(func():
+			_noter_suivi(m, p)
+			Game.aller(Game.SCENE_SALON, p))
 		bas.add_child(en_ligne)
 	_construire()
+
+
+## Premier duel lancé : le match compte comme suivi (missions, popularité)
+## et le billet n'est plus remboursable.
+func _noter_suivi(m: Dictionary, p: Dictionary) -> void:
+	if p.get("suivi_a_noter", false):
+		p.erase("suivi_a_noter")
+		Game.noter_suivi_favori(m, str(p.get("camp", "home")), str(p.get("mode", "pub")))
+	p["cout"] = 0
 
 
 func _construire() -> void:
