@@ -30,7 +30,7 @@ const PALETTE := [
 
 ## Compétitions dont le nom fictif est connu (maquettes validées).
 const LIGUES := {
-	"fr.1": "Ligue Hexagone", "es.1": "Liga Ibérica", "de.1": "Bundes Liga", "it.1": "Serie Azzurra",
+	"fr.1": "Ligue Hexagone", "es.1": "Liga Ibérica", "de.1": "Liga Germania", "it.1": "Serie Azzurra",
 	"en.1": "Premier Albion", "pt.1": "Liga Lusitana", "nl.1": "Eredivisie Orange", "be.1": "Pro Ligue Belge",
 	"br.1": "Série Samba", "ar.1": "Liga Pampa", "us.1": "Ligue des Étoiles", "mx.1": "Liga Azteca",
 	"jp.1": "J-Ligue du Soleil", "tr.1": "Süper Bosphore", "sco.1": "Ligue des Highlands",
