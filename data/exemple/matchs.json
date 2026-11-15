@@ -1,0 +1,463 @@
+{
+ "_note": "Matchs d'exemple utilisés seulement sans réseau ni cache. Même format que le relais ; decalage_h = heures par rapport à maintenant.",
+ "attribution": "Matchs d'exemple (hors ligne)",
+ "matches": [
+  {
+   "id": "ex:1",
+   "competition": {
+    "id": "fr.1",
+    "name": "France D1"
+   },
+   "decalage_h": -1.1,
+   "status": "LIVE",
+   "minute": 67,
+   "minute_estimated": false,
+   "round": null,
+   "group": null,
+   "venue": null,
+   "home": {
+    "id": "af:85",
+    "name": "af:85"
+   },
+   "away": {
+    "id": "af:81",
+    "name": "af:81"
+   },
+   "score": {
+    "current": {
+     "home": 2,
+     "away": 1
+    },
+    "halftime": null,
+    "extratime": null,
+    "penalties": null
+   }
+  },
+  {
+   "id": "ex:2",
+   "competition": {
+    "id": "es.1",
+    "name": "Spain D1"
+   },
+   "decalage_h": -0.6,
+   "status": "LIVE",
+   "minute": 34,
+   "minute_estimated": false,
+   "round": null,
+   "group": null,
+   "venue": null,
+   "home": {
+    "id": "af:541",
+    "name": "af:541"
+   },
+   "away": {
+    "id": "af:529",
+    "name": "af:529"
+   },
+   "score": {
+    "current": {
+     "home": 0,
+     "away": 0
+    },
+    "halftime": null,
+    "extratime": null,
+    "penalties": null
+   }
+  },
+  {
+   "id": "ex:3",
+   "competition": {
+    "id": "de.1",
+    "name": "Germany D1"
+   },
+   "decalage_h": -3,
+   "status": "FINISHED",
+   "minute": null,
+   "minute_estimated": false,
+   "round": null,
+   "group": null,
+   "venue": null,
+   "home": {
+    "id": "af:157",
+    "name": "af:157"
+   },
+   "away": {
+    "id": "af:165",
+    "name": "af:165"
+   },
+   "score": {
+    "current": {
+     "home": 3,
+     "away": 2
+    },
+    "halftime": null,
+    "extratime": null,
+    "penalties": null
+   }
+  },
+  {
+   "id": "ex:4",
+   "competition": {
+    "id": "it.1",
+    "name": "Italy D1"
+   },
+   "decalage_h": 2,
+   "status": "SCHEDULED",
+   "minute": null,
+   "minute_estimated": false,
+   "round": null,
+   "group": null,
+   "venue": null,
+   "home": {
+    "id": "af:489",
+    "name": "af:489"
+   },
+   "away": {
+    "id": "af:505",
+    "name": "af:505"
+   },
+   "score": {
+    "current": null,
+    "halftime": null,
+    "extratime": null,
+    "penalties": null
+   }
+  },
+  {
+   "id": "ex:5",
+   "competition": {
+    "id": "en.1",
+    "name": "England D1"
+   },
+   "decalage_h": 5,
+   "status": "SCHEDULED",
+   "minute": null,
+   "minute_estimated": false,
+   "round": null,
+   "group": null,
+   "venue": null,
+   "home": {
+    "id": "af:42",
+    "name": "af:42"
+   },
+   "away": {
+    "id": "af:49",
+    "name": "af:49"
+   },
+   "score": {
+    "current": null,
+    "halftime": null,
+    "extratime": null,
+    "penalties": null
+   }
+  },
+  {
+   "id": "ex:6",
+   "competition": {
+    "id": "br.1",
+    "name": "Brazil D1"
+   },
+   "decalage_h": 8,
+   "status": "SCHEDULED",
+   "minute": null,
+   "minute_estimated": false,
+   "round": null,
+   "group": null,
+   "venue": null,
+   "home": {
+    "id": "af:121",
+    "name": "af:121"
+   },
+   "away": {
+    "id": "af:127",
+    "name": "af:127"
+   },
+   "score": {
+    "current": null,
+    "halftime": null,
+    "extratime": null,
+    "penalties": null
+   }
+  },
+  {
+   "id": "ex:7",
+   "competition": {
+    "id": "jp.1",
+    "name": "Japan D1"
+   },
+   "decalage_h": 14,
+   "status": "SCHEDULED",
+   "minute": null,
+   "minute_estimated": false,
+   "round": null,
+   "group": null,
+   "venue": null,
+   "home": {
+    "id": "af:290",
+    "name": "af:290"
+   },
+   "away": {
+    "id": "af:292",
+    "name": "af:292"
+   },
+   "score": {
+    "current": null,
+    "halftime": null,
+    "extratime": null,
+    "penalties": null
+   }
+  },
+  {
+   "id": "ex:8",
+   "competition": {
+    "id": "us.1",
+    "name": "USA D1"
+   },
+   "decalage_h": 20,
+   "status": "SCHEDULED",
+   "minute": null,
+   "minute_estimated": false,
+   "round": null,
+   "group": null,
+   "venue": null,
+   "home": {
+    "id": "af:1602",
+    "name": "af:1602"
+   },
+   "away": {
+    "id": "af:1599",
+    "name": "af:1599"
+   },
+   "score": {
+    "current": null,
+    "halftime": null,
+    "extratime": null,
+    "penalties": null
+   }
+  },
+  {
+   "id": "ex:9",
+   "competition": {
+    "id": "ucl",
+    "name": "UEFA Champions League"
+   },
+   "decalage_h": 50,
+   "status": "SCHEDULED",
+   "minute": null,
+   "minute_estimated": false,
+   "round": null,
+   "group": null,
+   "venue": null,
+   "home": {
+    "id": "af:50",
+    "name": "af:50"
+   },
+   "away": {
+    "id": "af:496",
+    "name": "af:496"
+   },
+   "score": {
+    "current": null,
+    "halftime": null,
+    "extratime": null,
+    "penalties": null
+   }
+  },
+  {
+   "id": "ex:10",
+   "competition": {
+    "id": "ar.1",
+    "name": "Argentina D1"
+   },
+   "decalage_h": 30,
+   "status": "SCHEDULED",
+   "minute": null,
+   "minute_estimated": false,
+   "round": null,
+   "group": null,
+   "venue": null,
+   "home": {
+    "id": "af:435",
+    "name": "af:435"
+   },
+   "away": {
+    "id": "af:451",
+    "name": "af:451"
+   },
+   "score": {
+    "current": null,
+    "halftime": null,
+    "extratime": null,
+    "penalties": null
+   }
+  },
+  {
+   "id": "ex:11",
+   "competition": {
+    "id": "friendlies",
+    "name": "Friendlies"
+   },
+   "decalage_h": 26,
+   "status": "SCHEDULED",
+   "minute": null,
+   "minute_estimated": false,
+   "round": null,
+   "group": null,
+   "venue": null,
+   "home": {
+    "id": "af:2",
+    "name": "France"
+   },
+   "away": {
+    "id": "af:772",
+    "name": "Ukraine"
+   },
+   "score": {
+    "current": null,
+    "halftime": null,
+    "extratime": null,
+    "penalties": null
+   }
+  },
+  {
+   "id": "ex:12",
+   "competition": {
+    "id": "morocco.1",
+    "name": "Morocco D1"
+   },
+   "decalage_h": 28,
+   "status": "SCHEDULED",
+   "minute": null,
+   "minute_estimated": false,
+   "round": null,
+   "group": null,
+   "venue": null,
+   "home": {
+    "id": "af:968",
+    "name": "af:968"
+   },
+   "away": {
+    "id": "af:976",
+    "name": "af:976"
+   },
+   "score": {
+    "current": null,
+    "halftime": null,
+    "extratime": null,
+    "penalties": null
+   }
+  },
+  {
+   "id": "ex:13",
+   "competition": {
+    "id": "australia.1",
+    "name": "Australia D1"
+   },
+   "decalage_h": 40,
+   "status": "SCHEDULED",
+   "minute": null,
+   "minute_estimated": false,
+   "round": null,
+   "group": null,
+   "venue": null,
+   "home": {
+    "id": "af:940",
+    "name": "af:940"
+   },
+   "away": {
+    "id": "af:939",
+    "name": "af:939"
+   },
+   "score": {
+    "current": null,
+    "halftime": null,
+    "extratime": null,
+    "penalties": null
+   }
+  },
+  {
+   "id": "ex:14",
+   "competition": {
+    "id": "fr.1",
+    "name": "France D1"
+   },
+   "decalage_h": 74,
+   "status": "SCHEDULED",
+   "minute": null,
+   "minute_estimated": false,
+   "round": null,
+   "group": null,
+   "venue": null,
+   "home": {
+    "id": "af:80",
+    "name": "af:80"
+   },
+   "away": {
+    "id": "af:91",
+    "name": "af:91"
+   },
+   "score": {
+    "current": null,
+    "halftime": null,
+    "extratime": null,
+    "penalties": null
+   }
+  },
+  {
+   "id": "ex:15",
+   "competition": {
+    "id": "es.1",
+    "name": "Spain D1"
+   },
+   "decalage_h": 98,
+   "status": "SCHEDULED",
+   "minute": null,
+   "minute_estimated": false,
+   "round": null,
+   "group": null,
+   "venue": null,
+   "home": {
+    "id": "af:530",
+    "name": "af:530"
+   },
+   "away": {
+    "id": "af:532",
+    "name": "af:532"
+   },
+   "score": {
+    "current": null,
+    "halftime": null,
+    "extratime": null,
+    "penalties": null
+   }
+  },
+  {
+   "id": "ex:16",
+   "competition": {
+    "id": "south-africa.1",
+    "name": "South Africa D1"
+   },
+   "decalage_h": 120,
+   "status": "SCHEDULED",
+   "minute": null,
+   "minute_estimated": false,
+   "round": null,
+   "group": null,
+   "venue": null,
+   "home": {
+    "id": "af:2700",
+    "name": "af:2700"
+   },
+   "away": {
+    "id": "af:2690",
+    "name": "af:2690"
+   },
+   "score": {
+    "current": null,
+    "halftime": null,
+    "extratime": null,
+    "penalties": null
+   }
+  }
+ ]
+}

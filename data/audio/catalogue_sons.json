@@ -1,0 +1,390 @@
+{
+ "version": 1,
+ "_doc": "Catalogue des sons du jeu. Lu par scripts/audio/banque_sons.gd. Voir docs/AUDIO.md.",
+ "sons": {
+  "tambour_1": {
+   "fichier": "res://assets/audio/sfx/tambour_1.wav",
+   "bus": "Chants",
+   "volume_db": -6,
+   "variation_hauteur": 0.02,
+   "description": "grosse caisse de tribune",
+   "origine": "synthese"
+  },
+  "tambour_2": {
+   "fichier": "res://assets/audio/sfx/tambour_2.wav",
+   "bus": "Chants",
+   "volume_db": -6,
+   "variation_hauteur": 0.02,
+   "description": "grosse caisse de tribune",
+   "origine": "synthese"
+  },
+  "tambour_3": {
+   "fichier": "res://assets/audio/sfx/tambour_3.wav",
+   "bus": "Chants",
+   "volume_db": -6,
+   "variation_hauteur": 0.02,
+   "description": "grosse caisse de tribune",
+   "origine": "synthese"
+  },
+  "caisse_claire": {
+   "fichier": "res://assets/audio/sfx/caisse_claire.wav",
+   "bus": "Chants",
+   "volume_db": -6,
+   "variation_hauteur": 0.03,
+   "description": "caisse claire, pour les roulements",
+   "origine": "synthese"
+  },
+  "clap_1": {
+   "fichier": "res://assets/audio/sfx/clap_1.wav",
+   "bus": "Chants",
+   "volume_db": 2,
+   "variation_hauteur": 0.04,
+   "description": "claps de centaines de mains",
+   "origine": "synthese"
+  },
+  "clap_2": {
+   "fichier": "res://assets/audio/sfx/clap_2.wav",
+   "bus": "Chants",
+   "volume_db": 2,
+   "variation_hauteur": 0.04,
+   "description": "claps de centaines de mains",
+   "origine": "synthese"
+  },
+  "clap_3": {
+   "fichier": "res://assets/audio/sfx/clap_3.wav",
+   "bus": "Chants",
+   "volume_db": 2,
+   "variation_hauteur": 0.04,
+   "description": "claps de centaines de mains",
+   "origine": "synthese"
+  },
+  "eclat_o": {
+   "fichier": "res://assets/audio/sfx/eclat_o.wav",
+   "bus": "Effets",
+   "volume_db": -6,
+   "variation_hauteur": 0.08,
+   "description": "une voix qui crie « ho ! »",
+   "origine": "synthese"
+  },
+  "eclat_a": {
+   "fichier": "res://assets/audio/sfx/eclat_a.wav",
+   "bus": "Effets",
+   "volume_db": -6,
+   "variation_hauteur": 0.08,
+   "description": "une voix qui crie « ha ! »",
+   "origine": "synthese"
+  },
+  "eclat_e": {
+   "fichier": "res://assets/audio/sfx/eclat_e.wav",
+   "bus": "Effets",
+   "volume_db": -6,
+   "variation_hauteur": 0.08,
+   "description": "une voix qui crie « hé ! »",
+   "origine": "synthese"
+  },
+  "cri_groupe": {
+   "fichier": "res://assets/audio/sfx/cri_groupe.wav",
+   "bus": "Chants",
+   "volume_db": -4,
+   "variation_hauteur": 0.05,
+   "description": "une tribune qui crie ensemble",
+   "origine": "synthese"
+  },
+  "hey": {
+   "fichier": "res://assets/audio/sfx/hey.wav",
+   "bus": "Chants",
+   "volume_db": -4,
+   "variation_hauteur": 0.04,
+   "description": "le « hey ! » de fin de mesure",
+   "origine": "synthese"
+  },
+  "sifflet_court": {
+   "fichier": "res://assets/audio/sfx/sifflet_court.wav",
+   "bus": "Effets",
+   "volume_db": -6,
+   "variation_hauteur": 0.0,
+   "description": "coup de sifflet de l'arbitre",
+   "origine": "synthese"
+  },
+  "sifflet_fin": {
+   "fichier": "res://assets/audio/sfx/sifflet_fin.wav",
+   "bus": "Effets",
+   "volume_db": -6,
+   "variation_hauteur": 0.0,
+   "description": "trois coups de sifflet : fin du match",
+   "origine": "synthese"
+  },
+  "corne": {
+   "fichier": "res://assets/audio/sfx/corne.wav",
+   "bus": "Effets",
+   "volume_db": -8,
+   "variation_hauteur": 0.0,
+   "description": "corne de brume, accord tenu",
+   "origine": "synthese"
+  },
+  "clameur_but": {
+   "fichier": "res://assets/audio/sfx/clameur_but.wav",
+   "bus": "Effets",
+   "volume_db": 0,
+   "variation_hauteur": 0.0,
+   "description": "le but : explosion, tenue, applaudissements",
+   "origine": "synthese"
+  },
+  "deception": {
+   "fichier": "res://assets/audio/sfx/deception.wav",
+   "bus": "Effets",
+   "volume_db": -3,
+   "variation_hauteur": 0.0,
+   "description": "« ooooh » déçu de la tribune",
+   "origine": "synthese"
+  },
+  "sifflets_foule": {
+   "fichier": "res://assets/audio/sfx/sifflets_foule.wav",
+   "bus": "Effets",
+   "volume_db": -6,
+   "variation_hauteur": 0.0,
+   "description": "la tribune siffle",
+   "origine": "synthese"
+  },
+  "ola": {
+   "fichier": "res://assets/audio/sfx/ola.wav",
+   "bus": "Effets",
+   "volume_db": -3,
+   "variation_hauteur": 0.0,
+   "description": "la ola passe de gauche à droite",
+   "origine": "synthese"
+  },
+  "applaudissements": {
+   "fichier": "res://assets/audio/sfx/applaudissements.wav",
+   "bus": "Effets",
+   "volume_db": -3,
+   "variation_hauteur": 0.0,
+   "description": "applaudissements nourris",
+   "origine": "synthese"
+  },
+  "tifo": {
+   "fichier": "res://assets/audio/sfx/tifo.wav",
+   "bus": "Effets",
+   "volume_db": -3,
+   "variation_hauteur": 0.0,
+   "description": "un tifo géant se déploie",
+   "origine": "synthese"
+  },
+  "fumigene": {
+   "fichier": "res://assets/audio/sfx/fumigene.wav",
+   "bus": "Effets",
+   "volume_db": -8,
+   "variation_hauteur": 0.0,
+   "description": "chuintement de fumigène (fumée colorée)",
+   "origine": "synthese"
+  },
+  "ui_parfait": {
+   "fichier": "res://assets/audio/sfx/ui_parfait.wav",
+   "bus": "Interface",
+   "volume_db": 0,
+   "variation_hauteur": 0.0,
+   "description": "appui « parfait »",
+   "origine": "synthese"
+  },
+  "ui_bien": {
+   "fichier": "res://assets/audio/sfx/ui_bien.wav",
+   "bus": "Interface",
+   "volume_db": 0,
+   "variation_hauteur": 0.0,
+   "description": "appui « bien »",
+   "origine": "synthese"
+  },
+  "ui_rate": {
+   "fichier": "res://assets/audio/sfx/ui_rate.wav",
+   "bus": "Interface",
+   "volume_db": 0,
+   "variation_hauteur": 0.0,
+   "description": "appui raté",
+   "origine": "synthese"
+  },
+  "ui_combo_1": {
+   "fichier": "res://assets/audio/sfx/ui_combo_1.wav",
+   "bus": "Interface",
+   "volume_db": 0,
+   "variation_hauteur": 0.0,
+   "description": "palier de combo 1",
+   "origine": "synthese"
+  },
+  "ui_combo_2": {
+   "fichier": "res://assets/audio/sfx/ui_combo_2.wav",
+   "bus": "Interface",
+   "volume_db": 0,
+   "variation_hauteur": 0.0,
+   "description": "palier de combo 2",
+   "origine": "synthese"
+  },
+  "ui_combo_3": {
+   "fichier": "res://assets/audio/sfx/ui_combo_3.wav",
+   "bus": "Interface",
+   "volume_db": 0,
+   "variation_hauteur": 0.0,
+   "description": "palier de combo 3",
+   "origine": "synthese"
+  },
+  "ui_combo_4": {
+   "fichier": "res://assets/audio/sfx/ui_combo_4.wav",
+   "bus": "Interface",
+   "volume_db": 0,
+   "variation_hauteur": 0.0,
+   "description": "palier de combo 4",
+   "origine": "synthese"
+  },
+  "ui_clic": {
+   "fichier": "res://assets/audio/sfx/ui_clic.wav",
+   "bus": "Interface",
+   "volume_db": -4,
+   "variation_hauteur": 0.05,
+   "description": "clic de bouton",
+   "origine": "synthese"
+  },
+  "ui_decompte": {
+   "fichier": "res://assets/audio/sfx/ui_decompte.wav",
+   "bus": "Interface",
+   "volume_db": 0,
+   "variation_hauteur": 0.0,
+   "description": "3, 2, 1…",
+   "origine": "synthese"
+  },
+  "ui_decompte_go": {
+   "fichier": "res://assets/audio/sfx/ui_decompte_go.wav",
+   "bus": "Interface",
+   "volume_db": 0,
+   "variation_hauteur": 0.0,
+   "description": "… c'est parti !",
+   "origine": "synthese"
+  }
+ },
+ "groupes": {
+  "tambour": [
+   "tambour_1",
+   "tambour_2",
+   "tambour_3"
+  ],
+  "clap": [
+   "clap_1",
+   "clap_2",
+   "clap_3"
+  ],
+  "eclat": [
+   "eclat_o",
+   "eclat_a",
+   "eclat_e"
+  ],
+  "combo": [
+   "ui_combo_1",
+   "ui_combo_2",
+   "ui_combo_3",
+   "ui_combo_4"
+  ]
+ },
+ "ambiances": {
+  "stade_calme": {
+   "fichier": "res://assets/audio/ambiances/stade_calme.ogg",
+   "volume_db": 0,
+   "description": "rumeur d'avant-match, tribune qui se remplit",
+   "origine": "synthese"
+  },
+  "stade_chaud": {
+   "fichier": "res://assets/audio/ambiances/stade_chaud.ogg",
+   "volume_db": 0,
+   "description": "le match, la tribune vit",
+   "origine": "synthese"
+  },
+  "stade_ferveur": {
+   "fichier": "res://assets/audio/ambiances/stade_ferveur.ogg",
+   "volume_db": 0,
+   "description": "la tribune pousse, tambours lointains",
+   "origine": "synthese"
+  },
+  "pub": {
+   "fichier": "res://assets/audio/ambiances/pub.ogg",
+   "volume_db": 0,
+   "description": "un pub : conversations, verres, télé au fond",
+   "origine": "synthese"
+  },
+  "maison": {
+   "fichier": "res://assets/audio/ambiances/maison.ogg",
+   "volume_db": 0,
+   "description": "le salon : la foule dans le haut-parleur de la télé",
+   "origine": "synthese"
+  },
+  "ecran_geant": {
+   "fichier": "res://assets/audio/ambiances/ecran_geant.ogg",
+   "volume_db": 0,
+   "description": "une place en plein air devant un écran géant",
+   "origine": "synthese"
+  }
+ },
+ "lieux": {
+  "stade": [
+   "stade_calme",
+   "stade_chaud",
+   "stade_ferveur"
+  ],
+  "pub": [
+   "pub",
+   "pub",
+   "pub"
+  ],
+  "maison": [
+   "maison",
+   "maison",
+   "maison"
+  ],
+  "ecran_geant": [
+   "ecran_geant",
+   "ecran_geant",
+   "ecran_geant"
+  ]
+ },
+ "lieux_volume_db": {
+  "stade": [
+   0,
+   0,
+   0
+  ],
+  "pub": [
+   -6,
+   -2,
+   1
+  ],
+  "maison": [
+   -6,
+   -2,
+   1
+  ],
+  "ecran_geant": [
+   -6,
+   -2,
+   1
+  ]
+ },
+ "musiques": {
+  "accueil": {
+   "fichier": "res://assets/audio/musique/the_final_turn_boucle.ogg",
+   "boucle": true,
+   "volume_db": -4,
+   "description": "« The Final Turn » (Gaël), la boucle des menus",
+   "origine": "gael"
+  },
+  "victoire": {
+   "fichier": "res://assets/audio/musique/the_final_turn_victoire.ogg",
+   "boucle": false,
+   "volume_db": 0,
+   "description": "« The Final Turn » (Gaël), le bilan d'un duel gagné",
+   "origine": "gael"
+  }
+ },
+ "voix_des_chants": {
+  "T": "tambour",
+  "C": "clap",
+  "S": "caisse_claire",
+  "H": "hey",
+  "G": "cri_groupe"
+ }
+}

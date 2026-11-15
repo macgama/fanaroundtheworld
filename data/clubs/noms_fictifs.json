@@ -1,0 +1,125 @@
+{
+ "_note": "Noms fictifs choisis à la main, par identifiant d'équipe du relais de données. Les autres clubs reçoivent un nom inventé automatiquement. Un mod peut compléter cette table avec user://mods/noms_fictifs.json (même format).",
+ "clubs": {
+  "af:85": {
+   "nom": "Paris Capitale",
+   "stade": "Le Parc Capitale",
+   "c1": "#1e3a8a",
+   "c2": "#e8384f"
+  },
+  "af:81": {
+   "nom": "Phocéens",
+   "stade": "Le Chaudron du Vieux-Port",
+   "c1": "#5ec8f2",
+   "c2": "#ffffff"
+  },
+  "af:541": {
+   "nom": "Madrid Royal",
+   "stade": "Le Colisée Blanc",
+   "c1": "#f2f2f2",
+   "c2": "#8b5cff"
+  },
+  "af:529": {
+   "nom": "Catalans",
+   "stade": "Le Grand Camp",
+   "c1": "#a3165b",
+   "c2": "#1e6bff"
+  },
+  "af:157": {
+   "nom": "Munich Bavarois",
+   "stade": "L'Arène Gonflable",
+   "c1": "#e8384f",
+   "c2": "#ffffff"
+  },
+  "af:165": {
+   "nom": "Dortmund Jaunes",
+   "stade": "Le Mur Jaune",
+   "c1": "#ffd23f",
+   "c2": "#14112e"
+  },
+  "af:489": {
+   "nom": "Milano Diavoli",
+   "stade": "La Scala du Foot",
+   "c1": "#e8384f",
+   "c2": "#14112e"
+  },
+  "af:505": {
+   "nom": "Interisti",
+   "stade": "La Scala du Foot",
+   "c1": "#1e6bff",
+   "c2": "#14112e"
+  },
+  "af:42": {
+   "nom": "Londres Nord",
+   "stade": "Le Fort des Canons",
+   "c1": "#e8384f",
+   "c2": "#ffffff"
+  },
+  "af:49": {
+   "nom": "Londres Bleus",
+   "stade": "Le Pont des Bleus",
+   "c1": "#1e6bff",
+   "c2": "#ffffff"
+  },
+  "af:50": {
+   "nom": "Manchester Ciel",
+   "stade": "Le Stade du Ciel",
+   "c1": "#7cc4ff",
+   "c2": "#ffffff"
+  },
+  "af:33": {
+   "nom": "Manchester Rouges",
+   "stade": "Le Théâtre Rouge",
+   "c1": "#e8384f",
+   "c2": "#ffd23f"
+  },
+  "af:40": {
+   "nom": "Mersey Rouges",
+   "stade": "Le Kop",
+   "c1": "#c8102e",
+   "c2": "#ffffff"
+  },
+  "af:47": {
+   "nom": "Coqs de Londres",
+   "stade": "La Basse-Cour",
+   "c1": "#ffffff",
+   "c2": "#14112e"
+  },
+  "af:496": {
+   "nom": "Turin Zébrés",
+   "stade": "Le Zèbre",
+   "c1": "#14112e",
+   "c2": "#ffffff"
+  },
+  "af:492": {
+   "nom": "Naples Azzurri",
+   "stade": "Le Volcan",
+   "c1": "#5ec8f2",
+   "c2": "#ffffff"
+  },
+  "af:530": {
+   "nom": "Madrid Rojiblancos",
+   "stade": "Le Métropolitain",
+   "c1": "#e8384f",
+   "c2": "#ffffff"
+  },
+  "af:80": {
+   "nom": "Lyon Gones",
+   "stade": "Le Parc des Gones",
+   "c1": "#ffffff",
+   "c2": "#1e6bff"
+  },
+  "af:91": {
+   "nom": "Rocher Rouge",
+   "stade": "Le Rocher",
+   "c1": "#e8384f",
+   "c2": "#ffffff"
+  },
+  "af:79": {
+   "nom": "Dogues du Nord",
+   "stade": "Le Chenil",
+   "c1": "#e8384f",
+   "c2": "#1e3a8a"
+  }
+ }
+}
