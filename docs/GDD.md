@@ -196,7 +196,7 @@ complète les duels sans les remplacer. Chaque client servi donne aussi 2 XP au 
 - **Aucun nom de club ni logo officiel** : noms fictifs (exemples des maquettes :
   Paris Capitale, Phocéens, Madrid Royal, Catalans, Munich Bavarois, Dortmund Jaunes,
   Milano Diavoli, Interisti), ligues fictives (Ligue Hexagone, Liga Ibérica,
-  Bundes Liga, Serie Azzurra).
+  Liga Germania, Serie Azzurra).
 - Les joueurs pourront renommer les clubs avec des mods du Steam Workshop.
 - Source des données réelles : API-Football, via le relais `macgama/fanaroundtheworld-data`
   (voir [donnees-foot.md](donnees-foot.md)).
