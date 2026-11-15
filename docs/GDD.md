@@ -121,6 +121,23 @@ un joueur riche en Jetons ne doit pas écraser les autres.
 - Les membres sont des **FANZZY**, petits supporters au style chibi.
 - Le hub sert à gérer les membres, préparer les tifos et voir sa collection de stades.
 
+### 5.1 Gestion du club (prototype v0.3)
+
+- **Création** : nom, deux couleurs, écusson dessiné à partir des initiales. Les trois
+  FANZZY de la tribune sont les membres fondateurs.
+- **Recrutement** : gratuit (pas de FANZZY contre des Jetons). Le nombre de places suit
+  le niveau du club : 3 au niveau 1, puis 2 de plus par niveau. On peut renvoyer un membre
+  qui n'est pas dans la tribune.
+- **Recettes**, en Jetons, qui tombent en continu dans la caisse du club :
+  - cotisations : 1 Jeton par heure et par membre ;
+  - buvette (5 niveaux, de 3 à 21 Jetons/h) : double pendant 3 h après un duel ;
+  - atelier d'écharpes (5 niveaux, de 1 à 6 écharpes/h, stock limité) : prix de vente
+    2 Jetons + 1 par tranche de 3 membres.
+- **Bonus de taille** : +5 % sur les cotisations et la buvette par membre au-delà du premier.
+  Renommée : Petit groupe, Bande de potes, Club de quartier, Tribune entière, Légende du virage.
+- La caisse garde **8 h** de recettes : il faut revenir récolter (pas de gain infini hors ligne).
+- Ouvrir et améliorer la buvette et l'atelier coûte des Jetons : c'est de l'équipement.
+
 ## 6. Les FANZZY
 
 - Les FANZZY sont des **personnages jouables** : leur famille (Voix, Percussion, Tifo,
@@ -138,8 +155,9 @@ Ils ne s'achètent pas et ne donnent jamais de skins.
 D'où viennent les Jetons :
 
 - **Duels d'ambiance** : selon la performance, avec un bonus si ton équipe gagne vraiment.
-- **Pronostics** sur les vrais matchs : score exact, buteur, et une série de bons pronos
-  qui multiplie les gains.
+- **Pronostics** sur les vrais matchs, **gratuits et sans mise** : résultat, score exact,
+  équipe qui marque en premier, et une série de bons pronos qui multiplie les gains
+  (détails dans `docs/pronostics.md`).
 - **Missions** du jour et de la semaine : « suis 3 matchs », « visite un nouveau stade ».
 - **Le fan club** : cotisations des membres, buvette, vente d'écharpes faites maison.
   Plus le club grandit, plus ça rapporte.

@@ -3,7 +3,9 @@ extends Node
 ## Contient le fan club du joueur, sa position, ses tampons de stades,
 ## sa tribune de FANZZY et la navigation entre les écrans.
 
-const VERSION := "0.2.0"
+signal pronostics_resolus(liste: Array)
+
+const VERSION := "0.3.0"
 const CHEMIN_SAUVEGARDE := "user://sauvegarde.json"
 
 const SCENE_TITRE := "res://scenes/main/main.tscn"
@@ -12,6 +14,9 @@ const SCENE_VOYAGE := "res://scenes/voyage/voyage.tscn"
 const SCENE_TRIBUNE := "res://scenes/tribune/tribune.tscn"
 const SCENE_DUEL := "res://scenes/duel/duel.tscn"
 const SCENE_BUVETTE := "res://scenes/buvette/buvette.tscn"
+const SCENE_CLUB := "res://scenes/club/club.tscn"
+const SCENE_CREATION_CLUB := "res://scenes/club/creation_club.tscn"
+const SCENE_PRONOS := "res://scenes/pronostics/pronostics.tscn"
 
 ## Paramètres passés d'un écran à l'autre (match choisi, camp supporté…).
 var params: Dictionary = {}
@@ -31,6 +36,14 @@ var jetons := 150
 var buvette_record := 0
 var buvette_jour := ""
 var buvette_services := 0
+## Membres, local et caisse du fan club (règles dans FanClub).
+var club: Dictionary = FanClub.vide()
+## Pronostics sans mise (voir scripts/jeu/pronostics.gd).
+var pronos: Dictionary = {}        # id du match -> pronostic en attente
+var pronos_finis: Array = []       # derniers pronostics résolus (les plus récents d'abord)
+var serie_pronos := 0              # bons résultats d'affilée
+var meilleure_serie := 0
+const MAX_HISTORIQUE_PRONOS := 40
 
 ## Où suivre le match. Au stade : billet + trajet, tampon du stade, plus de Jetons.
 const MODES_SUIVI := {
@@ -61,6 +74,7 @@ func _ready() -> void:
 	charger()
 	if equipe.size() != 3:
 		equipe = equipe_par_defaut()
+	_brancher_pronostics.call_deferred()
 	_outils_de_test()
 
 
@@ -80,7 +94,8 @@ func _outils_de_test() -> void:
 			p = {"niveau": "continent", "continent": args["continent"]}
 		if args.has("match"):
 			p = {"match_id": args["match"], "camp": "home", "mode": args.get("mode", "stade"), "cout": 0}
-		var scenes := {"carte": SCENE_CARTE, "voyage": SCENE_VOYAGE, "tribune": SCENE_TRIBUNE, "duel": SCENE_DUEL, "buvette": SCENE_BUVETTE}
+		var scenes := {"carte": SCENE_CARTE, "voyage": SCENE_VOYAGE, "tribune": SCENE_TRIBUNE, "duel": SCENE_DUEL,
+			"pronos": SCENE_PRONOS, "club": SCENE_CLUB, "creation": SCENE_CREATION_CLUB, "buvette": SCENE_BUVETTE}
 		aller.call_deferred(scenes.get(args["scene"], SCENE_TITRE), p)
 	if args.has("capture"):
 		await get_tree().create_timer(float(args.get("apres", "3"))).timeout
@@ -164,6 +179,149 @@ func tamponner(cle: String, info: Dictionary) -> bool:
 	return true
 
 
+# ---------------------------------------------------------------- fan club
+
+static func maintenant() -> int:
+	return int(Time.get_unix_time_from_system())
+
+
+func club_cree() -> bool:
+	return bool(club.get("cree", false))
+
+
+func creer_club(nom: String, c1: String, c2: String) -> void:
+	## Les trois FANZZY de la tribune sont les membres fondateurs.
+	fan_club_nom = nom.strip_edges().substr(0, 28)
+	var fondateurs := equipe.filter(func(id): return not fanzzy_par_id(str(id)).is_empty())
+	club = FanClub.nouveau(fondateurs, c1, c2, maintenant())
+	sauver()
+
+
+func couleurs_club() -> Array:
+	var c: Array = club.get("couleurs", [FanClub.COULEURS[0], FanClub.COULEURS[7]])
+	return [Color(c[0]), Color(c[1])]
+
+
+func recruter(id: String) -> bool:
+	var ok := FanClub.recruter(club, id, niveau(), maintenant())
+	if ok:
+		sauver()
+	return ok
+
+
+func renvoyer(id: String) -> bool:
+	var ok := FanClub.renvoyer(club, id, maintenant())
+	if ok:
+		sauver()
+	return ok
+
+
+func recolter_caisse() -> int:
+	var n := FanClub.recolter(club, maintenant())
+	gagner_jetons(n)
+	return n
+
+
+func vendre_echarpes() -> int:
+	var n := FanClub.vendre_echarpes(club, maintenant())
+	gagner_jetons(n)
+	return n
+
+
+func ameliorer_local(type: String) -> bool:
+	var cout := FanClub.cout_amelioration(club, type)
+	if cout < 0 or not depenser(cout):
+		return false
+	FanClub.ameliorer(club, type, maintenant())
+	sauver()
+	return true
+
+
+# ---------------------------------------------------------------- pronostics
+
+func _brancher_pronostics() -> void:
+	Donnees.mis_a_jour.connect(resoudre_pronostics)
+	resoudre_pronostics()
+
+
+func prono_de(match_id: String) -> Dictionary:
+	if pronos.has(match_id):
+		return pronos[match_id]
+	for p in pronos_finis:
+		if p["match_id"] == match_id:
+			return p
+	return {}
+
+
+func peut_pronostiquer(m: Dictionary) -> String:
+	## "" si c'est possible, sinon la raison à afficher.
+	var maintenant := int(Time.get_unix_time_from_system())
+	if not Pronostics.ouvert(m, maintenant):
+		return "Pronostics fermés : le match a commencé"
+	if not pronos.has(str(m.get("id", ""))) and pronos.size() >= Pronostics.MAX_EN_ATTENTE:
+		return "%d pronostics en attente au maximum" % Pronostics.MAX_EN_ATTENTE
+	return ""
+
+
+func pronostiquer(m: Dictionary, dom: int, ext: int, premier_but: String) -> bool:
+	## Gratuit : aucun Jeton n'est dépensé. Modifiable jusqu'au coup d'envoi.
+	if peut_pronostiquer(m) != "":
+		return false
+	var maintenant := int(Time.get_unix_time_from_system())
+	pronos[str(m["id"])] = Pronostics.creer(m, dom, ext, premier_but, maintenant)
+	sauver()
+	return true
+
+
+func noter_duel_club() -> void:
+	if club_cree():
+		FanClub.noter_duel(club, maintenant())
+
+
+func annuler_prono(match_id: String) -> void:
+	var m := Donnees.match_par_id(match_id)
+	if pronos.has(match_id) and (m.is_empty() or Pronostics.ouvert(m, int(Time.get_unix_time_from_system()))):
+		pronos.erase(match_id)
+		sauver()
+
+
+func resoudre_pronostics() -> void:
+	if pronos.is_empty():
+		return
+	var maintenant := int(Time.get_unix_time_from_system())
+	var resolus: Array = []
+	var change := false
+	# Du plus ancien au plus récent coup d'envoi, pour que la série suive l'ordre des matchs.
+	var ids := pronos.keys()
+	ids.sort_custom(func(a, b): return int(pronos[a]["kickoff"]) < int(pronos[b]["kickoff"]))
+	for id in ids:
+		var p: Dictionary = pronos[id]
+		var m := Donnees.match_par_id(id)
+		if not m.is_empty():
+			var avant: Variant = p.get("vu")
+			Pronostics.observer(p, m)
+			change = change or p.get("vu") != avant
+		var r := Pronostics.resoudre(p, m, serie_pronos, maintenant)
+		if not r["fini"]:
+			continue
+		p.merge(r, true)
+		p.erase("fini")
+		p["resolu"] = maintenant
+		serie_pronos = int(r["serie"])
+		meilleure_serie = maxi(meilleure_serie, serie_pronos)
+		jetons += int(r["jetons"])
+		pronos.erase(id)
+		pronos_finis.push_front(p)
+		resolus.append(p)
+	if resolus.is_empty():
+		if change:
+			sauver()
+		return
+	pronos_finis = pronos_finis.slice(0, MAX_HISTORIQUE_PRONOS)
+	sauver()
+	pronostics_resolus.emit(resolus)
+
+
 # ---------------------------------------------------------------- FANZZY
 
 func _charger_fanzzy() -> void:
@@ -230,6 +388,11 @@ func sauver() -> void:
 		"duels_joues": duels_joues,
 		"jetons": jetons,
 		"buvette": {"record": buvette_record, "jour": buvette_jour, "services": buvette_services},
+		"club": club,
+		"pronos": pronos,
+		"pronos_finis": pronos_finis,
+		"serie_pronos": serie_pronos,
+		"meilleure_serie": meilleure_serie,
 	}
 	var f := FileAccess.open(CHEMIN_SAUVEGARDE, FileAccess.WRITE)
 	if f:
@@ -257,6 +420,12 @@ func charger() -> void:
 		buvette_record = int(bv.get("record", 0))
 		buvette_jour = str(bv.get("jour", ""))
 		buvette_services = int(bv.get("services", 0))
+	club = FanClub.reparer(d.get("club", null))
+	club["membres"] = club["membres"].filter(func(id): return not fanzzy_par_id(str(id)).is_empty())
+	pronos = d.get("pronos", {})
+	pronos_finis = d.get("pronos_finis", [])
+	serie_pronos = int(d.get("serie_pronos", 0))
+	meilleure_serie = int(d.get("meilleure_serie", 0))
 	# Un FANZZY retiré du catalogue ne doit pas casser la tribune.
 	for i in equipe.size():
 		if fanzzy_par_id(str(equipe[i])).is_empty():
@@ -277,4 +446,9 @@ func reinitialiser() -> void:
 	buvette_record = 0
 	buvette_jour = ""
 	buvette_services = 0
+	club = FanClub.vide()
+	pronos = {}
+	pronos_finis = []
+	serie_pronos = 0
+	meilleure_serie = 0
 	equipe = equipe_par_defaut()

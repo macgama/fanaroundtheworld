@@ -177,12 +177,15 @@ func _construire() -> void:
 	var n1 := Ui.label(Game.fan_club_nom.to_upper(), 30, Ui.BLANC, true, 8)
 	n1.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	n1.clip_text = true
+	n1.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
 	noms.add_child(n1)
 	noms.add_child(Ui.label("DUEL D'AMBIANCE", 40, Ui.JAUNE, true, 10))
 	var n2 := Ui.label(("TRIBUNE " + eux["nom"]).to_upper(), 30, Ui.BLANC, true, 8)
 	n2.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	n2.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 	n2.clip_text = true
+	# Sans « … », un nom long aligné à droite perdait son début sous le titre.
+	n2.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
 	noms.add_child(n2)
 	hj.add_child(noms)
 	_jauge_barre = Jauge.new()
@@ -671,6 +674,7 @@ func _finir() -> void:
 	Game.duels_joues += 1
 	if gagne:
 		Game.duels_gagnes += 1
+	Game.noter_duel_club()  # l'après-match fait tourner la buvette
 	Game.gagner_jetons(jetons)
 	Game.ajouter_xp(xp)
 	if gagne:

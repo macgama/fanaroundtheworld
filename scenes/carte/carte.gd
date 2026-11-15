@@ -19,6 +19,10 @@ var jour_filtre := ""     # "" = toute la semaine, "direct" = en direct, sinon A
 var match_choisi := ""
 var camp := "home"
 var mode_suivi := "stade"
+# pronostic en cours de saisie dans la fiche
+var _prono_dom := 1
+var _prono_ext := 0
+var _prono_pb := "home"
 
 var carte: CarteMonde
 var _titre_liste: Label
@@ -45,6 +49,7 @@ func _ready() -> void:
 	carte.pays_clique.connect(_sur_pays_clique)
 	_construire_interface()
 	Donnees.mis_a_jour.connect(_sur_donnees)
+	Game.pronostics_resolus.connect(_sur_pronos_resolus)
 	resized.connect(_placer_vue)
 	# Revenir là où on était (après un duel par exemple)
 	var p: Dictionary = Game.params
@@ -80,12 +85,16 @@ func _construire_interface() -> void:
 	var profil := Ui.panneau(Ui.NUIT, 20, 5)
 	var hp := Ui.hbox(12)
 	profil.add_child(hp)
-	var tex := TextureRect.new()
-	tex.texture = Game.texture_fanzzy(str(Game.equipe[0]), true) if Game.equipe.size() > 0 else null
-	tex.custom_minimum_size = Vector2(56, 56)
-	tex.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-	tex.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-	hp.add_child(tex)
+	if Game.club_cree():
+		var cc := Game.couleurs_club()
+		hp.add_child(Ui.ecusson(FanClub.sigle(Game.fan_club_nom), cc[0], cc[1], 52))
+	else:
+		var tex := TextureRect.new()
+		tex.texture = Game.texture_fanzzy(str(Game.equipe[0]), true) if Game.equipe.size() > 0 else null
+		tex.custom_minimum_size = Vector2(56, 56)
+		tex.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		tex.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+		hp.add_child(tex)
 	var vp := Ui.vbox(2)
 	hp.add_child(vp)
 	var nom := Ui.label(Game.fan_club_nom.to_upper(), 26, Ui.BLANC, true, 6)
@@ -183,8 +192,8 @@ func _construire_interface() -> void:
 	bas.set_anchors_preset(Control.PRESET_CENTER_BOTTOM)
 	bas.offset_top = -112
 	bas.offset_bottom = -20
-	bas.offset_left = -590
-	bas.offset_right = 590
+	bas.offset_left = -700
+	bas.offset_right = 700
 	bas.alignment = BoxContainer.ALIGNMENT_CENTER
 	add_child(bas)
 	var b_carte := Ui.bouton("Carte", Ui.JAUNE, 30)
@@ -197,17 +206,26 @@ func _construire_interface() -> void:
 	b_tribune.tooltip_text = "Choisir les FANZZY de ta tribune et leurs skins"
 	b_tribune.pressed.connect(func(): Game.aller(Game.SCENE_TRIBUNE, {"retour": "carte", "niveau": niveau, "continent": continent, "pays": pays}))
 	bas.add_child(b_tribune)
+	var b_pronos := Ui.bouton("Pronos", Ui.ROSE, 30)
+	b_pronos.custom_minimum_size = Vector2(210, 88)
+	b_pronos.tooltip_text = "Tes pronostics sur les vrais matchs (gratuits, sans mise)"
+	b_pronos.pressed.connect(func(): Game.aller(Game.SCENE_PRONOS, {"niveau": niveau, "continent": continent, "pays": pays}))
+	bas.add_child(b_pronos)
 	var b_buvette := Ui.bouton("Buvette", Ui.ROSE, 30)
 	b_buvette.custom_minimum_size = Vector2(210, 88)
 	b_buvette.tooltip_text = "Petit boulot : vendeur à la buvette (60 s) pour gagner des Jetons"
 	b_buvette.pressed.connect(func(): Game.aller(Game.SCENE_BUVETTE, {"niveau": niveau, "continent": continent, "pays": pays}))
 	bas.add_child(b_buvette)
-	for t in ["Fan Club", "PASS"]:
-		var b := Ui.bouton(t, Ui.NUIT_CLAIR, 30)
-		b.custom_minimum_size = Vector2(210, 88)
-		b.disabled = true
-		b.tooltip_text = "Bientôt"
-		bas.add_child(b)
+	var b_club := Ui.bouton("Fan Club", Ui.ROSE, 30)
+	b_club.custom_minimum_size = Vector2(210, 88)
+	b_club.tooltip_text = "Membres, cotisations, buvette et écharpes"
+	b_club.pressed.connect(func(): Game.aller(Game.SCENE_CLUB if Game.club_cree() else Game.SCENE_CREATION_CLUB))
+	bas.add_child(b_club)
+	var b_pass := Ui.bouton("PASS", Ui.NUIT_CLAIR, 30)
+	b_pass.custom_minimum_size = Vector2(210, 88)
+	b_pass.disabled = true
+	b_pass.tooltip_text = "Bientôt"
+	bas.add_child(b_pass)
 
 	_placer_vue()
 
@@ -542,6 +560,11 @@ func _carte_match(f: Dictionary) -> Control:
 	var pas := Ui.pastille(FicheMatch.statut_court(f), Ui.ROUGE if direct else (Ui.VERT if statut == "SCHEDULED" else Color("#6b6699")), 15)
 	pas.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	droite.add_child(pas)
+	if Game.pronos.has(str(f["id"])):
+		var pr: Dictionary = Game.pronos[str(f["id"])]
+		var tag := Ui.pastille("Prono %d-%d" % [int(pr["dom"]), int(pr["ext"])], Ui.ROSE, 14)
+		tag.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		droite.add_child(tag)
 	for c in b.find_children("*", "Control", true, false):
 		(c as Control).mouse_filter = Control.MOUSE_FILTER_IGNORE
 	var id: String = f["id"]
@@ -554,6 +577,10 @@ func _carte_match(f: Dictionary) -> Control:
 func _choisir_match(id: String) -> void:
 	match_choisi = id
 	camp = "home"
+	var pr := Game.prono_de(id)
+	_prono_dom = int(pr.get("dom", 1))
+	_prono_ext = int(pr.get("ext", 0))
+	_prono_pb = str(pr.get("premier_but", "home"))
 	var f := FicheMatch.de(Donnees.match_par_id(id))
 	# Choisir un stade depuis le monde ou un continent ouvre le pays du match.
 	if niveau != "pays" and f["lieu"]["pays"] != "" and f["lieu"]["niveau"] == "pays":
@@ -613,6 +640,7 @@ func _afficher_fiche() -> void:
 	v.add_child(_ligne("feu", "Ambiance prévue", "%d / 5" % FicheMatch.ambiance_prevue(f)))
 	var tamp := Game.a_tampon(f["stade"]["cle"])
 	v.add_child(_ligne("tampon", "Tampon du stade", "déjà dans ta collection" if tamp else "à gagner au stade"))
+	v.add_child(_bloc_prono(f))
 
 	# camp supporté
 	v.add_child(Ui.label("Tu supportes", 22, Ui.BLANC, true))
@@ -686,6 +714,149 @@ func _afficher_fiche() -> void:
 		go.text = FicheMatch.STATUTS.get(statut, "Indisponible")
 	go.pressed.connect(func(): _partir(f, cout_final))
 	v.add_child(go)
+
+
+# ------------------------------------------------------------------ pronostic
+
+func _bloc_prono(f: Dictionary) -> Control:
+	## Pronostic gratuit : score + premier but. Rien à miser, des Jetons à gagner.
+	var m: Dictionary = f["m"]
+	var id: String = f["id"]
+	var cadre := Ui.panneau(Ui.NUIT_CLAIR, 18, 4)
+	var v := Ui.vbox(8)
+	cadre.add_child(v)
+	var h := Ui.hbox(8)
+	h.add_child(Ui.icone("cible", 30))
+	var t := Ui.label("Ton pronostic", 22, Ui.BLANC, true)
+	t.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	h.add_child(t)
+	h.add_child(Ui.pastille("Gratuit · sans mise", Ui.VERT, 14, true))
+	v.add_child(h)
+
+	var pr := Game.prono_de(id)
+	var raison := Game.peut_pronostiquer(m)
+	if raison != "":
+		# Pronostic figé (match commencé ou terminé) : on l'affiche tel quel.
+		if pr.is_empty():
+			var l := Ui.label(raison, 17, Ui.GRIS)
+			l.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+			v.add_child(l)
+			return cadre
+		v.add_child(Ui.label(PronoTexte.resume(pr, f["dom"]["nom"], f["ext"]["nom"]), 19, Ui.JAUNE, true))
+		var etat := Ui.label(PronoTexte.etat(pr), 17, Ui.GRIS)
+		etat.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		v.add_child(etat)
+		return cadre
+
+	# saisie du score
+	var hs := Ui.hbox(10)
+	hs.alignment = BoxContainer.ALIGNMENT_CENTER
+	hs.add_child(_compteur(f["dom"]["sigle"], _prono_dom, func(n):
+		_prono_dom = n
+		_afficher_fiche()))
+	hs.add_child(Ui.label("–", 34, Ui.BLANC, true, 6))
+	hs.add_child(_compteur(f["ext"]["sigle"], _prono_ext, func(n):
+		_prono_ext = n
+		_afficher_fiche()))
+	v.add_child(hs)
+
+	# premier but : imposé par le score, sauf si les deux équipes marquent
+	_prono_pb = Pronostics.premier_but_coherent(_prono_dom, _prono_ext, _prono_pb)
+	var impose := Pronostics.premier_but_impose(_prono_dom, _prono_ext)
+	if impose == "":
+		v.add_child(Ui.label("Qui marque en premier ?", 18, Ui.BLANC, true))
+		var hp := Ui.hbox(8)
+		for cote in ["home", "away"]:
+			var e: Dictionary = f["dom"] if cote == "home" else f["ext"]
+			var b := Ui.bouton(e["nom"], Ui.ROSE if _prono_pb == cote else Ui.NUIT, 17)
+			b.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+			b.clip_text = true
+			b.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+			var cc: String = cote
+			b.pressed.connect(func():
+				_prono_pb = cc
+				_afficher_fiche())
+			hp.add_child(b)
+		v.add_child(hp)
+	else:
+		var txt := "Aucun but" if impose == "aucun" else "%s marque en premier" % (f["dom"]["nom"] if impose == "home" else f["ext"]["nom"])
+		v.add_child(Ui.label("Premier but : " + txt, 16, Ui.GRIS))
+
+	var multi := Pronostics.multiplicateur(Game.serie_pronos)
+	var gains := "Résultat +%d · score exact +%d · premier but +%d" % [
+		Pronostics.RECOMPENSE_RESULTAT, Pronostics.RECOMPENSE_SCORE, Pronostics.RECOMPENSE_PREMIER_BUT]
+	var lg := Ui.label(gains, 15, Ui.GRIS)
+	lg.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	v.add_child(lg)
+	if Game.serie_pronos > 0:
+		v.add_child(Ui.label("Série de %d · gains ×%s" % [Game.serie_pronos, str(multi)], 16, Ui.JAUNE, true))
+
+	var hb := Ui.hbox(8)
+	var deja := Game.pronos.has(id)
+	var ok := Ui.bouton("Modifier mon prono" if deja else "Valider mon prono", Ui.ROSE, 22)
+	ok.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	ok.pressed.connect(func():
+		if Game.pronostiquer(m, _prono_dom, _prono_ext, _prono_pb):
+			_rafraichir(false)
+			_afficher_fiche())
+	hb.add_child(ok)
+	if deja:
+		var annuler := Ui.bouton("Retirer", Ui.NUIT, 18)
+		annuler.pressed.connect(func():
+			Game.annuler_prono(id)
+			_rafraichir(false)
+			_afficher_fiche())
+		hb.add_child(annuler)
+	v.add_child(hb)
+	if deja:
+		var pd: Dictionary = Game.pronos[id]
+		v.add_child(Ui.label("Enregistré : " + PronoTexte.resume(pd, f["dom"]["nom"], f["ext"]["nom"]), 15, Ui.VERT))
+	return cadre
+
+
+func _compteur(sigle: String, valeur: int, rappel: Callable) -> Control:
+	var h := Ui.hbox(6)
+	var moins := Ui.bouton("-", Ui.NUIT, 24)
+	moins.custom_minimum_size = Vector2(52, 52)
+	moins.disabled = valeur <= 0
+	moins.pressed.connect(func(): rappel.call(valeur - 1))
+	h.add_child(moins)
+	var v := Ui.vbox(0)
+	var s := Ui.label(sigle, 14, Ui.GRIS, true)
+	s.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	v.add_child(s)
+	var n := Ui.label(str(valeur), 40, Ui.JAUNE, true, 6)
+	n.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	n.custom_minimum_size = Vector2(48, 0)
+	v.add_child(n)
+	h.add_child(v)
+	var plus := Ui.bouton("+", Ui.NUIT, 24)
+	plus.custom_minimum_size = Vector2(52, 52)
+	plus.disabled = valeur >= Pronostics.SCORE_MAX
+	plus.pressed.connect(func(): rappel.call(valeur + 1))
+	h.add_child(plus)
+	return h
+
+
+func _sur_pronos_resolus(liste: Array) -> void:
+	## Petite annonce en haut de l'écran pour chaque pronostic résolu.
+	var total := 0
+	for p in liste:
+		total += int(p.get("jetons", 0))
+	var txt := "%d pronostic%s terminé%s" % [liste.size(), "s" if liste.size() > 1 else "", "s" if liste.size() > 1 else ""]
+	txt += " · +%d Jetons" % total if total > 0 else " · pas de Jetons cette fois"
+	var toast := Ui.panneau(Ui.ROSE if total > 0 else Ui.NUIT, 20, 5)
+	toast.add_child(Ui.label(txt, 24, Ui.BLANC, true, 6))
+	toast.set_anchors_preset(Control.PRESET_CENTER_TOP)
+	toast.offset_top = 120
+	toast.grow_horizontal = Control.GROW_DIRECTION_BOTH
+	add_child(toast)
+	Ui.pop(toast, 1.1)
+	_rafraichir(false)
+	var tw := toast.create_tween()
+	tw.tween_interval(4.0)
+	tw.tween_property(toast, "modulate:a", 0.0, 0.5)
+	tw.tween_callback(toast.queue_free)
 
 
 func _partir(f: Dictionary, cout: int) -> void:
