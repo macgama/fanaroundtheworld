@@ -126,6 +126,7 @@ func _construire_interface() -> void:
 	etat.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	haut.add_child(etat)
 	haut.add_child(_bouton_missions())
+	haut.add_child(_bouton_classement())
 	var jet := Ui.panneau(Ui.NUIT, 20, 5)
 	var hj := Ui.hbox(8)
 	hj.add_child(Ui.icone("jeton", 36))
@@ -263,6 +264,17 @@ func _bouton_missions() -> Control:
 	b.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	b.tooltip_text = "Missions du jour et de la semaine : Jetons et XP de PASS"
 	b.pressed.connect(func(): Game.aller(Game.SCENE_MISSIONS, {"niveau": niveau, "continent": continent, "pays": pays}))
+	return b
+
+
+## Bouton « Classement » (fans et équipes, en ligne), avec ton rang de la semaine.
+func _bouton_classement() -> Control:
+	var rang: Variant = EnLigne.moi.get("rang_semaine")
+	var b := Ui.bouton("Classement" if rang == null or int(rang) <= 0 else "Classement · n° %d" % int(rang), Ui.BLEU, 24)
+	b.custom_minimum_size = Vector2(0, 64)
+	b.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	b.tooltip_text = "Les meilleurs fans et les équipes les plus soutenues, en ligne"
+	b.pressed.connect(func(): Game.aller(Game.SCENE_CLASSEMENT, {"niveau": niveau, "continent": continent, "pays": pays}))
 	return b
 
 
