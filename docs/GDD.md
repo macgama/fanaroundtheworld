@@ -138,8 +138,9 @@ Ils ne s'achètent pas et ne donnent jamais de skins.
 D'où viennent les Jetons :
 
 - **Duels d'ambiance** : selon la performance, avec un bonus si ton équipe gagne vraiment.
-- **Pronostics** sur les vrais matchs : score exact, buteur, et une série de bons pronos
-  qui multiplie les gains.
+- **Pronostics** sur les vrais matchs, **gratuits et sans mise** : résultat, score exact,
+  équipe qui marque en premier, et une série de bons pronos qui multiplie les gains
+  (détails dans `docs/pronostics.md`).
 - **Missions** du jour et de la semaine : « suis 3 matchs », « visite un nouveau stade ».
 - **Le fan club** : cotisations des membres, buvette, vente d'écharpes faites maison.
   Plus le club grandit, plus ça rapporte.
