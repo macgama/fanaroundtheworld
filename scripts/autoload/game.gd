@@ -26,6 +26,7 @@ const SCENE_PRONOS := "res://scenes/pronostics/pronostics.tscn"
 const SCENE_FAVORIS := "res://scenes/favoris/favoris.tscn"
 const SCENE_SALON := "res://scenes/salon/salon.tscn"
 const SCENE_MISSIONS := "res://scenes/missions/missions.tscn"
+const SCENE_COLLECTION := "res://scenes/collection/collection.tscn"
 
 ## Paramètres passés d'un écran à l'autre (match choisi, camp supporté…).
 var params: Dictionary = {}
@@ -58,6 +59,8 @@ var supporters: Dictionary = Supporters.vide()
 ## Missions du jour et de la semaine (voir Missions) et XP du PASS saisonnier.
 var missions: Dictionary = Missions.vide()
 var xp_pass := 0
+## Carnet de voyage et album des FANZZY : primes réclamées, FANZZY et skins vus en duel (voir Collection).
+var collection: Dictionary = Collection.vide()
 
 ## Où suivre le match. Au stade : billet + trajet, tampon du stade, plus de Jetons.
 const MODES_SUIVI := {
@@ -70,6 +73,7 @@ const ORDRE_MODES := ["stade", "ecran", "pub", "maison"]
 
 # --- Catalogue FANZZY (échantillon du prototype) ---
 var familles: Dictionary = {}
+var series_fanzzy: Dictionary = {}  # id de série -> {nom, ligne, couleur}
 var fanzzy: Array = []
 var _fanzzy_par_id: Dictionary = {}
 
@@ -113,7 +117,9 @@ func _outils_de_test() -> void:
 		var scenes := {"carte": SCENE_CARTE, "voyage": SCENE_VOYAGE, "tribune": SCENE_TRIBUNE, "duel": SCENE_DUEL,
 			"arene": SCENE_ARENE, "poussee": SCENE_POUSSEE,
 			"pronos": SCENE_PRONOS, "missions": SCENE_MISSIONS, "favoris": SCENE_FAVORIS, "club": SCENE_CLUB, "creation": SCENE_CREATION_CLUB, "buvette": SCENE_BUVETTE,
-			"salon": SCENE_SALON}
+			"salon": SCENE_SALON, "collection": SCENE_COLLECTION}
+		if args.has("onglet"):
+			p["onglet"] = args["onglet"]  # collection : « carnet » ou « album »
 		if args.has("salon"):
 			p["salon"] = args["salon"]  # test en ligne : « hote » ou l'adresse de l'hôte
 			if args.has("auto"):
@@ -310,9 +316,11 @@ func pronostiquer(m: Dictionary, dom: int, ext: int, premier_but: String) -> boo
 	return true
 
 
+## Appelé à la fin de chaque duel (ambiance, Arène, Poussée, en ligne ou non).
 func noter_duel_club() -> void:
 	if club_cree():
 		FanClub.noter_duel(club, maintenant())
+	noter_duel_collection()
 
 
 func annuler_prono(match_id: String) -> void:
@@ -507,6 +515,44 @@ func _annonce_missions(finies: Array) -> void:
 	tw.tween_callback(couche.queue_free)
 
 
+# ---------------------------------------------------------------- collection
+
+## Les FANZZY de la tribune (et leurs skins) entrent dans l'album.
+func noter_duel_collection() -> Array:
+	var ids := equipe.filter(func(id): return not fanzzy_par_id(str(id)).is_empty())
+	var nouveaux := Collection.noter_duel(collection, ids, ids.map(func(id): return skin_de(str(id))), Time.get_date_string_from_system())
+	sauver()
+	return nouveaux
+
+
+func lieux_visites() -> Dictionary:
+	return Collection.lieux_visites(tampons, Geo.pays_des_equipes, Geo.continent_de)
+
+
+func series_carnet() -> Array:
+	return Collection.series_carnet(collection, tampons, lieux_visites(), Donnees.championnats())
+
+
+func series_album() -> Array:
+	return Collection.series_album(collection, fanzzy, familles, series_fanzzy)
+
+
+## Nombre de primes de collection prêtes à réclamer (pastille sur la carte).
+func primes_pretes() -> int:
+	return Collection.pretes(series_carnet()).size() + Collection.pretes(series_album()).size()
+
+
+## Réclame la prime d'une série complète. Renvoie les Jetons gagnés (0 sinon).
+func reclamer_prime(id: String) -> int:
+	for s in series_carnet() + series_album():
+		if s["id"] == id:
+			var n := Collection.reclamer(collection, s, Time.get_date_string_from_system())
+			if n > 0:
+				gagner_jetons(n)
+			return n
+	return 0
+
+
 # ---------------------------------------------------------------- FANZZY
 
 func _charger_fanzzy() -> void:
@@ -517,6 +563,7 @@ func _charger_fanzzy() -> void:
 	var d: Variant = JSON.parse_string(f.get_as_text())
 	if d is Dictionary:
 		familles = d.get("familles", {})
+		series_fanzzy = d.get("series", {})
 		fanzzy = d.get("fanzzy", [])
 		for z in fanzzy:
 			_fanzzy_par_id[z["id"]] = z
@@ -581,6 +628,7 @@ func sauver() -> void:
 		"supporters": supporters,
 		"missions": missions,
 		"xp_pass": xp_pass,
+		"collection": collection,
 	}
 	var f := FileAccess.open(CHEMIN_SAUVEGARDE, FileAccess.WRITE)
 	if f:
@@ -617,6 +665,7 @@ func charger() -> void:
 	supporters = Supporters.reparer(d.get("supporters", null))
 	missions = Missions.reparer(d.get("missions", null))
 	xp_pass = int(d.get("xp_pass", 0))
+	collection = Collection.reparer(d.get("collection", null))
 	# Un FANZZY retiré du catalogue ne doit pas casser la tribune.
 	for i in equipe.size():
 		if fanzzy_par_id(str(equipe[i])).is_empty():
@@ -645,4 +694,5 @@ func reinitialiser() -> void:
 	supporters = Supporters.vide()
 	missions = Missions.vide()
 	xp_pass = 0
+	collection = Collection.vide()
 	equipe = equipe_par_defaut()

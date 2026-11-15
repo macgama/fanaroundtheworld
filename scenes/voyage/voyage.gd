@@ -61,6 +61,8 @@ func _arrive() -> void:
 	var nouveau := Game.tamponner(_fiche["stade"]["cle"], {
 		"nom": _fiche["stade"]["nom"], "club": _fiche["dom"]["nom"],
 		"date": Time.get_date_string_from_system(), "match": "%s – %s" % [_fiche["dom"]["nom"], _fiche["ext"]["nom"]],
+		"pays": _fiche["lieu"]["pays"], "continent": _fiche["lieu"]["continent"],
+		"competition": str(_fiche["m"].get("competition", {}).get("id", "")),
 	})
 	Game.sauver()
 	var voile := ColorRect.new()
@@ -100,6 +102,10 @@ func _arrive() -> void:
 	var msg := Ui.label("NOUVEAU TAMPON !" if nouveau else "Stade déjà tamponné, content de revenir !", 44 if nouveau else 30, Ui.JAUNE, true, 10)
 	msg.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	bas.add_child(msg)
+	if nouveau and Game.primes_pretes() > 0:
+		var pr := Ui.label("Prime de collection à réclamer sur la carte (compteur de tampons)", 22, Ui.BLANC, true, 6)
+		pr.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		bas.add_child(pr)
 	var b := Ui.bouton("ENTRER DANS LE STADE", Ui.VERT, 36)
 	Ui.colorer_bouton(b, Ui.VERT, true)
 	b.custom_minimum_size = Vector2(560, 96)

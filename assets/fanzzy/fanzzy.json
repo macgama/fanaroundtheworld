@@ -68,6 +68,28 @@
    ]
   }
  },
+ "series": {
+  "TR": {
+   "nom": "La Tribune",
+   "ligne": "ceux qui reviennent chaque samedi",
+   "couleur": "#E0402C"
+  },
+  "MS": {
+   "nom": "Les Métiers du Stade",
+   "ligne": "ceux qui font tourner la baraque",
+   "couleur": "#E08A2C"
+  },
+  "GD": {
+   "nom": "Les Galères de Déplacement",
+   "ligne": "neuf cents kilomètres, et ça commence mal",
+   "couleur": "#4A8FC0"
+  },
+  "AN": {
+   "nom": "Les Terraces",
+   "ligne": "debout sous le crachin, et le thé a déjà refroidi",
+   "couleur": "#3B7A57"
+  }
+ },
  "fanzzy": [
   {
    "id": "TR1",

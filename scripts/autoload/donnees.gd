@@ -143,6 +143,22 @@ func pays_avec_clubs() -> Array:
 	return p.keys()
 
 
+## Championnats nationaux connus : {id ligue: {titre (fictif), pays, clubs: [id]}}.
+## Sert au carnet de voyage (tamponner tous les stades d'une ligue).
+func championnats() -> Dictionary:
+	var res: Dictionary = {}
+	for comp_id in _equipes:
+		var pays := str(Geo.info_competition(comp_id).get("pays", ""))
+		if pays == "":
+			continue
+		var clubs: Array = []
+		for e in _equipes[comp_id]:
+			if str(e.get("id", "")) != "":
+				clubs.append(str(e["id"]))
+		res[comp_id] = {"titre": Fiction.competition({"id": comp_id}), "pays": pays, "clubs": clubs}
+	return res
+
+
 ## Pour les tests : remplace la liste des clubs.
 func injecter_equipes(d: Dictionary) -> void:
 	_lire_equipes(d)
