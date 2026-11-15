@@ -62,6 +62,11 @@ offset_bottom = 148.0
 alignment = 1
 theme_override_constants/separation = 10
 
+[node name="lever_bras" type="Button" parent="Boutons"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 18
+text = "Lever les bras"
+
 [node name="chanter" type="Button" parent="Boutons"]
 layout_mode = 2
 theme_override_font_sizes/font_size = 18
