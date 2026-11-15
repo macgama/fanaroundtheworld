@@ -80,12 +80,16 @@ func _construire_interface() -> void:
 	var profil := Ui.panneau(Ui.NUIT, 20, 5)
 	var hp := Ui.hbox(12)
 	profil.add_child(hp)
-	var tex := TextureRect.new()
-	tex.texture = Game.texture_fanzzy(str(Game.equipe[0]), true) if Game.equipe.size() > 0 else null
-	tex.custom_minimum_size = Vector2(56, 56)
-	tex.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-	tex.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-	hp.add_child(tex)
+	if Game.club_cree():
+		var cc := Game.couleurs_club()
+		hp.add_child(Ui.ecusson(FanClub.sigle(Game.fan_club_nom), cc[0], cc[1], 52))
+	else:
+		var tex := TextureRect.new()
+		tex.texture = Game.texture_fanzzy(str(Game.equipe[0]), true) if Game.equipe.size() > 0 else null
+		tex.custom_minimum_size = Vector2(56, 56)
+		tex.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		tex.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+		hp.add_child(tex)
 	var vp := Ui.vbox(2)
 	hp.add_child(vp)
 	var nom := Ui.label(Game.fan_club_nom.to_upper(), 26, Ui.BLANC, true, 6)
@@ -197,12 +201,16 @@ func _construire_interface() -> void:
 	b_tribune.tooltip_text = "Choisir les FANZZY de ta tribune et leurs skins"
 	b_tribune.pressed.connect(func(): Game.aller(Game.SCENE_TRIBUNE, {"retour": "carte", "niveau": niveau, "continent": continent, "pays": pays}))
 	bas.add_child(b_tribune)
-	for t in ["Fan Club", "PASS"]:
-		var b := Ui.bouton(t, Ui.NUIT_CLAIR, 30)
-		b.custom_minimum_size = Vector2(210, 88)
-		b.disabled = true
-		b.tooltip_text = "Bientôt"
-		bas.add_child(b)
+	var b_club := Ui.bouton("Fan Club", Ui.ROSE, 30)
+	b_club.custom_minimum_size = Vector2(210, 88)
+	b_club.tooltip_text = "Membres, cotisations, buvette et écharpes"
+	b_club.pressed.connect(func(): Game.aller(Game.SCENE_CLUB if Game.club_cree() else Game.SCENE_CREATION_CLUB))
+	bas.add_child(b_club)
+	var b_pass := Ui.bouton("PASS", Ui.NUIT_CLAIR, 30)
+	b_pass.custom_minimum_size = Vector2(210, 88)
+	b_pass.disabled = true
+	b_pass.tooltip_text = "Bientôt"
+	bas.add_child(b_pass)
 
 	_placer_vue()
 

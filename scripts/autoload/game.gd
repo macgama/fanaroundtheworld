@@ -3,7 +3,7 @@ extends Node
 ## Contient le fan club du joueur, sa position, ses tampons de stades,
 ## sa tribune de FANZZY et la navigation entre les écrans.
 
-const VERSION := "0.2.0"
+const VERSION := "0.3.0"
 const CHEMIN_SAUVEGARDE := "user://sauvegarde.json"
 
 const SCENE_TITRE := "res://scenes/main/main.tscn"
@@ -11,6 +11,8 @@ const SCENE_CARTE := "res://scenes/carte/carte.tscn"
 const SCENE_VOYAGE := "res://scenes/voyage/voyage.tscn"
 const SCENE_TRIBUNE := "res://scenes/tribune/tribune.tscn"
 const SCENE_DUEL := "res://scenes/duel/duel.tscn"
+const SCENE_CLUB := "res://scenes/club/club.tscn"
+const SCENE_CREATION_CLUB := "res://scenes/club/creation_club.tscn"
 
 ## Paramètres passés d'un écran à l'autre (match choisi, camp supporté…).
 var params: Dictionary = {}
@@ -26,6 +28,8 @@ var duels_gagnes := 0
 var duels_joues := 0
 ## Jetons : gagnés en jouant, dépensés en billets et trajets (jamais pour des skins).
 var jetons := 150
+## Membres, local et caisse du fan club (règles dans FanClub).
+var club: Dictionary = FanClub.vide()
 
 ## Où suivre le match. Au stade : billet + trajet, tampon du stade, plus de Jetons.
 const MODES_SUIVI := {
@@ -75,7 +79,8 @@ func _outils_de_test() -> void:
 			p = {"niveau": "continent", "continent": args["continent"]}
 		if args.has("match"):
 			p = {"match_id": args["match"], "camp": "home", "mode": args.get("mode", "stade"), "cout": 0}
-		var scenes := {"carte": SCENE_CARTE, "voyage": SCENE_VOYAGE, "tribune": SCENE_TRIBUNE, "duel": SCENE_DUEL}
+		var scenes := {"carte": SCENE_CARTE, "voyage": SCENE_VOYAGE, "tribune": SCENE_TRIBUNE, "duel": SCENE_DUEL,
+			"club": SCENE_CLUB, "creation": SCENE_CREATION_CLUB}
 		aller.call_deferred(scenes.get(args["scene"], SCENE_TITRE), p)
 	if args.has("capture"):
 		await get_tree().create_timer(float(args.get("apres", "3"))).timeout
@@ -145,6 +150,69 @@ func tamponner(cle: String, info: Dictionary) -> bool:
 	return true
 
 
+# ---------------------------------------------------------------- fan club
+
+static func maintenant() -> int:
+	return int(Time.get_unix_time_from_system())
+
+
+func club_cree() -> bool:
+	return bool(club.get("cree", false))
+
+
+func creer_club(nom: String, c1: String, c2: String) -> void:
+	## Les trois FANZZY de la tribune sont les membres fondateurs.
+	fan_club_nom = nom.strip_edges().substr(0, 28)
+	var fondateurs := equipe.filter(func(id): return not fanzzy_par_id(str(id)).is_empty())
+	club = FanClub.nouveau(fondateurs, c1, c2, maintenant())
+	sauver()
+
+
+func couleurs_club() -> Array:
+	var c: Array = club.get("couleurs", [FanClub.COULEURS[0], FanClub.COULEURS[7]])
+	return [Color(c[0]), Color(c[1])]
+
+
+func recruter(id: String) -> bool:
+	var ok := FanClub.recruter(club, id, niveau(), maintenant())
+	if ok:
+		sauver()
+	return ok
+
+
+func renvoyer(id: String) -> bool:
+	var ok := FanClub.renvoyer(club, id, maintenant())
+	if ok:
+		sauver()
+	return ok
+
+
+func recolter_caisse() -> int:
+	var n := FanClub.recolter(club, maintenant())
+	gagner_jetons(n)
+	return n
+
+
+func vendre_echarpes() -> int:
+	var n := FanClub.vendre_echarpes(club, maintenant())
+	gagner_jetons(n)
+	return n
+
+
+func ameliorer_local(type: String) -> bool:
+	var cout := FanClub.cout_amelioration(club, type)
+	if cout < 0 or not depenser(cout):
+		return false
+	FanClub.ameliorer(club, type, maintenant())
+	sauver()
+	return true
+
+
+func noter_duel_club() -> void:
+	if club_cree():
+		FanClub.noter_duel(club, maintenant())
+
+
 # ---------------------------------------------------------------- FANZZY
 
 func _charger_fanzzy() -> void:
@@ -210,6 +278,7 @@ func sauver() -> void:
 		"duels_gagnes": duels_gagnes,
 		"duels_joues": duels_joues,
 		"jetons": jetons,
+		"club": club,
 	}
 	var f := FileAccess.open(CHEMIN_SAUVEGARDE, FileAccess.WRITE)
 	if f:
@@ -232,6 +301,8 @@ func charger() -> void:
 	duels_gagnes = int(d.get("duels_gagnes", 0))
 	duels_joues = int(d.get("duels_joues", 0))
 	jetons = int(d.get("jetons", jetons))
+	club = FanClub.reparer(d.get("club", null))
+	club["membres"] = club["membres"].filter(func(id): return not fanzzy_par_id(str(id)).is_empty())
 	# Un FANZZY retiré du catalogue ne doit pas casser la tribune.
 	for i in equipe.size():
 		if fanzzy_par_id(str(equipe[i])).is_empty():
@@ -249,4 +320,5 @@ func reinitialiser() -> void:
 	duels_gagnes = 0
 	duels_joues = 0
 	jetons = 150
+	club = FanClub.vide()
 	equipe = equipe_par_defaut()

@@ -36,7 +36,7 @@ func _ready() -> void:
 	Ui.colorer_bouton(jouer, Ui.JAUNE, true)
 	jouer.custom_minimum_size = Vector2(420, 120)
 	jouer.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
-	jouer.pressed.connect(func(): Game.aller(Game.SCENE_CARTE))
+	jouer.pressed.connect(func(): Game.aller(Game.SCENE_CARTE if Game.club_cree() else Game.SCENE_CREATION_CLUB))
 	v.add_child(jouer)
 	_etat = Ui.label("", 20, Ui.BLANC)
 	_etat.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER

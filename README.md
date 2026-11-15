@@ -15,9 +15,10 @@ Le concept complet est dans [docs/GDD.md](docs/GDD.md).
 Le projet utilise le moteur de rendu *Compatibilité* pour tourner sur les petits PC
 et, plus tard, sur mobile.
 
-## Le prototype jouable (v0.2)
+## Le prototype jouable (v0.3)
 
-1. **Écran titre** : clique sur **JOUER**.
+1. **Écran titre** : clique sur **JOUER**. La première fois, **crée ton fan club** :
+   nom, deux couleurs, écusson. Tes 3 FANZZY de tribune sont les membres fondateurs.
 2. **Carte du monde** : les vrais matchs de la semaine (de la veille à J+7), relus
    toutes les 30 min, et le live relu chaque minute. Clique sur un continent, puis sur
    un pays. À gauche, la liste des matchs (filtre par jour ou « Direct »). Molette pour
@@ -32,6 +33,17 @@ et, plus tard, sur mobile.
    - **O** quand l'ola est prête, puis les **flèches** dans l'ordre ;
    - touches de test : **B** simule un but pour ton équipe, **N** un but adverse.
 
+**Le fan club** (bouton *Fan Club* en bas de la carte) :
+
+- **Recruter** des FANZZY : gratuit, mais le nombre de places dépend du niveau du club
+  (3 au niveau 1, puis +2 par niveau).
+- **Cotisations** : chaque membre verse 1 Jeton par heure.
+- **Buvette** : à ouvrir puis améliorer avec des Jetons ; elle rapporte double pendant
+  3 h après chaque duel.
+- **Atelier d'écharpes** : tricote des écharpes à vendre, leur prix monte avec la taille du club.
+- **Bonus de taille** : +5 % sur les recettes par membre. La caisse garde 8 h de recettes,
+  il faut passer **récolter**.
+
 Sans internet, le jeu garde la dernière semaine téléchargée. La toute première fois
 sans réseau, il affiche 16 matchs d'exemple. La partie est sauvegardée dans
 `user://sauvegarde.json` (sous Windows : `%APPDATA%\Godot\app_userdata\FanAroundTheWorld`).
@@ -41,9 +53,10 @@ Supprime ce fichier pour recommencer à zéro.
 
 | Dossier | Contenu |
 | --- | --- |
-| `scenes/` | Scènes Godot (`.tscn`) et leurs scripts, un sous-dossier par écran (`main/`, `carte/`, `voyage/`, `tribune/`, `duel/`) |
+| `scenes/` | Scènes Godot (`.tscn`) et leurs scripts, un sous-dossier par écran (`main/`, `carte/`, `voyage/`, `tribune/`, `duel/`, `club/`) |
 | `scripts/autoload/` | Scripts globaux chargés au démarrage (`Game` : état du jeu et sauvegarde, `Donnees` : vrais matchs) |
 | `scripts/donnees/` | Noms fictifs (`fiction.gd`), placement sur la carte (`geo.gd`), fiche d'un match |
+| `scripts/club/` | Règles du fan club (`fan_club.gd` : membres, cotisations, buvette, écharpes) |
 | `scripts/carte/` | La carte du monde dessinée |
 | `scripts/ui/` | Style commun de l'interface (couleurs, boutons, icônes) |
 | `assets/fanzzy/` | Les FANZZY (personnages jouables, avec leurs skins cosmétiques), importés depuis thebestfan.online |
@@ -55,7 +68,7 @@ Supprime ce fichier pour recommencer à zéro.
 | `tools/` | Scripts de préparation des données (carte du monde) |
 | `mods/` | Format des mods Steam Workshop (noms et couleurs de clubs) |
 | `docs/` | Game design et maquettes |
-| `tests/` | Tests automatiques (`godot --headless --path . --script tests/test_logique.gd`) |
+| `tests/` | Tests automatiques (`godot --headless --path . --script tests/test_logique.gd`, idem avec `test_club.gd`) |
 
 ## Règles du projet
 

@@ -45,13 +45,14 @@ func _ready() -> void:
 	var bas := Ui.hbox(20)
 	bas.alignment = BoxContainer.ALIGNMENT_CENTER
 	racine.add_child(bas)
-	var retour := Ui.bouton("Retour à la carte", Ui.NUIT, 28)
+	var vers_club: bool = p.get("retour", "") == "club"
+	var retour := Ui.bouton("Retour au fan club" if vers_club else "Retour à la carte", Ui.NUIT, 28)
 	retour.custom_minimum_size = Vector2(340, 84)
 	retour.pressed.connect(func():
 		# Partir avant le duel rembourse le billet.
 		if not m.is_empty():
 			Game.gagner_jetons(int(p.get("cout", 0)))
-		Game.aller(Game.SCENE_CARTE, p))
+		Game.aller(Game.SCENE_CLUB if vers_club else Game.SCENE_CARTE, p))
 	bas.add_child(retour)
 	if not m.is_empty():
 		var go := Ui.bouton("LANCER LE DUEL !", Ui.JAUNE, 40)
