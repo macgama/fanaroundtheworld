@@ -58,6 +58,11 @@ et, plus tard, sur mobile.
    - **ENTRÉE** ou **ESPACE** : servir · **RETOUR ARRIÈRE** : vider le plateau ;
    - à 30 s, c'est la mi-temps : le rush. Après 3 services dans la journée, la paye est divisée par deux.
 
+**Missions** (bouton en haut de la carte) : 3 missions du jour et 3 de la semaine
+(« suis 3 matchs », « visite un nouveau stade », « gagne un duel »…) qui rapportent des Jetons
+et de l'XP de PASS. Une mission du jour peut être changée une fois par jour, et une mission
+terminée mais oubliée est versée automatiquement. Détails dans [docs/missions.md](docs/missions.md).
+
 **Mes équipes** (bouton *Équipes* en bas de la carte) : choisis **un club favori par pays**
 et **une équipe nationale** (ou directement depuis la fiche d'un match : *En faire mon club favori*).
 Tes duels, pronos et déplacements pour elles, et les récoltes de ton fan club, leur donnent des
@@ -103,7 +108,7 @@ Supprime ce fichier pour recommencer à zéro.
 | `tools/` | Scripts de préparation des données (carte du monde, repérage des bras des FANZZY) |
 | `mods/` | Format des mods Steam Workshop (noms et couleurs de clubs) |
 | `docs/` | Game design et maquettes |
-| `tests/` | Tests automatiques (`godot --headless --path . --script tests/test_logique.gd`, `tests/test_pronostics.gd`, `tests/test_club.gd`, `tests/test_supporters.gd`, `tests/test_buvette.gd`, `tests/test_audio.gd`, et le parcours complet : `godot --headless --path . res://tests/test_pronostics_jeu.tscn -- --hors-ligne`, le tutoriel : `res://tests/test_tutoriel.tscn -- --hors-ligne`) |
+| `tests/` | Tests automatiques (`godot --headless --path . --script tests/test_logique.gd`, `tests/test_pronostics.gd`, `tests/test_club.gd`, `tests/test_supporters.gd`, `tests/test_buvette.gd`, `tests/test_collection.gd`, `tests/test_audio.gd`, et le parcours complet : `godot --headless --path . res://tests/test_pronostics_jeu.tscn -- --hors-ligne`, le tutoriel : `res://tests/test_tutoriel.tscn -- --hors-ligne`) |
 
 ## Règles du projet
 

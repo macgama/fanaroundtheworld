@@ -41,7 +41,7 @@ const ETAPES := [
 		"texte": "Choisis ton club favori dans un pays, et ton équipe nationale. Chaque duel et chaque prono pour elles leur donne de la popularité !",
 		"bouton": "Vers la carte"},
 	{"id": "match", "scenes": [SC_CARTE], "titre": "Choisis un match",
-		"texte": "Voici la carte du monde. Les épingles, ce sont les vrais matchs de la semaine ! Clique sur un continent, puis choisis un match dans la liste à gauche."},
+		"texte": "Voici la carte du monde. Les épingles, ce sont les vrais matchs de la semaine ! Choisis un match dans la liste à gauche, ou clique sur un continent pour en voir d'autres."},
 	{"id": "prono", "scenes": [SC_CARTE], "titre": "Ton prono",
 		"texte": "Avant le coup d'envoi, fais ton prono : le score et l'équipe qui marque en premier. C'est gratuit, et un bon prono rapporte des Jetons !",
 		"cible": "Valider mon prono", "bouton": "Plus tard"},
@@ -359,7 +359,9 @@ func _placer() -> void:
 	if etape == "bravo":
 		largeur = 560.0
 	elif sc == SC_CREATION or (etape == "duel" and not _reduit):
-		largeur = 500.0  # à côté d'un panneau qu'il ne faut pas cacher
+		largeur = 500.0
+	elif sc == SC_CARTE and not _reduit:
+		largeur = 620.0  # à côté d'un panneau qu'il ne faut pas cacher
 	_bulle.custom_minimum_size.x = largeur
 	_bulle.size = Vector2.ZERO
 	_bulle.reset_size()
