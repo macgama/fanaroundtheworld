@@ -11,6 +11,7 @@ func _init() -> void:
 	_tester_profil()
 	_tester_jauge()
 	_tester_annonces()
+	_tester_poussee()
 	print("Tests réseau : %d vérifications, %s" % [_verifs, "OK" if _echecs == 0 else "%d ÉCHEC(S)" % _echecs])
 	quit(1 if _echecs > 0 else 0)
 
@@ -67,6 +68,8 @@ func _tester_jauge() -> void:
 	hote.distant(g1)
 	_verifier(hote.jauge == 6.0, "geste de l'invité retiré chez l'hôte (10 - 4)")
 	# l'état part avant que g2 arrive : l'invité rejoue g2 par-dessus
+	_verifier(Protocole.valide(hote.etat(1.0)), "le message d'état est valide")
+	_verifier(Protocole.valide(g1), "le message de geste est valide")
 	invite.recaler(hote.etat(1.0))
 	_verifier(invite.jauge == -3.0, "invité recalé : -6 + 3 en vol = -3")
 	_verifier(invite.en_attente() == 1, "g1 confirmé")
@@ -96,3 +99,26 @@ func _tester_annonces() -> void:
 	_verifier(Protocole.lire_annonce(vieux).is_empty(), "autre version ignorée")
 	var port := JSON.stringify({"jeu": Protocole.JEU, "v": Protocole.VERSION, "port": 22}).to_utf8_buffer()
 	_verifier(Protocole.lire_annonce(port).is_empty(), "port bizarre ignoré")
+
+
+func _tester_poussee() -> void:
+	_verifier(Protocole.valide(Protocole.msg("lancer", {"jeu": "poussee"})), "lancer la Poussée")
+	_verifier(not Protocole.valide(Protocole.msg("lancer", {"jeu": "foot"})), "jeu inconnu refusé")
+	_verifier(Protocole.valide(Protocole.msg("carte", {"i": 2, "x": 300.0, "y": 400.0})), "carte valide")
+	_verifier(not Protocole.valide(Protocole.msg("carte", {"i": 7, "x": 300.0, "y": 400.0})), "carte hors de la main refusée")
+	_verifier(not Protocole.valide(Protocole.msg("carte", {"i": 1, "x": INF, "y": 400.0})), "position infinie refusée")
+	var inst := Protocole.msg("instant", {"tps": 12.5, "f": [3.0, 4.5], "tr": [1200.0, 980.0], "b": [960.0, 490.0, 0.3],
+		"m": ["tambour", "drapeau", "chorale", "canon", "serpentins"], "z": [[500.0, 400.0, "fumigene", 1, 3.2]],
+		"u": [[1, "tambour", 0, 400.0, 300.0, 0.8, 2, 1], [2, "canon", 1, 1500.0, 500.0, 1.0, 0, 0]]})
+	_verifier(Protocole.valide(inst), "instantané valide")
+	var faux := inst.duplicate(true)
+	faux["u"][0][1] = "bazooka"
+	_verifier(not Protocole.valide(faux), "unité inconnue refusée")
+	faux = inst.duplicate(true)
+	faux["m"] = ["tambour", 5]
+	_verifier(not Protocole.valide(faux), "main bizarre refusée")
+	_verifier(Protocole.valide(Protocole.msg("fin_p", {"res": -1, "r": "tribune"})), "fin de Poussée valide")
+	_verifier(not Protocole.valide(Protocole.msg("fin_p", {"res": 3, "r": "tribune"})), "résultat bizarre refusé")
+	var t := Rect2(150, 176, 1620, 630)
+	_verifier(is_equal_approx(Protocole.miroir_x(200.0, t), 1720.0), "terrain retourné pour l'invité")
+	_verifier(is_equal_approx(Protocole.miroir_x(Protocole.miroir_x(321.0, t), t), 321.0), "retourner deux fois = rien")

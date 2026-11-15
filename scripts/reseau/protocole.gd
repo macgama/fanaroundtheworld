@@ -20,17 +20,24 @@ const TYPES := {
 	"depart": [],                  # l'hôte lance le compte à rebours
 	"pousse": ["d", "n"],          # geste de l'invité : variation de jauge + numéro
 	"evt": ["e"],                  # effet à montrer chez l'autre (tifo, ola, combo…)
-	"etat": ["j", "ack", "t"],     # l'hôte : jauge (son point de vue), dernier geste reçu, temps
+	"etat": ["j", "ack", "tps"],     # l'hôte : jauge (son point de vue), dernier geste reçu, temps
 	"fin": ["j"],                  # l'hôte : jauge finale
-	"lancer": [],                  # l'hôte, dans le salon : on passe au duel
+	"lancer": ["jeu"],             # l'hôte, dans le salon : on passe au duel ("duel" ou "poussee")
+	# --- Poussée (l'hôte simule tout, l'invité affiche et envoie ses cartes)
+	"carte": ["i", "x", "y"],      # invité : joue la carte n° i de sa main à (x, y), dans SA vue
+	"instant": ["tps", "f", "tr", "b", "m", "z", "u"],  # hôte : instantané de la partie
+	"fin_p": ["res", "r"],         # hôte : résultat (de son point de vue) et raison
 }
 const EVENEMENTS := ["tifo", "ola", "ola_ratee", "combo", "but"]
+const JEUX := ["duel", "poussee"]
+const RAISONS_POUSSEE := ["but", "tribune", "temps", "forfait"]
 ## Un geste ne peut pas bouger la jauge de plus que ça (le tifo fait +17 au mieux).
 const POUSSE_MAX := 25.0
 const NOM_MAX := 28
 
 
 static func msg(t: String, donnees: Dictionary = {}) -> Dictionary:
+	assert(not donnees.has("t"), "« t » est réservé au type du message")
 	var m := donnees.duplicate()
 	m["t"] = t
 	return m
@@ -50,7 +57,7 @@ static func valide(m: Variant) -> bool:
 		"pousse":
 			return _nombre(m["d"]) and absf(float(m["d"])) <= POUSSE_MAX and _nombre(m["n"])
 		"etat":
-			return _nombre(m["j"]) and _nombre(m["ack"]) and _nombre(m["t"])
+			return _nombre(m["j"]) and _nombre(m["ack"]) and _nombre(m["tps"])
 		"fin":
 			return _nombre(m["j"])
 		"evt":
@@ -59,7 +66,53 @@ static func valide(m: Variant) -> bool:
 			return m["m"] is Dictionary and m["camp_hote"] in ["home", "away"]
 		"profil":
 			return m["equipe"] is Array and m["couleurs"] is Array and _nombre(m["v"])
+		"lancer":
+			return m["jeu"] in JEUX
+		"carte":
+			return _nombre(m["i"]) and int(m["i"]) >= 0 and int(m["i"]) < PousseeRegles.TAILLE_MAIN and _nombre(m["x"]) and _nombre(m["y"])
+		"fin_p":
+			return _nombre(m["res"]) and int(m["res"]) in [-1, 0, 1] and m["r"] in RAISONS_POUSSEE
+		"instant":
+			return _instant_valide(m)
 	return true
+
+
+## Instantané de la Poussée : seulement des nombres et des clés de cartes connues.
+static func _instant_valide(m: Dictionary) -> bool:
+	if not (_nombre(m["tps"]) and _nombres(m["f"], 2) and _nombres(m["tr"], 2) and _nombres(m["b"], 3)):
+		return false
+	if not m["m"] is Array or m["m"].size() > 8:
+		return false
+	for c in m["m"]:
+		if not c is String or not PousseeRegles.CARTES.has(c):
+			return false
+	if not m["z"] is Array or m["z"].size() > 40 or not m["u"] is Array or m["u"].size() > 200:
+		return false
+	for z in m["z"]:
+		# [x, y, type, equipe, reste]
+		if not z is Array or z.size() != 5 or not PousseeRegles.CARTES.has(z[2]) or not _nombres([z[0], z[1], z[3], z[4]], 4):
+			return false
+	for u in m["u"]:
+		# [id, cle, equipe, x, y, vie 0-1, chants, coups reçus]
+		if not u is Array or u.size() != 8 or not u[1] is String or not PousseeRegles.CARTES.has(u[1]):
+			return false
+		if not _nombres([u[0], u[2], u[3], u[4], u[5], u[6], u[7]], 7):
+			return false
+	return true
+
+
+static func _nombres(a: Variant, n: int) -> bool:
+	if not a is Array or a.size() != n:
+		return false
+	for v in a:
+		if not _nombre(v):
+			return false
+	return true
+
+
+## Vue de l'invité : le terrain est retourné (il joue toujours de gauche à droite).
+static func miroir_x(x: float, terrain: Rect2) -> float:
+	return terrain.position.x + terrain.end.x - x
 
 
 static func _nombre(v: Variant) -> bool:
@@ -142,7 +195,7 @@ class JaugePartagee:
 
 	## Hôte : message d'état à envoyer à l'invité.
 	func etat(temps: float) -> Dictionary:
-		return Protocole.msg("etat", {"j": jauge, "ack": _ack, "t": temps})
+		return Protocole.msg("etat", {"j": jauge, "ack": _ack, "tps": temps})
 
 	## Invité : état reçu de l'hôte.
 	func recaler(m: Dictionary) -> void:

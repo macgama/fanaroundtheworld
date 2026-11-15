@@ -47,10 +47,24 @@ var _ia_pense := [1.5, 1.5]
 var _auto := false             # démo : ton camp joue tout seul
 var _visuels := {}              # [equipe, famille] -> id FANZZY
 
+# --- en ligne : l'hôte simule tout (il est l'équipe 0 chez lui, l'invité l'équipe 1) ;
+# l'invité voit le terrain retourné (lui à gauche), envoie ses cartes et affiche les instantanés.
+var en_ligne := false
+var _invite := false            # vrai chez l'invité : pas de simulation locale
+var _uid := 0
+var _par_id := {}               # invité : id d'unité -> Unite
+var _t_instant := 0.0
+var _adv_pret := false
+var _depart_envoye := false
+var _ballon_cible := Vector2.ZERO
+var _main_vue := []
+
 
 func _ready() -> void:
 	var p: Dictionary = Game.params
-	var m := Donnees.match_par_id(str(p.get("match_id", "")))
+	en_ligne = bool(p.get("en_ligne", false)) and Reseau.connecte()
+	_invite = en_ligne and not Reseau.hote
+	var m: Dictionary = p.get("match", {}) if en_ligne else Donnees.match_par_id(str(p.get("match_id", "")))
 	if m.is_empty():
 		Game.aller(Game.SCENE_CARTE)
 		return
@@ -67,15 +81,21 @@ func _ready() -> void:
 	couleurs[1] = Duel._vive(eux["c1"], eux["c2"], Ui.ROUGE)
 	couleurs[1] = Ui.couleur_distincte(couleurs[0], couleurs[1])
 	noms[0] = Game.fan_club_nom
-	noms[1] = "Tribune " + str(eux["nom"])
+	noms[1] = str(Reseau.adversaire.get("nom", "?")) if en_ligne else "Tribune " + str(eux["nom"])
 	var cartes := PousseeRegles.cartes_debloquees(Game.niveau())
 	piles[0] = PousseeRegles.nouvelle_pile(cartes, _rng)
 	# l'adversaire a le même jeu que toi : la partie reste équitable
 	piles[1] = PousseeRegles.nouvelle_pile(cartes, _rng)
 	ballon["pos"] = TERRAIN.get_center()
+	_ballon_cible = ballon["pos"]
+	if _invite:
+		piles[0] = []  # la main de l'invité arrive avec les instantanés de l'hôte
 	_choisir_visuels()
 	_construire()
-	_compte_a_rebours()
+	if en_ligne:
+		_preparer_en_ligne()
+	else:
+		_compte_a_rebours()
 
 
 ## Quel FANZZY représente chaque carte : les tiens d'abord, sinon le catalogue.
@@ -291,7 +311,7 @@ func _unhandled_input(ev: InputEvent) -> void:
 				var cle: String = piles[0][selection]
 				if not zone_permise(0, cle, pos):
 					texte(pos, "DANS TA MOITIÉ !", Ui.ROSE)
-				elif not poser(0, selection, pos):
+				elif not _jouer(selection, pos):
 					texte(pos, "PAS ASSEZ DE FERVEUR", Ui.ROSE)
 				else:
 					selection = -1
@@ -322,18 +342,42 @@ func poser(e: int, i: int, pos: Vector2) -> bool:
 		return true
 	var nb: int = c["nb"]
 	for k in nb:
-		var u := Unite.new()
-		u.jeu = self
-		u.equipe = e
-		u.cle = cle
-		u.carte = c
-		u.pv = c["pv"]
-		u.position = pos + (Vector2.from_angle(k * TAU / nb) * 34.0 if nb > 1 else Vector2.ZERO)
-		u.couleur = couleurs[e]
-		u.creer(str(_visuels.get([e, c["famille"]], "")))
-		_monde.add_child(u)
-		unites.append(u)
+		_uid += 1
+		_creer_unite(_uid, e, cle, pos + (Vector2.from_angle(k * TAU / nb) * 34.0 if nb > 1 else Vector2.ZERO))
 	_pluie(pos, couleurs[e], 14)
+	return true
+
+
+func _creer_unite(uid: int, e: int, cle: String, pos: Vector2) -> Unite:
+	var c: Dictionary = PousseeRegles.CARTES[cle]
+	var u := Unite.new()
+	u.jeu = self
+	u.uid = uid
+	u.equipe = e
+	u.cle = cle
+	u.carte = c
+	u.pv = c["pv"]
+	u.position = pos
+	u.cible = pos
+	u.couleur = couleurs[e]
+	u.creer(str(_visuels.get([e, c["famille"]], "")))
+	_monde.add_child(u)
+	unites.append(u)
+	return u
+
+
+## Ta carte n° i : posée tout de suite, ou envoyée à l'hôte si tu es l'invité.
+func _jouer(i: int, pos: Vector2) -> bool:
+	if not _invite:
+		return poser(0, i, pos)
+	var cout := float(PousseeRegles.CARTES[piles[0][i]]["cout"])
+	if ferveur[0] < cout:
+		return false
+	ferveur[0] -= cout  # en attendant l'instantané de l'hôte
+	posees[0] += 1
+	Reseau.envoyer(Protocole.msg("carte", {"i": i, "x": pos.x, "y": pos.y}))
+	_pluie(pos, couleurs[0], 10)
+	_maj_main()
 	return true
 
 
@@ -345,6 +389,10 @@ func _process(delta: float) -> void:
 	_ciel.queue_redraw()
 	if not en_cours or termine:
 		return
+	if _invite:
+		_suivre_hote(delta)
+		_maj_hud()
+		return
 	temps += delta
 	for e in 2:
 		var avant: int = int(ferveur[e])
@@ -354,7 +402,8 @@ func _process(delta: float) -> void:
 	if temps >= PousseeRegles.DUREE - PousseeRegles.RUSH and temps - delta < PousseeRegles.DUREE - PousseeRegles.RUSH:
 		annoncer("DERNIÈRE MINUTE : FERVEUR x2 !", Ui.ROSE)
 		get_tree().create_timer(1.5).timeout.connect(func(): if not termine: _lbl_annonce.text = "")
-	_ia(1, delta)
+	if not en_ligne:
+		_ia(1, delta)
 	if _auto:
 		_ia(0, delta)
 	for u in unites.duplicate():
@@ -365,6 +414,22 @@ func _process(delta: float) -> void:
 	for z in zones:
 		z["reste"] -= delta
 	zones = zones.filter(func(z): return z["reste"] > 0.0)
+	if en_ligne:
+		_t_instant -= delta
+		if _t_instant <= 0.0:
+			_t_instant = 0.05
+			Reseau.envoyer_vite(_instant())
+	_maj_hud()
+	if tribune[1] <= 0.0:
+		_finir(1, "TRIBUNE CONQUISE !")
+	elif tribune[0] <= 0.0:
+		_finir(-1, "ILS ONT CONQUIS TA TRIBUNE…")
+	elif temps >= PousseeRegles.DUREE:
+		var res := PousseeRegles.resultat_temps(tribune[0], tribune[1])
+		_finir(res, "FIN DU TEMPS !")
+
+
+func _maj_hud() -> void:
 	var reste := maxf(PousseeRegles.DUREE - temps, 0.0)
 	_lbl_temps.text = "%d:%02d" % [int(reste) / 60, int(reste) % 60]
 	_lbl_temps.add_theme_color_override("font_color", Ui.ROSE if reste < 20.0 else Ui.BLANC)
@@ -373,13 +438,6 @@ func _process(delta: float) -> void:
 		_barres[e].queue_redraw()
 	_ferveur_barre.valeur = ferveur[0]
 	_ferveur_barre.queue_redraw()
-	if tribune[1] <= 0.0:
-		_finir(1, "TRIBUNE CONQUISE !")
-	elif tribune[0] <= 0.0:
-		_finir(-1, "ILS ONT CONQUIS TA TRIBUNE…")
-	elif temps >= PousseeRegles.DUREE:
-		var res := PousseeRegles.resultat_temps(tribune[0], tribune[1])
-		_finir(res, "FIN DU TEMPS !")
 
 
 func _sens(e: int) -> float:
@@ -589,7 +647,138 @@ func _ia(e: int, delta: float) -> void:
 	if PousseeRegles.CARTES[main[choix]]["type"] != "effet":
 		pos.x = minf(pos.x, x_min) if e == 0 else maxf(pos.x, x_min)
 	if zone_permise(e, main[choix], pos):
-		poser(e, choix, pos)
+		if e == 0:
+			_jouer(choix, pos)
+		else:
+			poser(e, choix, pos)
+
+
+# ------------------------------------------------------------------ en ligne
+
+const RAISONS_CODE := {"BUUUUT !": "but", "TRIBUNE CONQUISE !": "tribune", "ILS ONT CONQUIS TA TRIBUNE…": "tribune",
+	"FIN DU TEMPS !": "temps", "L'ADVERSAIRE EST PARTI !": "forfait"}
+
+
+func _preparer_en_ligne() -> void:
+	Reseau.message.connect(_sur_message)
+	Reseau.adversaire_parti.connect(_sur_adversaire_parti)
+	annoncer("En attente de %s…" % Reseau.adversaire.get("nom", "l'adversaire"), Ui.BLANC)
+	Reseau.envoyer(Protocole.msg("pret"))
+
+
+func _sur_message(m: Dictionary) -> void:
+	match m["t"]:
+		"pret":
+			_adv_pret = true
+			if _invite:
+				Reseau.envoyer(Protocole.msg("pret"))  # l'hôte est arrivé après : on le redit
+			elif not _depart_envoye:
+				_depart_envoye = true
+				Reseau.envoyer(Protocole.msg("depart"))
+				_compte_a_rebours()
+		"depart":
+			if _invite and not _depart_envoye:
+				_depart_envoye = true
+				_compte_a_rebours()
+		"carte":
+			# hôte : carte de l'invité, position dans SA vue (retournée)
+			if not _invite and en_cours and not termine:
+				var pos := Vector2(Protocole.miroir_x(float(m["x"]), TERRAIN), float(m["y"]))
+				var i := int(m["i"])
+				if i < piles[1].size() and zone_permise(1, piles[1][i], pos):
+					poser(1, i, pos)
+		"instant":
+			if _invite and not termine:
+				_appliquer(m)
+		"fin_p":
+			if _invite:
+				var res := -int(m["res"])
+				var textes := {"but": "BUUUUT !", "temps": "FIN DU TEMPS !", "forfait": "L'ADVERSAIRE EST PARTI !",
+					"tribune": "TRIBUNE CONQUISE !" if res > 0 else "ILS ONT CONQUIS TA TRIBUNE…"}
+				if m["r"] == "tribune":
+					tribune[1 if res > 0 else 0] = 0.0  # le dernier instantané a pu partir juste avant
+				en_cours = true
+				_finir(res, textes[m["r"]])
+
+
+func _sur_adversaire_parti() -> void:
+	if termine:
+		return
+	if not en_cours:
+		Game.aller(Game.SCENE_SALON, Game.params)
+		return
+	_finir(1, "L'ADVERSAIRE EST PARTI !")
+
+
+## Hôte : tout ce que l'invité doit afficher (20 fois par seconde).
+func _instant() -> Dictionary:
+	var us: Array = []
+	for u in unites:
+		if u.actif:
+			us.append([u.uid, u.cle, u.equipe, snappedf(u.position.x, 0.1), snappedf(u.position.y, 0.1),
+				snappedf(clampf(u.pv / float(u.carte["pv"]), 0.0, 1.0), 0.01), u.chants, u.coups])
+	var zs: Array = []
+	for z in zones:
+		zs.append([z["pos"].x, z["pos"].y, z["type"], z["equipe"], snappedf(z["reste"], 0.1)])
+	var b: Vector2 = ballon["pos"]
+	return Protocole.msg("instant", {"tps": temps, "f": [ferveur[0], ferveur[1]], "tr": [tribune[0], tribune[1]],
+		"b": [b.x, b.y, float(ballon.get("rot", 0.0))], "m": piles[1].slice(0, PousseeRegles.TAILLE_MAIN + 1), "z": zs, "u": us})
+
+
+## Invité : on retourne l'instantané (l'hôte devient l'équipe 1, à droite).
+func _appliquer(m: Dictionary) -> void:
+	temps = float(m["tps"])
+	var f0 := int(ferveur[0])
+	ferveur = [float(m["f"][1]), float(m["f"][0])]
+	tribune = [float(m["tr"][1]), float(m["tr"][0])]
+	_ballon_cible = Vector2(Protocole.miroir_x(float(m["b"][0]), TERRAIN), float(m["b"][1]))
+	ballon["rot"] = -float(m["b"][2])
+	if m["m"] != piles[0] or int(ferveur[0]) != f0:
+		piles[0] = m["m"]
+		if selection >= mini(piles[0].size(), PousseeRegles.TAILLE_MAIN):
+			selection = -1
+		_maj_main()
+	zones = []
+	for z in m["z"]:
+		var c: Dictionary = PousseeRegles.CARTES[z[2]]
+		zones.append({"pos": Vector2(Protocole.miroir_x(float(z[0]), TERRAIN), float(z[1])), "rayon": c.get("rayon", 100.0),
+			"type": z[2], "equipe": 1 - int(z[3]), "reste": float(z[4]), "duree": c.get("duree", 1.0)})
+	var vus := {}
+	for d in m["u"]:
+		var uid := int(d[0])
+		var e := 1 - int(d[2])
+		var pos := Vector2(Protocole.miroir_x(float(d[3]), TERRAIN), float(d[4]))
+		vus[uid] = true
+		var u: Unite = _par_id.get(uid)
+		if u == null:
+			u = _creer_unite(uid, e, str(d[1]), pos)
+			_par_id[uid] = u
+		u.cible = pos
+		u.pv = float(d[5]) * float(u.carte["pv"])
+		if int(d[6]) > u.chants:
+			u.chanter()
+			u.chants = int(d[6])
+		if int(d[7]) > u.coups:
+			u.secouer()
+			u.coups = int(d[7])
+	for uid in _par_id.keys():
+		if not vus.has(uid):
+			var u: Unite = _par_id[uid]
+			_par_id.erase(uid)
+			if is_instance_valid(u):
+				u.s_asseoir()
+
+
+## Invité : les unités et le ballon glissent vers les positions de l'hôte.
+func _suivre_hote(delta: float) -> void:
+	var k := minf(1.0, delta * 14.0)
+	for u in unites:
+		if u.actif:
+			var v: Vector2 = (u.cible - u.position) * k
+			u.avancer(v, v.length() > 0.4)
+	ballon["pos"] = (ballon["pos"] as Vector2).lerp(_ballon_cible, k)
+	if _auto:
+		_ia(0, delta)
 
 
 # ------------------------------------------------------------------ effets
@@ -630,6 +819,8 @@ func _finir(res: int, pourquoi: String) -> void:
 	termine = true
 	vainqueur = res
 	raison = pourquoi
+	if en_ligne and not _invite:
+		Reseau.envoyer(Protocole.msg("fin_p", {"res": res, "r": RAISONS_CODE.get(pourquoi, "temps")}))
 	selection = -1
 	var gagne := res > 0
 	annoncer(pourquoi, Ui.JAUNE if gagne else (Ui.BLANC if res == 0 else Ui.ROSE))
@@ -652,7 +843,7 @@ func _finir(res: int, pourquoi: String) -> void:
 		["Bonus « ton équipe gagne vraiment »", "x1,3" if g["equipe_gagne"] else "non"],
 		["Jetons gagnés", "+%d" % g["jetons"]],
 		["XP du fan club", "+%d" % g["xp"]],
-	] + FinDuel.ligne_popularite(g), Game.SCENE_POUSSEE)
+	] + FinDuel.ligne_popularite(g), Game.SCENE_SALON if en_ligne and Reseau.connecte() else Game.SCENE_POUSSEE)
 
 
 # ================================================================== classes
@@ -660,6 +851,10 @@ func _finir(res: int, pourquoi: String) -> void:
 ## Un supporter posé sur le terrain (ou un canon à confettis).
 class Unite extends Node2D:
 	var jeu
+	var uid := 0
+	var cible := Vector2.ZERO     # invité : position donnée par l'hôte
+	var chants := 0               # compteurs envoyés à l'invité pour rejouer les animations
+	var coups := 0
 	var equipe := 0
 	var cle := ""
 	var carte: Dictionary
@@ -703,12 +898,14 @@ class Unite extends Node2D:
 			corps.cap = signf(dx)
 
 	func chanter() -> void:
+		chants += 1
 		if corps:
 			corps.jouer(&"lancer" if float(carte["portee"]) > 100.0 else &"chanter", 0.45)
 		else:
 			queue_redraw()
 
 	func secouer() -> void:
+		coups += 1
 		_secousse = 0.2
 
 	func s_asseoir() -> void:

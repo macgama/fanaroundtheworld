@@ -39,6 +39,8 @@ var _barre_xp: ProgressBar
 
 
 func _ready() -> void:
+	if Reseau.en_salon():
+		Reseau.quitter()  # revenir à la carte, c'est quitter le salon en ligne
 	set_anchors_preset(Control.PRESET_FULL_RECT)
 	carte = CarteMonde.new()
 	carte.set_anchors_preset(Control.PRESET_FULL_RECT)

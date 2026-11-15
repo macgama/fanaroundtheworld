@@ -1,7 +1,7 @@
 # Jouer contre un ami ou un autre joueur
 
-Prototype v0.4 : le **duel d'ambiance** se joue contre un vrai joueur. Arène et Poussée
-restent contre l'IA pour l'instant (voir « Étapes suivantes »).
+Le **duel d'ambiance** et la **Poussée** se jouent contre un vrai joueur. L'Arène reste
+contre l'IA pour l'instant (voir « Étapes suivantes »).
 
 ## Pour le joueur
 
@@ -9,7 +9,7 @@ restent contre l'IA pour l'instant (voir « Étapes suivantes »).
 - **Carte** → **En ligne** : rejoindre un ami, trouver un adversaire, ou ouvrir un salon
   (le match est alors le prochain match du calendrier).
 - Dans le salon, chacun voit le fan club et les 3 FANZZY de l'autre (avec ses skins).
-  L'hôte appuie sur **LANCER LE DUEL**. L'invité soutient l'autre équipe du match.
+  L'hôte choisit **DUEL D'AMBIANCE** ou **POUSSÉE**. L'invité soutient l'autre équipe du match.
 - Après le duel : **Revanche** (retour au salon, toujours connectés) ou retour à la carte.
 - Si l'adversaire s'en va pendant le duel, tu gagnes par forfait.
 
@@ -48,6 +48,23 @@ restent contre l'IA pour l'instant (voir « Étapes suivantes »).
 | `scripts/autoload/reseau.gd` | Transport : Steam ou ENet, salons, invitations, recherche |
 | `scenes/salon/` | Écran du salon |
 | `scenes/duel/duel.gd` | Mode en ligne du duel d'ambiance |
+| `scenes/poussee/poussee.gd` | Mode en ligne de la Poussée |
+
+### La Poussée en ligne
+
+- **L'hôte simule toute la partie** (unités, ballon, tribunes, Ferveur des deux camps,
+  et la pile de cartes de l'invité). Pas de « lockstep » : les calculs en nombres à virgule
+  et le temps de chaque image ne sont pas identiques d'un PC à l'autre, une simulation en
+  double finirait par diverger.
+- **L'invité envoie ses cartes** (« carte » : n° dans sa main + position) et reçoit
+  20 instantanés par seconde (« instant » : temps, Ferveur, tribunes, ballon, sa main,
+  zones d'effet, unités avec leur vie et des compteurs de chants et de coups pour rejouer
+  les animations). Ses FANZZY glissent vers les positions reçues.
+- **Terrain retourné chez l'invité** : chacun se voit à gauche et attaque vers la droite
+  (`Protocole.miroir_x`). L'hôte vérifie la carte (dans la main, dans la bonne moitié,
+  assez de Ferveur) avant de la poser.
+- Une carte de l'invité met un aller-retour réseau à apparaître (souvent moins de 0,1 s) :
+  normal pour un jeu de cartes.
 
 ### Les deux transports
 
@@ -61,14 +78,15 @@ restent contre l'IA pour l'instant (voir « Étapes suivantes »).
 Par Internet sans Steam, l'hôte doit ouvrir le port 24680 de sa box : c'est réservé aux
 tests. Pour les vrais joueurs, Steam s'occupe de tout.
 
-### Brancher Steam (à faire, rien à payer pour tester)
+### Steam (GodotSteam)
 
-Le code Steam est écrit mais **pas encore testé** : il faut l'extension et un PC avec Steam.
+L'extension **GodotSteam GDExtension 4.24** (Steamworks SDK 1.65, licence MIT, projet
+hébergé sur Codeberg) est dans `addons/godotsteam/` : Windows 64 bits, Linux 64 bits et
+macOS. `SteamMultiplayerPeer` en fait partie. Elle se charge ; le jeu passe tout seul en
+réseau local si Steam n'est pas lancé.
 
-1. Dans Godot : AssetLib → **GodotSteam GDExtension** (version 4.x pour Godot 4.5),
-   installer. Il faut la classe `SteamMultiplayerPeer` (incluse dans les versions
-   récentes de GodotSteam, sinon l'extension « GodotSteam MultiplayerPeer »).
-2. Lancer avec Steam ouvert. Tant que le jeu n'a pas son App ID (100 $ de frais Steam
+1. Lancer avec Steam ouvert (test : `godot --path . -- --scene=salon --salon=steam --journal`).
+2. `steam_appid.txt` contient 480. Tant que le jeu n'a pas son App ID (100 $ de frais Steam
    Direct, pas encore payés), `Reseau.APP_ID_STEAM = 480` : l'appli de test de Valve
    (« Spacewar »). Les salons sont filtrés par `jeu = fanaroundtheworld` et la version.
 3. Tester à deux comptes Steam sur deux PC : « Défier un ami Steam » puis invitation.
@@ -82,10 +100,13 @@ Deux fenêtres sur le même PC (ou deux PC du même réseau) :
     godot --path . -- --scene=salon --salon=127.0.0.1 --auto
 
 `--auto` : la tribune joue toute seule et l'hôte lance le duel dès que l'invité arrive.
+`--jeu=poussee` (côté hôte) : lance la Poussée au lieu du duel d'ambiance.
 `--quitter` : écrit le résultat et ferme à la fin du duel.
 Tests sans réseau : `godot --headless --path . --script tests/test_reseau.gd`.
 
-Vérifié : un duel complet entre deux jeux (jauges finales +82,6 / −82,6, identiques),
+Vérifié : un duel complet entre deux jeux (jauges finales identiques, ±100),
+une Poussée complète (fin du temps, tribunes 1200/1020 des deux côtés, 33 cartes de l'invité
+posées chez l'hôte),
 et l'invité qui coupe en plein duel (l'hôte gagne par forfait). Les deux jeux d'un
 même PC partagent la même sauvegarde : normal pour un test.
 
@@ -99,9 +120,7 @@ même PC partagent la même sauvegarde : normal pour un test.
 
 ## Étapes suivantes proposées
 
-1. Installer GodotSteam et tester avec l'App ID 480 sur deux PC.
-2. **Poussée en ligne** : la simulation se prête au « lockstep » (on n'échange que les
-   cartes posées, avec leur instant) ; il faudra rendre ses tirages aléatoires communs.
-3. **Arène en ligne** : l'hôte simule, l'invité envoie ses commandes et reçoit des
-   instantanés (plus de travail, à faire après Poussée).
-4. Classement par saison et récompenses de duel en ligne, une fois le PASS en place.
+1. Tester Steam avec l'App ID 480 sur deux PC (deux comptes Steam).
+2. **Arène en ligne** : même principe que la Poussée (l'hôte simule), mais l'invité bouge
+   en continu : il faudra prédire son propre FANZZY pour que ça reste réactif.
+3. Classement par saison et récompenses de duel en ligne, une fois le PASS en place.

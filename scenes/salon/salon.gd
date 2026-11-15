@@ -90,6 +90,10 @@ func _ready() -> void:
 	var salon := str(p.get("salon", ""))
 	if salon == "hote":
 		Reseau.creer_salon_lan()
+	elif salon == "steam":
+		Reseau.creer_salon_steam(false)  # test : salon d'amis Steam
+	elif salon == "steam-trouver":
+		Reseau.trouver_adversaire_steam()
 	elif not salon.is_empty():
 		Reseau.rejoindre_lan(salon)
 	if Reseau.hote:
@@ -129,6 +133,8 @@ func _maj() -> void:
 	if not is_inside_tree():
 		return
 	_statut.text = Reseau.statut
+	if "--journal" in OS.get_cmdline_user_args():
+		print("SALON [%s%s] %s" % [Reseau.transport, " hôte" if Reseau.hote else "", Reseau.statut])
 	_remplir_carte(_carte_moi, Game.fan_club_nom, Game.couleurs_club(), Game.equipe.map(func(id): return Game.skin_de(str(id))), "Toi · niveau %d" % Game.niveau())
 	var adv := Reseau.adversaire
 	if adv.is_empty():
@@ -177,11 +183,12 @@ func _maj() -> void:
 		return
 	if Reseau.hote:
 		if Reseau.connecte():
-			_bouton("LANCER LE DUEL", Ui.JAUNE, _lancer, true)
+			_bouton("DUEL D'AMBIANCE\nrythme · 90 s", Ui.JAUNE, func(): _lancer("duel"), true)
+			_bouton("POUSSÉE\ncartes et ballon · 3 min", Ui.VERT, func(): _lancer("poussee"), true)
 		elif Reseau.transport == "steam":
 			_bouton("Inviter un ami Steam", Ui.JAUNE, func(): Reseau.inviter_amis_steam(), true)
 	elif Reseau.connecte():
-		var l := Ui.label("L'hôte va lancer le duel", 24, Ui.JAUNE, true, 6)
+		var l := Ui.label("L'hôte choisit le jeu et lance le duel", 24, Ui.JAUNE, true, 6)
 		l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		_actions.add_child(l)
 	_bouton("Quitter le salon", Ui.NUIT, func(): Reseau.quitter())
@@ -229,28 +236,28 @@ func _sur_adversaire() -> void:
 	if _auto and Reseau.hote:
 		await get_tree().create_timer(1.0).timeout
 		if Reseau.connecte():
-			_lancer()
+			_lancer(str(Game.params.get("jeu", "duel")))
 
 
-## Hôte : les deux joueurs passent au duel.
-func _lancer() -> void:
-	if not Reseau.hote or not Reseau.connecte() or Reseau.match_salon.is_empty():
+## Hôte : les deux joueurs passent au duel (« duel » d'ambiance ou « poussee »).
+func _lancer(jeu: String) -> void:
+	if not Reseau.hote or not Reseau.connecte() or Reseau.match_salon.is_empty() or not jeu in Protocole.JEUX:
 		return
-	Reseau.envoyer(Protocole.msg("lancer"))
-	_aller_au_duel()
+	Reseau.envoyer(Protocole.msg("lancer", {"jeu": jeu}))
+	_aller_au_duel(jeu)
 
 
 func _sur_message(m: Dictionary) -> void:
 	if m["t"] == "lancer" and not Reseau.hote and not Reseau.match_salon.is_empty():
-		_aller_au_duel()
+		_aller_au_duel(str(m["jeu"]))
 
 
-func _aller_au_duel() -> void:
+func _aller_au_duel(jeu: String) -> void:
 	var p: Dictionary = Game.params
 	var m := Reseau.match_salon
-	Game.aller(Game.SCENE_DUEL, {
+	Game.aller(Game.SCENE_POUSSEE if jeu == "poussee" else Game.SCENE_DUEL, {
 		"en_ligne": true, "match": m, "match_id": str(m.get("id", "")), "camp": Reseau.mon_camp(),
 		# l'invité suit le match « au pub » avec l'hôte : gains normaux, pas de billet
 		"mode": str(p.get("mode", "stade")) if Reseau.hote else "pub",
-		"auto": _auto, "cout": 0,
+		"auto": _auto, "cout": 0, "jeu": jeu,
 	})

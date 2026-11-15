@@ -324,12 +324,15 @@ func salons_lan() -> Array:
 ## SteamMultiplayerPeer sont là, et que le client Steam tourne. Sinon : réseau local.
 func _initialiser_steam() -> void:
 	if not Engine.has_singleton("Steam") or not ClassDB.class_exists("SteamMultiplayerPeer"):
+		if Engine.has_singleton("Steam"):
+			print("Steam : extension trouvée mais pas SteamMultiplayerPeer")
 		return
 	_steam = Engine.get_singleton("Steam")
 	OS.set_environment("SteamAppId", str(APP_ID_STEAM))
 	OS.set_environment("SteamGameId", str(APP_ID_STEAM))
 	var r: Variant = _steam.call("steamInitEx")
 	steam_ok = r is Dictionary and int(r.get("status", 1)) == 0
+	print("Steam : %s" % str(r))
 	if not steam_ok:
 		push_warning("Steam pas disponible : %s" % str(r))
 		return
