@@ -37,7 +37,18 @@ static func enregistrer(gagne: bool, perf: float, fiche: Dictionary, camp: Strin
 	g["equipe"] = fiche.get("dom" if camp == "home" else "ext", {}).get("nom", "")
 	Game.gagner_jetons(g["jetons"])
 	Game.ajouter_xp(g["xp"])
+	g["evenement"] = Game.recompense_evenement(fiche.get("m", {}), int(g["jetons"]))
 	return g
+
+
+## Lignes « Bonus Derby » et « Prime de la soirée » du panneau de fin, ou [].
+static func lignes_evenement(ev: Dictionary) -> Array:
+	if ev.is_empty():
+		return []
+	var lignes := [["Bonus %s (%s)" % [ev["titre"], ev["texte_mult"]], "+%d Jetons" % int(ev["bonus"])]]
+	if int(ev.get("prime_xp", 0)) > 0:
+		lignes.append(["Prime de la soirée", "+%d XP PASS · +%d Jetons" % [int(ev["prime_xp"]), int(ev["prime_jetons"])]])
+	return lignes
 
 
 ## Ligne « Popularité » du panneau de fin, ou [] si l'équipe n'est pas un favori.
@@ -58,8 +69,9 @@ static func panneau(parent: Control, titre: String, gagne: bool, lignes: Array, 
 	pan.set_anchors_preset(Control.PRESET_CENTER)
 	pan.offset_left = -460
 	pan.offset_right = 460
-	pan.offset_top = -300
-	pan.offset_bottom = 300
+	var demi_h := 300 + 24 * maxi(0, lignes.size() - 8)  # lignes en plus : derby, prime…
+	pan.offset_top = -demi_h
+	pan.offset_bottom = demi_h
 	parent.add_child(pan)
 	var v := Ui.vbox(12)
 	v.alignment = BoxContainer.ALIGNMENT_CENTER
@@ -90,5 +102,5 @@ static func panneau(parent: Control, titre: String, gagne: bool, lignes: Array, 
 	v.add_child(Ui.espace())
 	v.add_child(hb)
 	pan.scale = Vector2(0.6, 0.6)
-	pan.pivot_offset = Vector2(460, 300)
+	pan.pivot_offset = Vector2(460, demi_h)
 	pan.create_tween().tween_property(pan, "scale", Vector2.ONE, 0.35).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)

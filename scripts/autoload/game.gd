@@ -62,6 +62,10 @@ var missions: Dictionary = Missions.vide()
 var xp_pass := 0
 ## Carnet de voyage et album des FANZZY : primes réclamées, FANZZY et skins vus en duel (voir Collection).
 var collection: Dictionary = Collection.vide()
+## Événements autour des vrais matchs (voir Evenements) : primes déjà gagnées, par match.
+var evenements: Dictionary = {"primes": {}}
+## Matchs du calendrier avec un événement en cours ou à venir (recalculé à chaque mise à jour).
+var nb_evenements := 0
 
 ## Où suivre le match. Au stade : billet + trajet, tampon du stade, plus de Jetons.
 const MODES_SUIVI := {
@@ -282,7 +286,9 @@ func ameliorer_local(type: String) -> bool:
 
 func _brancher_pronostics() -> void:
 	Donnees.mis_a_jour.connect(resoudre_pronostics)
+	Donnees.mis_a_jour.connect(_compter_evenements)
 	resoudre_pronostics()
+	_compter_evenements()
 
 
 func prono_de(match_id: String) -> Dictionary:
@@ -435,7 +441,8 @@ func _annoncer(points: int, raison: String, cle := "") -> void:
 # ---------------------------------------------------------------- missions
 
 func _ctx_missions() -> Dictionary:
-	return {"club": club_cree(), "favoris": not Supporters.cles_favorites(supporters).is_empty()}
+	return {"club": club_cree(), "favoris": not Supporters.cles_favorites(supporters).is_empty(),
+		"evenements": nb_evenements > 0}
 
 
 static func heure_locale() -> int:
@@ -514,6 +521,57 @@ func _annonce_missions(finies: Array) -> void:
 	tw.tween_interval(3.5)
 	tw.tween_property(toast, "modulate:a", 0.0, 0.5)
 	tw.tween_callback(couche.queue_free)
+
+
+# ---------------------------------------------------------------- événements
+
+## Derby, finale, Grand Choc… du match, ou {} (voir Evenements.detecter).
+func evenement_de(m: Dictionary) -> Dictionary:
+	Fiction._charger()
+	return Evenements.detecter(m, Donnees.villes(), Geo.pays_des_equipes, Fiction._surcharges)
+
+
+## "a_venir", "actif" (bonus en cours) ou "fini".
+func etat_evenement(m: Dictionary) -> String:
+	return Evenements.etat(Donnees.heure_unix(m), maintenant())
+
+
+func prime_evenement_gagnee(match_id: String) -> bool:
+	return evenements.get("primes", {}).has(match_id)
+
+
+func _compter_evenements() -> void:
+	var n := 0
+	for m in Donnees.matchs():
+		if etat_evenement(m) != "fini" and not evenement_de(m).is_empty():
+			n += 1
+	nb_evenements = n
+
+
+## Fin d'un duel sur un match spécial : Jetons en plus (multiplicateur de
+## l'événement) et, au premier duel sur ce match, la prime fixe (XP de PASS + Jetons).
+## Renvoie {} hors événement, sinon {titre, texte_mult, bonus, prime_xp, prime_jetons}.
+func recompense_evenement(m: Dictionary, jetons_duel: int) -> Dictionary:
+	var ev := evenement_de(m)
+	if ev.is_empty() or etat_evenement(m) != "actif":
+		return {}
+	var id := str(m.get("id", ""))
+	var r := {
+		"type": ev["type"], "titre": ev["titre"], "texte_mult": Evenements.texte_mult(ev),
+		"bonus": Evenements.bonus_jetons(ev, jetons_duel), "prime_xp": 0, "prime_jetons": 0,
+	}
+	var primes: Dictionary = evenements.get("primes", {})
+	if id != "" and not primes.has(id):
+		primes[id] = maintenant()
+		r["prime_xp"] = int(ev["xp_pass"])
+		r["prime_jetons"] = int(ev["jetons"])
+	Evenements.nettoyer_primes(primes, maintenant())
+	evenements["primes"] = primes
+	jetons += int(r["bonus"]) + int(r["prime_jetons"])
+	xp_pass += int(r["prime_xp"])
+	noter_mission("evenement", str(ev["type"]))
+	sauver()
+	return r
 
 
 # ---------------------------------------------------------------- collection
@@ -630,6 +688,7 @@ func sauver() -> void:
 		"missions": missions,
 		"xp_pass": xp_pass,
 		"collection": collection,
+		"evenements": evenements,
 	}
 	var f := FileAccess.open(CHEMIN_SAUVEGARDE, FileAccess.WRITE)
 	if f:
@@ -667,6 +726,8 @@ func charger() -> void:
 	missions = Missions.reparer(d.get("missions", null))
 	xp_pass = int(d.get("xp_pass", 0))
 	collection = Collection.reparer(d.get("collection", null))
+	var ev: Variant = d.get("evenements", null)
+	evenements = ev if ev is Dictionary and ev.get("primes") is Dictionary else {"primes": {}}
 	# Un FANZZY retiré du catalogue ne doit pas casser la tribune.
 	for i in equipe.size():
 		if fanzzy_par_id(str(equipe[i])).is_empty():
@@ -696,4 +757,5 @@ func reinitialiser() -> void:
 	missions = Missions.vide()
 	xp_pass = 0
 	collection = Collection.vide()
+	evenements = {"primes": {}}
 	equipe = equipe_par_defaut()
