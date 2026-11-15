@@ -137,8 +137,16 @@ func _construire_interface() -> void:
 	var ht := Ui.hbox(8)
 	ht.add_child(Ui.icone("tampon", 36))
 	ht.add_child(Ui.label("%d" % Game.tampons.size(), 28, Ui.BLANC, true, 6))
+	var primes := Game.primes_pretes()
+	if primes > 0:
+		ht.add_child(Ui.pastille("%d prime%s !" % [primes, "" if primes == 1 else "s"], Ui.JAUNE, 18, true))
 	tamp.add_child(ht)
-	tamp.tooltip_text = "Stades tamponnés"
+	# Clic : la collection (carnet de voyage et album des FANZZY).
+	tamp.tooltip_text = "Collection : stades tamponnés, album des FANZZY et primes"
+	tamp.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
+	tamp.gui_input.connect(func(e: InputEvent):
+		if e is InputEventMouseButton and e.pressed and e.button_index == MOUSE_BUTTON_LEFT:
+			Game.aller(Game.SCENE_COLLECTION, {"niveau": niveau, "continent": continent, "pays": pays}))
 	haut.add_child(tamp)
 
 	# --- panneau de gauche : liste des matchs
