@@ -125,6 +125,7 @@ func _construire_interface() -> void:
 	etat.add_child(_etat_donnees)
 	etat.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	haut.add_child(etat)
+	haut.add_child(_bouton_missions())
 	var jet := Ui.panneau(Ui.NUIT, 20, 5)
 	var hj := Ui.hbox(8)
 	hj.add_child(Ui.icone("jeton", 36))
@@ -241,6 +242,20 @@ func _construire_interface() -> void:
 	bas.add_child(b_pass)
 
 	_placer_vue()
+
+
+## Bouton « Missions » de la barre du haut, avec le nombre de récompenses à récupérer.
+func _bouton_missions() -> Control:
+	Game.actualiser_missions()
+	var n := Missions.a_recuperer(Game.missions)
+	var b := Ui.bouton("Missions" if n == 0 else "Missions · %d" % n, Ui.VERT if n > 0 else Ui.NUIT, 24)
+	if n > 0:
+		Ui.colorer_bouton(b, Ui.VERT, true)
+	b.custom_minimum_size = Vector2(0, 64)
+	b.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	b.tooltip_text = "Missions du jour et de la semaine : Jetons et XP de PASS"
+	b.pressed.connect(func(): Game.aller(Game.SCENE_MISSIONS, {"niveau": niveau, "continent": continent, "pays": pays}))
+	return b
 
 
 # ------------------------------------------------------------------ navigation

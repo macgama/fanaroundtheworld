@@ -6,6 +6,8 @@ extends Node
 signal pronostics_resolus(liste: Array)
 ## Une équipe favorite a gagné des points de popularité (pour les petites annonces).
 signal popularite_gagnee(cle: String, points: int, raison: String)
+## Des missions du jour ou de la semaine viennent d'être terminées.
+signal missions_terminees(liste: Array)
 
 const VERSION := "0.3.0"
 const CHEMIN_SAUVEGARDE := "user://sauvegarde.json"
@@ -23,6 +25,7 @@ const SCENE_CREATION_CLUB := "res://scenes/club/creation_club.tscn"
 const SCENE_PRONOS := "res://scenes/pronostics/pronostics.tscn"
 const SCENE_FAVORIS := "res://scenes/favoris/favoris.tscn"
 const SCENE_SALON := "res://scenes/salon/salon.tscn"
+const SCENE_MISSIONS := "res://scenes/missions/missions.tscn"
 
 ## Paramètres passés d'un écran à l'autre (match choisi, camp supporté…).
 var params: Dictionary = {}
@@ -52,6 +55,9 @@ var meilleure_serie := 0
 const MAX_HISTORIQUE_PRONOS := 40
 ## Équipes favorites (un club par pays + une sélection) et popularité (voir Supporters).
 var supporters: Dictionary = Supporters.vide()
+## Missions du jour et de la semaine (voir Missions) et XP du PASS saisonnier.
+var missions: Dictionary = Missions.vide()
+var xp_pass := 0
 
 ## Où suivre le match. Au stade : billet + trajet, tampon du stade, plus de Jetons.
 const MODES_SUIVI := {
@@ -106,7 +112,7 @@ func _outils_de_test() -> void:
 				p["auto"] = true  # Arène / Poussée : ton camp joue tout seul (démo)
 		var scenes := {"carte": SCENE_CARTE, "voyage": SCENE_VOYAGE, "tribune": SCENE_TRIBUNE, "duel": SCENE_DUEL,
 			"arene": SCENE_ARENE, "poussee": SCENE_POUSSEE,
-			"pronos": SCENE_PRONOS, "favoris": SCENE_FAVORIS, "club": SCENE_CLUB, "creation": SCENE_CREATION_CLUB, "buvette": SCENE_BUVETTE,
+			"pronos": SCENE_PRONOS, "missions": SCENE_MISSIONS, "favoris": SCENE_FAVORIS, "club": SCENE_CLUB, "creation": SCENE_CREATION_CLUB, "buvette": SCENE_BUVETTE,
 			"salon": SCENE_SALON}
 		if args.has("salon"):
 			p["salon"] = args["salon"]  # test en ligne : « hote » ou l'adresse de l'hôte
@@ -186,6 +192,7 @@ func finir_service_buvette(paye: int) -> void:
 	buvette_services = services_buvette_du_jour() + 1
 	buvette_jour = jour
 	buvette_record = maxi(buvette_record, paye)
+	noter_mission("buvette")
 	gagner_jetons(paye)
 
 
@@ -198,6 +205,7 @@ func tamponner(cle: String, info: Dictionary) -> bool:
 	if tampons.has(cle):
 		return false
 	tampons[cle] = info
+	noter_mission("nouveau_stade", cle)
 	sauver()
 	return true
 
@@ -242,6 +250,8 @@ func renvoyer(id: String) -> bool:
 func recolter_caisse() -> int:
 	var n := FanClub.recolter(club, maintenant())
 	_annoncer(Supporters.noter_club(supporters, n, maintenant()), "club")
+	if n > 0:
+		noter_mission("recolte")
 	gagner_jetons(n)
 	return n
 
@@ -292,7 +302,10 @@ func pronostiquer(m: Dictionary, dom: int, ext: int, premier_but: String) -> boo
 	if peut_pronostiquer(m) != "":
 		return false
 	var maintenant := int(Time.get_unix_time_from_system())
+	var nouveau := not pronos.has(str(m["id"]))
 	pronos[str(m["id"])] = Pronostics.creer(m, dom, ext, premier_but, maintenant)
+	if nouveau:
+		noter_mission("prono")
 	sauver()
 	return true
 
@@ -337,6 +350,8 @@ func resoudre_pronostics() -> void:
 		var pop := Supporters.noter_prono(supporters, p, r, maintenant)
 		p["popularite"] = pop
 		_annoncer(pop, "prono")
+		if bool(r.get("resultat_ok", false)):
+			noter_mission("prono_bon")
 		pronos.erase(id)
 		pronos_finis.push_front(p)
 		resolus.append(p)
@@ -381,6 +396,13 @@ func camps_favoris(m: Dictionary) -> Array:
 func noter_duel_favori(m: Dictionary, camp: String, gagne: bool, mode_suivi: String) -> int:
 	var n := Supporters.noter_duel(supporters, m, camp, gagne, gain_suivi(mode_suivi), maintenant())
 	_annoncer(n, "duel", Supporters.cle_equipe(m.get(camp, {}), Fiction.est_selection(m)))
+	# Appelée à la fin de chaque partie, dans les trois modes : on en profite pour les missions.
+	var jeu := _jeu_en_cours()
+	noter_mission("duel_joue", jeu)
+	if gagne:
+		noter_mission("duel_gagne", jeu)
+	if n > 0:
+		noter_mission("favori")
 	return n
 
 
@@ -388,6 +410,10 @@ func noter_duel_favori(m: Dictionary, camp: String, gagne: bool, mode_suivi: Str
 func noter_suivi_favori(m: Dictionary, camp: String, mode_suivi: String) -> int:
 	var n := Supporters.noter_suivi(supporters, m, camp, mode_suivi, maintenant())
 	_annoncer(n, "suivi", Supporters.cle_equipe(m.get(camp, {}), Fiction.est_selection(m)))
+	noter_mission("suivre", mode_suivi)
+	noter_mission("suivre_pays", str(Geo.lieu_match(m).get("pays", "")))
+	if n > 0:
+		noter_mission("favori")
 	return n
 
 
@@ -395,6 +421,90 @@ func _annoncer(points: int, raison: String, cle := "") -> void:
 	if points > 0:
 		sauver()
 		popularite_gagnee.emit(cle, points, raison)
+
+
+# ---------------------------------------------------------------- missions
+
+func _ctx_missions() -> Dictionary:
+	return {"club": club_cree(), "favoris": not Supporters.cles_favorites(supporters).is_empty()}
+
+
+static func heure_locale() -> int:
+	return maintenant() + FicheMatch.decalage_local()
+
+
+## Duel d'ambiance, Arène ou Poussée, d'après l'écran ouvert.
+func _jeu_en_cours() -> String:
+	var sc := get_tree().current_scene
+	var chemin := sc.scene_file_path if sc else ""
+	for jeu in ["arene", "poussee", "duel"]:
+		if chemin.ends_with("/%s.tscn" % jeu):
+			return jeu
+	return "duel"
+
+
+## Renouvelle les missions si besoin ; verse les récompenses oubliées de la veille.
+func actualiser_missions() -> Dictionary:
+	var verse := Missions.actualiser(missions, heure_locale(), _ctx_missions())
+	if int(verse["jetons"]) > 0 or int(verse["xp_pass"]) > 0:
+		jetons += int(verse["jetons"])
+		xp_pass += int(verse["xp_pass"])
+		sauver()
+	return verse
+
+
+func noter_mission(evt: String, cle := "", n := 1) -> void:
+	actualiser_missions()
+	var finies := Missions.noter(missions, evt, cle, n)
+	if finies.is_empty():
+		return
+	sauver()
+	missions_terminees.emit(finies)
+	_annonce_missions(finies)
+
+
+func recuperer_mission(periode: String, index: int) -> Dictionary:
+	actualiser_missions()
+	var g := Missions.recuperer(missions, periode, index)
+	if not g.is_empty():
+		jetons += int(g["jetons"])
+		xp_pass += int(g["xp_pass"])
+		sauver()
+	return g
+
+
+func changer_mission(index: int) -> bool:
+	var ok := Missions.changer(missions, index, _ctx_missions())
+	if ok:
+		sauver()
+	return ok
+
+
+## Petite annonce par-dessus n'importe quel écran quand une mission est terminée.
+func _annonce_missions(finies: Array) -> void:
+	if DisplayServer.get_name() == "headless" or not is_inside_tree():
+		return
+	var couche := CanvasLayer.new()
+	couche.layer = 50
+	add_child(couche)
+	var toast := Ui.panneau(Ui.VERT, 20, 5)
+	var h := Ui.hbox(10)
+	h.add_child(Ui.icone("cible", 34))
+	var txt := "Mission terminée : %s" % finies[0]["titre"] if finies.size() == 1 else "%d missions terminées !" % finies.size()
+	var l := Ui.label(txt + " · à récupérer dans Missions", 22, Ui.CONTOUR, true)
+	h.add_child(l)
+	toast.add_child(h)
+	toast.set_anchors_preset(Control.PRESET_CENTER_BOTTOM)
+	toast.grow_horizontal = Control.GROW_DIRECTION_BOTH
+	toast.grow_vertical = Control.GROW_DIRECTION_BEGIN
+	toast.offset_bottom = -130
+	toast.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	couche.add_child(toast)
+	Ui.pop(toast, 1.1)
+	var tw := toast.create_tween()
+	tw.tween_interval(3.5)
+	tw.tween_property(toast, "modulate:a", 0.0, 0.5)
+	tw.tween_callback(couche.queue_free)
 
 
 # ---------------------------------------------------------------- FANZZY
@@ -469,6 +579,8 @@ func sauver() -> void:
 		"serie_pronos": serie_pronos,
 		"meilleure_serie": meilleure_serie,
 		"supporters": supporters,
+		"missions": missions,
+		"xp_pass": xp_pass,
 	}
 	var f := FileAccess.open(CHEMIN_SAUVEGARDE, FileAccess.WRITE)
 	if f:
@@ -503,6 +615,8 @@ func charger() -> void:
 	serie_pronos = int(d.get("serie_pronos", 0))
 	meilleure_serie = int(d.get("meilleure_serie", 0))
 	supporters = Supporters.reparer(d.get("supporters", null))
+	missions = Missions.reparer(d.get("missions", null))
+	xp_pass = int(d.get("xp_pass", 0))
 	# Un FANZZY retiré du catalogue ne doit pas casser la tribune.
 	for i in equipe.size():
 		if fanzzy_par_id(str(equipe[i])).is_empty():
@@ -529,4 +643,6 @@ func reinitialiser() -> void:
 	serie_pronos = 0
 	meilleure_serie = 0
 	supporters = Supporters.vide()
+	missions = Missions.vide()
+	xp_pass = 0
 	equipe = equipe_par_defaut()
