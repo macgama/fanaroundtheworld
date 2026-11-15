@@ -140,7 +140,7 @@ func _traiter(m: Variant) -> void:
 
 func _envoyer_profil() -> void:
 	var skins: Array = Game.equipe.map(func(id): return Game.skin_de(str(id)))
-	envoyer(Protocole.profil(Game.fan_club_nom, Game.couleurs_club(), skins, Game.niveau()))
+	envoyer(Protocole.profil(Game.fan_club_nom, Game.couleurs_club(), skins, Game.niveau(), Game.equipe))
 
 
 ## Hôte : choisit le match du duel et l'envoie à l'invité.

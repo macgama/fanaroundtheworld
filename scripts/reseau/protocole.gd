@@ -10,7 +10,7 @@ extends RefCounted
 
 ## Change dès que le format des messages change : deux versions différentes
 ## refusent de jouer ensemble.
-const VERSION := 1
+const VERSION := 2
 const JEU := "fanaroundtheworld"
 
 const TYPES := {
@@ -27,9 +27,16 @@ const TYPES := {
 	"carte": ["i", "x", "y"],      # invité : joue la carte n° i de sa main à (x, y), dans SA vue
 	"instant": ["tps", "f", "tr", "b", "m", "z", "u"],  # hôte : instantané de la partie
 	"fin_p": ["res", "r"],         # hôte : résultat (de son point de vue) et raison
+	# --- Arène (l'hôte simule, l'invité dirige un FANZZY)
+	"cmd": ["d", "v", "c", "n"],   # invité, 30 fois/s : direction, visée (SA vue), FANZZY dirigé, numéro
+	"act": ["a", "x", "y"],        # invité : tir, tir chargé, super ou roulade, vers (x, y)
+	"arene": ["tps", "bd", "to", "ack", "ctl", "j", "bl", "mu", "nu", "on"],  # hôte : instantané
+	"fin_a": ["bd", "to", "ne"],   # hôte : banderoles, touches, alliés nettoyés (son point de vue)
 }
 const EVENEMENTS := ["tifo", "ola", "ola_ratee", "combo", "but"]
-const JEUX := ["duel", "poussee"]
+const JEUX := ["duel", "poussee", "arene"]
+const ACTIONS_ARENE := ["tir", "tir_charge", "super", "roulade"]
+const ONDES := ["cone", "cercle", "soin"]
 const RAISONS_POUSSEE := ["but", "tribune", "temps", "forfait"]
 ## Un geste ne peut pas bouger la jauge de plus que ça (le tifo fait +17 au mieux).
 const POUSSE_MAX := 25.0
@@ -74,6 +81,14 @@ static func valide(m: Variant) -> bool:
 			return _nombre(m["res"]) and int(m["res"]) in [-1, 0, 1] and m["r"] in RAISONS_POUSSEE
 		"instant":
 			return _instant_valide(m)
+		"cmd":
+			return _nombres(m["d"], 2) and _nombres(m["v"], 2) and _nombre(m["c"]) and int(m["c"]) in [0, 1, 2] and _nombre(m["n"])
+		"act":
+			return m["a"] in ACTIONS_ARENE and _nombre(m["x"]) and _nombre(m["y"])
+		"fin_a":
+			return _nombres(m["bd"], 2) and _nombres(m["to"], 2) and _nombres(m["ne"], 2)
+		"arene":
+			return _arene_valide(m)
 	return true
 
 
@@ -101,6 +116,32 @@ static func _instant_valide(m: Dictionary) -> bool:
 	return true
 
 
+## Instantané de l'Arène : 6 FANZZY, puis des listes de nombres de taille fixe.
+static func _arene_valide(m: Dictionary) -> bool:
+	if not (_nombre(m["tps"]) and _nombres(m["bd"], 2) and _nombres(m["to"], 2) and _nombre(m["ack"]) and _nombre(m["ctl"])):
+		return false
+	if not m["j"] is Array or m["j"].size() != 6:
+		return false
+	for j in m["j"]:
+		if not _nombres(j, 10):  # x, y, pv, munitions, super, drapeaux, lancers, coups, supers, roulade
+			return false
+	for liste in [[m["bl"], 4], [m["mu"], 6], [m["nu"], 5]]:
+		if not liste[0] is Array or liste[0].size() > 120:
+			return false
+		for e in liste[0]:
+			if not _nombres(e, liste[1]):
+				return false
+	if not m["on"] is Array or m["on"].size() > 40:
+		return false
+	for o in m["on"]:
+		# [x, y, dx, dy, rayon, max, type, equipe, reste]
+		if not o is Array or o.size() != 9 or not o[6] in ONDES:
+			return false
+		if not _nombres(o.slice(0, 6) + o.slice(7, 9), 8):
+			return false
+	return true
+
+
 static func _nombres(a: Variant, n: int) -> bool:
 	if not a is Array or a.size() != n:
 		return false
@@ -122,10 +163,12 @@ static func _nombre(v: Variant) -> bool:
 # ---------------------------------------------------------------- profil
 
 ## Ce que l'autre joueur voit de toi. `equipe` : les skins affichés (noms d'image).
-static func profil(nom: String, couleurs: Array, equipe: Array, niveau: int) -> Dictionary:
+## `ids` : les FANZZY eux-mêmes (pour leur famille et leur super dans l'Arène).
+static func profil(nom: String, couleurs: Array, equipe: Array, niveau: int, ids: Array = []) -> Dictionary:
 	return msg("profil", {
 		"nom": nom, "couleurs": couleurs.map(func(c): return c.to_html(false) if c is Color else str(c)),
 		"equipe": equipe.map(func(id): return str(id)), "niveau": niveau, "v": VERSION,
+		"ids": ids.map(func(id): return str(id)),
 	})
 
 
@@ -139,12 +182,17 @@ static func profil_propre(m: Dictionary) -> Dictionary:
 		couleurs.append(Color.from_string(str(c), Color("#ff4b4b")))
 	while couleurs.size() < 2:
 		couleurs.append(Color("#ff4b4b") if couleurs.is_empty() else Color.WHITE)
-	var equipe: Array = []
 	var re := RegEx.create_from_string("^[A-Za-z0-9_]{1,16}$")
+	var equipe: Array = []
 	for id in m.get("equipe", []).slice(0, 3):
 		var s := str(id)
 		equipe.append(s if re.search(s) else "")
-	return {"nom": nom, "couleurs": couleurs, "equipe": equipe,
+	var ids: Array = []
+	var recus: Variant = m.get("ids", [])
+	for id in (recus as Array).slice(0, 3) if recus is Array else []:
+		var s := str(id)
+		ids.append(s if re.search(s) else "")
+	return {"nom": nom, "couleurs": couleurs, "equipe": equipe, "ids": ids,
 		"niveau": clampi(int(m.get("niveau", 1)), 1, 999), "v": int(m.get("v", 0))}
 
 

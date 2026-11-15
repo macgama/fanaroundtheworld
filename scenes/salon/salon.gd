@@ -188,6 +188,7 @@ func _maj() -> void:
 		if Reseau.connecte():
 			_bouton("DUEL D'AMBIANCE\nrythme · 90 s", Ui.JAUNE, func(): _lancer("duel"), true)
 			_bouton("POUSSÉE\ncartes et ballon · 3 min", Ui.VERT, func(): _lancer("poussee"), true)
+			_bouton("ARÈNE\n3 contre 3 · 2 min", Ui.ROSE, func(): _lancer("arene"), true)
 		elif Reseau.transport == "steam":
 			_bouton("Inviter un ami Steam", Ui.JAUNE, func(): Reseau.inviter_amis_steam(), true)
 	elif Reseau.connecte():
@@ -258,7 +259,8 @@ func _sur_message(m: Dictionary) -> void:
 func _aller_au_duel(jeu: String) -> void:
 	var p: Dictionary = Game.params
 	var m := Reseau.match_salon
-	Game.aller(Game.SCENE_POUSSEE if jeu == "poussee" else Game.SCENE_DUEL, {
+	var scenes := {"duel": Game.SCENE_DUEL, "poussee": Game.SCENE_POUSSEE, "arene": Game.SCENE_ARENE}
+	Game.aller(scenes[jeu], {
 		"en_ligne": true, "match": m, "match_id": str(m.get("id", "")), "camp": Reseau.mon_camp(),
 		# l'invité suit le match « au pub » avec l'hôte : gains normaux, pas de billet
 		"mode": str(p.get("mode", "stade")) if Reseau.hote else "pub",

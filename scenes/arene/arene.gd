@@ -52,10 +52,26 @@ var _appui_tir := -1.0
 var _auto := false             # démo : ton FANZZY joue tout seul
 var _rng := RandomNumberGenerator.new()
 
+# --- en ligne : l'hôte simule tout (équipe 0 chez lui), l'invité dirige un FANZZY de
+# l'équipe 1. L'invité voit le terrain retourné : ses FANZZY sont à gauche (équipe 0 chez lui).
+var en_ligne := false
+var _invite := false
+var _ctl_adv: Joueur            # hôte : le FANZZY dirigé par l'invité
+var _actions_adv: Array = []    # hôte : actions débloquées de l'invité (son niveau)
+var _ack := 0                   # hôte : dernière commande reçue
+var _num := 0                   # invité : numéro de sa dernière commande
+var _en_vol: Array = []         # invité : [numéro, déplacement] pas encore confirmés
+var _t_reseau := 0.0
+var _depart_envoye := false
+var _attente_fin := false
+var _cibles: Array = []         # invité : position donnée par l'hôte, pour chaque FANZZY
+
 
 func _ready() -> void:
 	var p: Dictionary = Game.params
-	var m := Donnees.match_par_id(str(p.get("match_id", "")))
+	en_ligne = bool(p.get("en_ligne", false)) and Reseau.connecte()
+	_invite = en_ligne and not Reseau.hote
+	var m: Dictionary = p.get("match", {}) if en_ligne else Donnees.match_par_id(str(p.get("match_id", "")))
 	if m.is_empty():
 		Game.aller(Game.SCENE_CARTE)
 		return
@@ -73,9 +89,14 @@ func _ready() -> void:
 	couleurs[1] = Duel._vive(eux["c1"], eux["c2"], Ui.ROUGE)
 	couleurs[1] = Ui.couleur_distincte(couleurs[0], couleurs[1])
 	noms[0] = Game.fan_club_nom
-	noms[1] = "Tribune " + str(eux["nom"])
+	noms[1] = str(Reseau.adversaire.get("nom", "?")) if en_ligne else "Tribune " + str(eux["nom"])
+	if en_ligne:
+		_actions_adv = AreneRegles.actions_debloquees(int(Reseau.adversaire.get("niveau", 1)))
 	_construire()
-	_compte_a_rebours()
+	if en_ligne:
+		_preparer_en_ligne()
+	else:
+		_compte_a_rebours()
 
 
 # ------------------------------------------------------------------ construction
@@ -97,6 +118,15 @@ func _construire() -> void:
 	add_child(_ciel)
 
 	var adverses := _equipe_adverse()
+	var skins_adv: Array = adverses.duplicate()
+	if en_ligne:
+		# les vrais FANZZY de l'adversaire (et leurs skins)
+		var ids: Array = Reseau.adversaire.get("ids", [])
+		var sk: Array = Reseau.adversaire.get("equipe", [])
+		for i in 3:
+			if i < ids.size() and not Game.fanzzy_par_id(str(ids[i])).is_empty():
+				adverses[i] = str(ids[i])
+				skins_adv[i] = str(sk[i]) if i < sk.size() and not str(sk[i]).is_empty() else adverses[i]
 	for e in 2:
 		for i in 3:
 			var id: String = str(Game.equipe[i]) if e == 0 else adverses[i]
@@ -108,10 +138,14 @@ func _construire() -> void:
 			j.spawn = Vector2(TERRAIN.position.x + 110 if e == 0 else TERRAIN.end.x - 110, 380 + i * 210)
 			j.position = j.spawn
 			j.couleur = couleurs[e]
-			j.creer_corps(Game.skin_de(id) if e == 0 else id)
+			j.creer_corps(Game.skin_de(id) if e == 0 else skins_adv[i])
 			_monde.add_child(j)
 			joueurs.append(j)
 	controle = joueurs[0]
+	if en_ligne:
+		_ctl_adv = joueurs[3]
+		for j in joueurs:
+			_cibles.append(j.position)
 
 	# HUD du haut : deux banderoles et le chrono
 	var haut := Ui.hbox(18)
@@ -206,16 +240,28 @@ func _process(delta: float) -> void:
 		_sol.queue_redraw()
 		_ciel.queue_redraw()
 		return
-	temps += delta
-	if not _auto:
-		_commandes_joueur(delta)
-	for j in joueurs:
-		if (j != controle or _auto) and j.actif():
-			_ia(j, delta)
-		j.mettre_a_jour(delta)
-	_ballons(delta)
-	_effets_zone(delta)
-	_megaphone(delta)
+	if _invite:
+		_tour_invite(delta)
+	else:
+		temps += delta
+		if not _auto:
+			_commandes_joueur(delta)
+		for j in joueurs:
+			if (j != controle or _auto) and j != _ctl_adv and j.actif():
+				_ia(j, delta)
+			j.mettre_a_jour(delta)
+		_ballons(delta)
+		_effets_zone(delta)
+		_megaphone(delta)
+		if en_ligne:
+			if not _ctl_adv.actif():
+				var autre := _prochain(_ctl_adv)
+				if autre:
+					_ctl_adv = autre
+			_t_reseau -= delta
+			if _t_reseau <= 0.0:
+				_t_reseau = 0.05
+				Reseau.envoyer_vite(_instant())
 	_animer_effets(delta)
 	var reste := maxf(AreneRegles.DUREE - temps, 0.0)
 	_lbl_temps.text = "%d:%02d" % [int(reste) / 60, int(reste) % 60]
@@ -226,7 +272,10 @@ func _process(delta: float) -> void:
 	_hud_bas.queue_redraw()
 	_sol.queue_redraw()
 	_ciel.queue_redraw()
-	if banderole[0] >= AreneRegles.BANDEROLE_MAX or banderole[1] >= AreneRegles.BANDEROLE_MAX or temps >= AreneRegles.DUREE:
+	if _invite:
+		if temps >= AreneRegles.DUREE or banderole[0] >= AreneRegles.BANDEROLE_MAX or banderole[1] >= AreneRegles.BANDEROLE_MAX:
+			_attendre_fin()
+	elif banderole[0] >= AreneRegles.BANDEROLE_MAX or banderole[1] >= AreneRegles.BANDEROLE_MAX or temps >= AreneRegles.DUREE:
 		_finir()
 
 
@@ -270,7 +319,10 @@ func _unhandled_input(ev: InputEvent) -> void:
 		if k.physical_keycode == KEY_E:
 			super_geste(controle, get_global_mouse_position())
 		elif k.keycode == KEY_SPACE and "roulade" in actions:
-			controle.rouler()
+			if _invite:
+				_action_invite("roulade", controle.position)
+			else:
+				controle.rouler()
 		elif k.keycode == KEY_TAB:
 			var autre := _prochain_allie(controle)
 			if autre:
@@ -279,7 +331,12 @@ func _unhandled_input(ev: InputEvent) -> void:
 
 
 func _prochain_allie(j: Joueur) -> Joueur:
-	var allies := joueurs.filter(func(x): return x.equipe == 0 and x.actif())
+	return _prochain(j, 0)
+
+
+func _prochain(j: Joueur, equipe := -1) -> Joueur:
+	var e := j.equipe if equipe < 0 else equipe
+	var allies := joueurs.filter(func(x): return x.equipe == e and x.actif())
 	if allies.is_empty():
 		return null
 	var i := allies.find(j)
@@ -294,6 +351,10 @@ func charge_tir() -> float:
 # ------------------------------------------------------------------ actions
 
 func tirer(j: Joueur, cible: Vector2, charge: bool) -> void:
+	if _invite:
+		if j == controle:
+			_action_invite("tir_charge" if charge else "tir", cible)
+		return
 	if not j.actif() or j.recharge > 0.0:
 		return
 	var cout := 2 if charge else 1
@@ -314,6 +375,10 @@ func tirer(j: Joueur, cible: Vector2, charge: bool) -> void:
 
 
 func super_geste(j: Joueur, cible: Vector2) -> void:
+	if _invite:
+		if j == controle and j.charge_super >= 1.0:
+			_action_invite("super", cible)
+		return
 	if not j.actif() or j.charge_super < 1.0:
 		return
 	j.charge_super = 0.0
@@ -545,6 +610,221 @@ func _super_utile(j: Joueur, cible: Joueur, d: float) -> bool:
 			return d < 520.0 or cible.position.distance_to(TERRAIN.get_center()) < AreneRegles.RAYON_MEGAPHONE
 
 
+# ------------------------------------------------------------------ en ligne
+
+func _preparer_en_ligne() -> void:
+	Reseau.message.connect(_sur_message)
+	Reseau.adversaire_parti.connect(_sur_adversaire_parti)
+	annoncer("En attente de %s…" % Reseau.adversaire.get("nom", "l'adversaire"), Ui.BLANC)
+	Reseau.envoyer(Protocole.msg("pret"))
+
+
+func _mx(p: Vector2) -> Vector2:
+	return Vector2(Protocole.miroir_x(p.x, TERRAIN), p.y)
+
+
+func _sur_message(m: Dictionary) -> void:
+	match m["t"]:
+		"pret":
+			if _invite:
+				Reseau.envoyer(Protocole.msg("pret"))  # l'hôte est arrivé après : on le redit
+			elif not _depart_envoye:
+				_depart_envoye = true
+				Reseau.envoyer(Protocole.msg("depart"))
+				_compte_a_rebours()
+		"depart":
+			if _invite and not _depart_envoye:
+				_depart_envoye = true
+				_compte_a_rebours()
+		"cmd":
+			if not _invite:
+				_ack = maxi(_ack, int(m["n"]))
+				var c: Joueur = joueurs[3 + int(m["c"])]
+				if c != _ctl_adv and c.actif():
+					_ctl_adv.direction = Vector2.ZERO
+					_ctl_adv = c
+				_ctl_adv.direction = Vector2(-float(m["d"][0]), float(m["d"][1])).limit_length(1.0)
+				_ctl_adv.visee = _mx(Vector2(float(m["v"][0]), float(m["v"][1])))
+		"act":
+			if not _invite and en_cours and not termine:
+				var cible := _mx(Vector2(float(m["x"]), float(m["y"])))
+				match m["a"]:
+					"tir":
+						tirer(_ctl_adv, cible, false)
+					"tir_charge":
+						tirer(_ctl_adv, cible, "tir_charge" in _actions_adv)
+					"super":
+						super_geste(_ctl_adv, cible)
+					"roulade":
+						if "roulade" in _actions_adv:
+							_ctl_adv.rouler()
+		"arene":
+			if _invite and not termine:
+				_appliquer(m)
+		"fin_a":
+			if _invite:
+				banderole = [float(m["bd"][1]), float(m["bd"][0])]
+				touches = [int(m["to"][1]), int(m["to"][0])]
+				nettoyes = [int(m["ne"][1]), int(m["ne"][0])]
+				_finir()
+
+
+func _sur_adversaire_parti() -> void:
+	if termine:
+		return
+	if not en_cours:
+		Game.aller(Game.SCENE_SALON, Game.params)
+		return
+	annoncer("L'ADVERSAIRE EST PARTI !", Ui.JAUNE)
+	# victoire par forfait : ta banderole est déclarée pleine
+	banderole[0] = AreneRegles.BANDEROLE_MAX
+	en_ligne = false
+	_finir()
+
+
+## Hôte : l'arène vue par l'invité (20 fois par seconde).
+func _instant() -> Dictionary:
+	var js: Array = []
+	for j in joueurs:
+		var drapeaux := (1 if j.banc > 0.0 else 0) + (2 if j.etourdi > 0.0 else 0) + (4 if j.invulnerable > 0.0 else 0) \
+			+ (8 if j.ralenti > 0.0 else 0) + (16 if j.sprint > 0.0 else 0)
+		js.append([snappedf(j.position.x, 0.1), snappedf(j.position.y, 0.1), snappedf(j.pv, 0.1), snappedf(j.munitions, 0.01),
+			snappedf(j.charge_super, 0.01), drapeaux, j.lancers, j.coups, j.supers, snappedf(j.recharge_roulade, 0.1)])
+	var bl: Array = []
+	for b in ballons:
+		bl.append([snappedf(b["pos"].x, 0.1), snappedf(b["pos"].y, 0.1), b["equipe"], b["rayon"]])
+	var mu: Array = []
+	for m in murs:
+		mu.append([m["a"].x, m["a"].y, m["b"].x, m["b"].y, m["equipe"], m["reste"]])
+	var nu: Array = []
+	for n in nuages:
+		nu.append([n["pos"].x, n["pos"].y, n["rayon"], n["equipe"], n["reste"]])
+	var on: Array = []
+	for o in ondes:
+		on.append([o["pos"].x, o["pos"].y, o["dir"].x, o["dir"].y, o["rayon"], o["max"], o["type"], o["equipe"], o["reste"]])
+	return Protocole.msg("arene", {"tps": temps, "bd": banderole, "to": touches, "ack": _ack, "ctl": joueurs.find(_ctl_adv) - 3,
+		"j": js, "bl": bl, "mu": mu, "nu": nu, "on": on})
+
+
+## Invité : on retourne l'instantané. Ses FANZZY (équipe 1 chez l'hôte) sont les n° 0 à 2 ici.
+func _appliquer(m: Dictionary) -> void:
+	temps = float(m["tps"])
+	banderole = [float(m["bd"][1]), float(m["bd"][0])]
+	touches = [int(m["to"][1]), int(m["to"][0])]
+	for k in 6:
+		var d: Array = m["j"][(k + 3) % 6]
+		var j: Joueur = joueurs[k]
+		_cibles[k] = _mx(Vector2(float(d[0]), float(d[1])))
+		j.pv = float(d[2])
+		j.munitions = float(d[3])
+		j.charge_super = float(d[4])
+		var f := int(d[5])
+		var revient := j.banc > 0.0 and f & 1 == 0
+		j.banc = 1.0 if f & 1 else 0.0
+		j.etourdi = 1.0 if f & 2 else 0.0
+		j.invulnerable = 1.0 if f & 4 else 0.0
+		j.ralenti = 1.0 if f & 8 else 0.0
+		j.sprint = 1.0 if f & 16 else 0.0
+		j.recharge_roulade = float(d[9])
+		if revient:
+			j.position = _cibles[k]
+		if int(d[6]) > j.lancers:
+			j.lancer((_cibles[k] - j.position).x if j != controle else (j.visee - j.position).x)
+			j.lancers = int(d[6])
+		if int(d[7]) > j.coups:
+			j.secouer()
+			j.coups = int(d[7])
+			_pluie(j.position + Vector2(0, -60), couleurs[1 - j.equipe], 10)
+		if int(d[8]) > j.supers:
+			j.celebrer_court()
+			j.supers = int(d[8])
+			texte(j.position + Vector2(0, -170), str(AreneRegles.SUPERS.get(j.famille, {}).get("nom", "")).to_upper(), couleurs[j.equipe])
+	# le FANZZY dirigé : celui de l'hôte s'il a changé (le tien est au banc)
+	var ctl := int(m["ctl"])
+	if ctl >= 0 and ctl < 3 and not controle.actif() and joueurs[ctl] != controle:
+		controle = joueurs[ctl]
+		_en_vol.clear()
+	ballons = []
+	for b in m["bl"]:
+		ballons.append({"pos": _mx(Vector2(float(b[0]), float(b[1]))), "equipe": 1 - int(b[2]), "rayon": float(b[3])})
+	murs = []
+	for x in m["mu"]:
+		murs.append({"a": _mx(Vector2(float(x[0]), float(x[1]))), "b": _mx(Vector2(float(x[2]), float(x[3]))), "equipe": 1 - int(x[4]), "reste": float(x[5])})
+	nuages = []
+	for n in m["nu"]:
+		nuages.append({"pos": _mx(Vector2(float(n[0]), float(n[1]))), "rayon": float(n[2]), "equipe": 1 - int(n[3]), "reste": float(n[4])})
+	ondes = []
+	for o in m["on"]:
+		ondes.append({"pos": _mx(Vector2(float(o[0]), float(o[1]))), "dir": Vector2(-float(o[2]), float(o[3])), "rayon": float(o[4]),
+			"max": float(o[5]), "type": o[6], "equipe": 1 - int(o[7]), "reste": float(o[8])})
+	# ton FANZZY : la position de l'hôte + tes déplacements qu'il n'a pas encore reçus
+	var ack := int(m["ack"])
+	_en_vol = _en_vol.filter(func(g): return g[0] > ack)
+	var i := joueurs.find(controle)
+	var p: Vector2 = _cibles[i]
+	for g in _en_vol:
+		p += g[1]
+	_cibles[i] = p
+
+
+## Invité, à chaque image : commandes, prédiction de ton FANZZY, glissement des autres.
+func _tour_invite(delta: float) -> void:
+	if _auto:
+		_ia(controle, delta)
+	else:
+		_commandes_joueur(delta)
+	var pas := Vector2.ZERO
+	if controle.actif():
+		pas = controle.direction * AreneRegles.VITESSE * controle.vitesse_actuelle() * delta
+		var avant := controle.position
+		deplacer(controle, pas)
+		pas = controle.position - avant
+	# une commande par image, numérotée : l'hôte renvoie le numéro de la dernière reçue
+	_num += 1
+	_en_vol.append([_num, pas])
+	if _en_vol.size() > 120:
+		_en_vol.pop_front()
+	Reseau.envoyer_vite(Protocole.msg("cmd", {"d": [controle.direction.x, controle.direction.y],
+		"v": [controle.visee.x, controle.visee.y], "c": joueurs.find(controle), "n": _num}))
+	var k := minf(1.0, delta * 12.0)
+	for idx in joueurs.size():
+		var j: Joueur = joueurs[idx]
+		var avant := j.position
+		if j == controle and j.actif():
+			# petite correction vers la position confirmée + prédite
+			j.position = j.position.lerp(_cibles[idx], minf(1.0, delta * 6.0))
+			j.animer(delta, pas / maxf(delta, 0.001) / AreneRegles.VITESSE)
+		else:
+			j.position = j.position.lerp(_cibles[idx], k)
+			j.animer(delta, (j.position - avant) / maxf(delta, 0.001) / AreneRegles.VITESSE)
+	_megaphone_vu()
+
+
+## Invité : le mégaphone change de couleur selon qui le tient (calculé à partir des positions).
+func _megaphone_vu() -> void:
+	var dans := [0, 0]
+	for j in joueurs:
+		if j.actif() and j.position.distance_to(TERRAIN.get_center()) < AreneRegles.RAYON_MEGAPHONE:
+			dans[j.equipe] += 1
+	_sol.dispute = dans[0] > 0 and dans[1] > 0
+	_sol.tenu = -1 if _sol.dispute or (dans[0] == 0 and dans[1] == 0) else (0 if dans[0] > 0 else 1)
+
+
+func _action_invite(a: String, cible: Vector2) -> void:
+	if en_cours and not termine and controle.actif():
+		Reseau.envoyer(Protocole.msg("act", {"a": a, "x": cible.x, "y": cible.y}))
+
+
+## Invité : temps écoulé ou banderole pleine, on attend le résultat de l'hôte (3 s au plus).
+func _attendre_fin() -> void:
+	if _attente_fin or termine:
+		return
+	_attente_fin = true
+	await get_tree().create_timer(3.0).timeout
+	if not termine:
+		_finir()
+
+
 # ------------------------------------------------------------------ effets
 
 func _pluie(pos: Vector2, couleur: Color, n: int) -> void:
@@ -575,8 +855,12 @@ func _animer_effets(delta: float) -> void:
 # ------------------------------------------------------------------ fin
 
 func _finir() -> void:
+	if termine:
+		return
 	termine = true
 	ballons.clear()
+	if en_ligne and not _invite:
+		Reseau.envoyer(Protocole.msg("fin_a", {"bd": banderole, "to": touches, "ne": nettoyes}))
 	var res := AreneRegles.resultat(banderole[0], banderole[1], touches[0], touches[1])
 	var gagne := res > 0
 	for j in joueurs:
@@ -597,7 +881,7 @@ func _finir() -> void:
 		["Bonus « ton équipe gagne vraiment »", "x1,3" if g["equipe_gagne"] else "non"],
 		["Jetons gagnés", "+%d" % g["jetons"]],
 		["XP du fan club", "+%d" % g["xp"]],
-	] + FinDuel.ligne_popularite(g), Game.SCENE_ARENE)
+	] + FinDuel.ligne_popularite(g), Game.SCENE_SALON if en_ligne and Reseau.connecte() else Game.SCENE_ARENE)
 
 
 # ================================================================== classes
@@ -630,6 +914,9 @@ class Joueur extends Node2D:
 	var _cap := 1.0
 	var _action := &""
 	var _secousse := 0.0
+	var lancers := 0              # compteurs envoyés à l'invité pour rejouer les animations
+	var coups := 0
+	var supers := 0
 
 	func creer_corps(id: String) -> void:
 		corps = FanzzyAnime.creer(id)
@@ -703,6 +990,7 @@ class Joueur extends Node2D:
 		_action = a
 
 	func lancer(dx: float) -> void:
+		lancers += 1
 		if absf(dx) > 0.05:
 			_cap = signf(dx)
 		corps.cap = _cap
@@ -710,6 +998,7 @@ class Joueur extends Node2D:
 		_action = &"lancer"
 
 	func celebrer_court() -> void:
+		supers += 1
 		corps.jouer(&"celebrer", 0.6)
 		_action = &"lancer"
 
@@ -717,7 +1006,25 @@ class Joueur extends Node2D:
 		_poussee += v
 
 	func secouer() -> void:
+		coups += 1
 		_secousse = 0.25
+
+	## Invité : seulement l'animation, la position vient de l'hôte.
+	func animer(delta: float, v: Vector2) -> void:
+		_secousse = maxf(_secousse - delta, 0.0)
+		if absf(v.x) > 0.3:
+			_cap = signf(v.x)
+		corps.cap = _cap
+		if _action != &"lancer" or corps.action != &"lancer":
+			if etourdi > 0.0:
+				_jouer(&"depit")
+			elif v.length() > 0.6:
+				_jouer(&"courir")
+			elif actif():
+				_jouer(&"repos")
+		modulate.a = 0.0 if banc > 0.0 else (0.55 if invulnerable > 0.0 and int(Time.get_ticks_msec() / 100) % 2 == 0 else 1.0)
+		corps.position.x = sin(_secousse * 60.0) * 6.0 * _secousse * 4.0
+		queue_redraw()
 
 	func rouler() -> void:
 		if not actif() or recharge_roulade > 0.0:
