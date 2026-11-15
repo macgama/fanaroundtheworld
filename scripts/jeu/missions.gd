@@ -77,6 +77,7 @@ static func vide() -> Dictionary:
 	return {
 		"jour": "", "du_jour": [], "changements": 0, "bonus_jour": false,
 		"semaine": "", "de_la_semaine": [], "bonus_semaine": false,
+		"matchs_suivis": [],  # derniers matchs suivis (un match ne compte qu'une fois)
 	}
 
 

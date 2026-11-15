@@ -128,7 +128,7 @@ func _construire_menu() -> void:
 		v.add_child(bienvenue)
 	var jouer := _bouton(v, "CONTINUER" if Game.club_cree() else "JOUER", Ui.JAUNE, 60, 130, true)
 	jouer.pressed.connect(_jouer)
-	jouer.grab_focus.call_deferred()
+	_focus_plus_tard(jouer)
 	_pulser(jouer)
 	var ligne := _bouton(v, "EN LIGNE", Ui.BLEU, 38, 90)
 	ligne.tooltip_text = "Défie un ami ou un autre joueur"
@@ -299,3 +299,10 @@ func _unhandled_input(e: InputEvent) -> void:
 				f.queue_free()
 				get_viewport().set_input_as_handled()
 				return
+
+
+## Focus clavier sur JOUER, sauf si l'écran a déjà été quitté (tests, raccourcis).
+func _focus_plus_tard(b: Control) -> void:
+	get_tree().process_frame.connect(func():
+		if is_instance_valid(b) and b.is_inside_tree():
+			b.grab_focus(), CONNECT_ONE_SHOT)
