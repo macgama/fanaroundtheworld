@@ -1,7 +1,6 @@
 # Jouer contre un ami ou un autre joueur
 
-Le **duel d'ambiance** et la **Poussée** se jouent contre un vrai joueur. L'Arène reste
-contre l'IA pour l'instant (voir « Étapes suivantes »).
+Les trois jeux se jouent contre un vrai joueur : **duel d'ambiance**, **Poussée** et **Arène**.
 
 ## Pour le joueur
 
@@ -9,7 +8,7 @@ contre l'IA pour l'instant (voir « Étapes suivantes »).
 - **Carte** → **En ligne** : rejoindre un ami, trouver un adversaire, ou ouvrir un salon
   (le match est alors le prochain match du calendrier).
 - Dans le salon, chacun voit le fan club et les 3 FANZZY de l'autre (avec ses skins).
-  L'hôte choisit **DUEL D'AMBIANCE** ou **POUSSÉE**. L'invité soutient l'autre équipe du match.
+  L'hôte choisit **DUEL D'AMBIANCE**, **POUSSÉE** ou **ARÈNE**. L'invité soutient l'autre équipe du match.
 - Après le duel : **Revanche** (retour au salon, toujours connectés) ou retour à la carte.
 - Si l'adversaire s'en va pendant le duel, tu gagnes par forfait.
 
@@ -49,6 +48,21 @@ contre l'IA pour l'instant (voir « Étapes suivantes »).
 | `scenes/salon/` | Écran du salon |
 | `scenes/duel/duel.gd` | Mode en ligne du duel d'ambiance |
 | `scenes/poussee/poussee.gd` | Mode en ligne de la Poussée |
+| `scenes/arene/arene.gd` | Mode en ligne de l'Arène |
+
+### L'Arène en ligne
+
+- Chaque joueur dirige un de ses 3 FANZZY (TAB pour changer), les deux autres sont
+  joués par l'IA de l'hôte. L'équipe d'en face, ce sont les vrais FANZZY de l'adversaire
+  avec ses skins (le profil envoie maintenant aussi les identifiants, `ids`).
+- **L'hôte simule** ; l'invité envoie à chaque image une commande numérotée (« cmd » :
+  direction, visée, FANZZY dirigé) et ses actions (« act » : tir, tir chargé, super,
+  roulade). Les actions débloquées sont celles du **niveau de l'invité**, vérifiées chez l'hôte.
+- **Prédiction** : chez l'invité, son FANZZY bouge tout de suite. À chaque instantané
+  (« arene », 20 par seconde), il repart de la position de l'hôte et rejoue les
+  déplacements que l'hôte n'a pas encore reçus (même principe que la jauge du duel).
+  Les autres FANZZY, les ballons, murs, nuages et ondes glissent vers leurs positions.
+- Terrain retourné chez l'invité, comme pour la Poussée (obstacles symétriques).
 
 ### La Poussée en ligne
 
@@ -101,13 +115,13 @@ Deux fenêtres sur le même PC (ou deux PC du même réseau) :
     godot --path . -- --scene=salon --salon=127.0.0.1 --auto
 
 `--auto` : la tribune joue toute seule et l'hôte lance le duel dès que l'invité arrive.
-`--jeu=poussee` (côté hôte) : lance la Poussée au lieu du duel d'ambiance.
+`--jeu=poussee` ou `--jeu=arene` (côté hôte) : lance ce jeu au lieu du duel d'ambiance.
 `--quitter` : écrit le résultat et ferme à la fin du duel.
 Tests sans réseau : `godot --headless --path . --script tests/test_reseau.gd`.
 
 Vérifié : un duel complet entre deux jeux (jauges finales identiques, ±100),
 une Poussée complète (fin du temps, tribunes 1200/1020 des deux côtés, 33 cartes de l'invité
-posées chez l'hôte),
+posées chez l'hôte), une Arène complète (banderoles 100/36 et touches 67/44 des deux côtés),
 et l'invité qui coupe en plein duel (l'hôte gagne par forfait). Les deux jeux d'un
 même PC partagent la même sauvegarde : normal pour un test.
 
@@ -122,6 +136,5 @@ même PC partagent la même sauvegarde : normal pour un test.
 ## Étapes suivantes proposées
 
 1. Tester Steam avec l'App ID 480 sur deux PC (deux comptes Steam).
-2. **Arène en ligne** : même principe que la Poussée (l'hôte simule), mais l'invité bouge
-   en continu : il faudra prédire son propre FANZZY pour que ça reste réactif.
+2. Tester l'Arène entre deux vrais PC (ressenti de la prédiction avec un vrai réseau).
 3. Classement par saison et récompenses de duel en ligne, une fois le PASS en place.

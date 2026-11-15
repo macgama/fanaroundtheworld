@@ -1,59 +1,89 @@
 extends Control
-## Écran titre : nom du jeu, bouton Jouer, état des données réelles.
+## Écran d'accueil : stade animé, titre, et le menu Jouer / En ligne /
+## Options / Quitter. Un nouveau joueur qui appuie sur Jouer part dans le
+## tutoriel (scripts/autoload/tutoriel.gd).
 
 var _etat: Label
+var _options: Control
+var _confirmation: Control
 
 
 func _ready() -> void:
-	var fond := ColorRect.new()
-	fond.color = Ui.BLEU
-	fond.set_anchors_preset(Control.PRESET_FULL_RECT)
-	add_child(fond)
-	var v := Ui.vbox(26)
-	v.set_anchors_preset(Control.PRESET_CENTER)
-	v.alignment = BoxContainer.ALIGNMENT_CENTER
-	v.grow_horizontal = Control.GROW_DIRECTION_BOTH
-	v.grow_vertical = Control.GROW_DIRECTION_BOTH
-	add_child(v)
-	var rang := Ui.hbox(-30)
-	rang.alignment = BoxContainer.ALIGNMENT_CENTER
-	for z in Game.fanzzy.slice(0, 6):
-		var t := TextureRect.new()
-		t.texture = Game.texture_fanzzy(z["id"])
-		t.custom_minimum_size = Vector2(130, 240)
-		t.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-		t.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-		rang.add_child(t)
-		_sautiller(t, randf() * 0.6)
-	v.add_child(rang)
-	var titre := Ui.label("FanAroundTheWorld", 110, Ui.JAUNE, true, 18)
-	titre.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	v.add_child(titre)
-	var st := Ui.label("Suis les vrais matchs, tamponne les stades, gagne les duels d'ambiance", 28, Ui.BLANC, true, 8)
-	st.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	v.add_child(st)
-	var jouer := Ui.bouton("JOUER", Ui.JAUNE, 56)
-	Ui.colorer_bouton(jouer, Ui.JAUNE, true)
-	jouer.custom_minimum_size = Vector2(420, 120)
-	jouer.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
-	jouer.pressed.connect(func(): Game.aller(Game.SCENE_CARTE if Game.club_cree() else Game.SCENE_CREATION_CLUB))
-	v.add_child(jouer)
-	_etat = Ui.label("", 20, Ui.BLANC)
-	_etat.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	v.add_child(_etat)
-	var bas := Ui.label("v%s · prototype · noms de clubs fictifs · %s" % [Game.VERSION, Donnees.attribution], 18, Color(1, 1, 1, 0.7))
+	set_anchors_preset(Control.PRESET_FULL_RECT)
+	Reglages.appliquer()
+	var decor := DecorStade.new()
+	decor.set_anchors_preset(Control.PRESET_FULL_RECT)
+	add_child(decor)
+	_construire_foule()
+	_construire_titre()
+	_construire_menu()
+	var bas := Ui.label("v%s · prototype · noms de clubs fictifs · %s" % [Game.VERSION, Donnees.attribution], 18, Color(1, 1, 1, 0.8), false, 5)
 	bas.set_anchors_preset(Control.PRESET_BOTTOM_WIDE)
-	bas.offset_top = -44
+	bas.offset_top = -40
 	bas.offset_left = 24
 	add_child(bas)
 	Donnees.mis_a_jour.connect(_maj)
 	_maj()
 
 
-func _maj() -> void:
-	var n := Donnees.matchs().size()
-	var d := Donnees.matchs().filter(func(m): return Donnees.en_direct(m)).size()
-	_etat.text = "%d vrais matchs cette semaine · %d en direct · source : %s" % [n, d, Donnees.source]
+# ---------------------------------------------------------------- décor
+
+func _construire_titre() -> void:
+	var logo := Control.new()
+	logo.position = Vector2(110, 70)
+	logo.size = Vector2(980, 520)
+	logo.pivot_offset = logo.size / 2.0
+	logo.rotation_degrees = -4.0
+	logo.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	add_child(logo)
+	var fan := Ui.label("FAN", 210, Ui.JAUNE, true, 30)
+	fan.position = Vector2(0, -10)
+	logo.add_child(fan)
+	var ruban := Ui.panneau(Ui.ROSE, 18, 6)
+	ruban.position = Vector2(370, 70)
+	ruban.rotation_degrees = 3.0
+	var autour := Ui.label("AROUND THE", 82, Ui.BLANC, true, 16)
+	ruban.add_child(autour)
+	logo.add_child(ruban)
+	var monde := Ui.hbox(4)
+	monde.position = Vector2(0, 205)
+	monde.add_child(Ui.label("W", 210, Ui.JAUNE, true, 30))
+	var globe := Ui.icone("monde", 150)
+	globe.custom_minimum_size = Vector2(150, 150)
+	globe.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	monde.add_child(globe)
+	monde.add_child(Ui.label("RLD", 210, Ui.JAUNE, true, 30))
+	logo.add_child(monde)
+	var tourne := globe.create_tween().set_loops()
+	globe.pivot_offset = Vector2(75, 75)
+	tourne.tween_property(globe, "rotation", TAU, 8.0).from(0.0)
+	var bandeau := Ui.panneau(Ui.CONTOUR, 22, 0)
+	bandeau.position = Vector2(30, 450)
+	bandeau.add_child(Ui.label("Suis les vrais matchs, tamponne les stades,\ngagne les duels d'ambiance !", 32, Ui.BLANC, true))
+	logo.add_child(bandeau)
+	# entrée en rebond
+	logo.scale = Vector2(0.6, 0.6)
+	logo.modulate.a = 0.0
+	var t := logo.create_tween().set_parallel()
+	t.tween_property(logo, "scale", Vector2.ONE, 0.6).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	t.tween_property(logo, "modulate:a", 1.0, 0.3)
+
+
+func _construire_foule() -> void:
+	var liste: Array = []
+	for z in Game.fanzzy:
+		liste.append(z["id"])
+	liste = liste.slice(0, 9)
+	for i in liste.size():
+		var tr := TextureRect.new()
+		tr.texture = Game.texture_fanzzy(liste[i])
+		tr.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		tr.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+		tr.size = Vector2(170, 300)
+		tr.position = Vector2(20 + i * 212, 730 + (i % 2) * 26)
+		tr.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		add_child(tr)
+		_sautiller(tr, randf() * 0.6)
 
 
 func _sautiller(n: Control, delai: float) -> void:
@@ -61,5 +91,211 @@ func _sautiller(n: Control, delai: float) -> void:
 	if not is_instance_valid(n):
 		return
 	var t := n.create_tween().set_loops()
-	t.tween_property(n, "position:y", -18.0, 0.32).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT).as_relative()
-	t.tween_property(n, "position:y", 18.0, 0.32).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN).as_relative()
+	t.tween_property(n, "position:y", -22.0, 0.32).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT).as_relative()
+	t.tween_property(n, "position:y", 22.0, 0.32).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN).as_relative()
+
+
+# ---------------------------------------------------------------- menu
+
+func _construire_menu() -> void:
+	var p := Ui.panneau(Color(Ui.NUIT, 0.94), 32, 6)
+	p.position = Vector2(1240, 150)
+	p.custom_minimum_size = Vector2(580, 0)
+	add_child(p)
+	var v := Ui.vbox(18)
+	p.add_child(Ui.marge(v, 14, 14, 14, 14))
+	if Game.club_cree():
+		var h := Ui.hbox(16)
+		var cc := Game.couleurs_club()
+		h.add_child(Ui.ecusson(FanClub.sigle(Game.fan_club_nom), Color(cc[0]), Color(cc[1]), 70))
+		var vv := Ui.vbox(2)
+		var nom := Ui.label(Game.fan_club_nom.to_upper(), 30, Ui.BLANC, true, 6)
+		nom.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+		nom.custom_minimum_size.x = 380
+		vv.add_child(nom)
+		var infos := Ui.hbox(8)
+		infos.add_child(Ui.label("NIV. %d" % Game.niveau(), 22, Ui.JAUNE, true))
+		infos.add_child(Ui.icone("jeton", 26))
+		infos.add_child(Ui.label(str(Game.jetons), 22, Ui.JAUNE, true))
+		infos.add_child(Ui.icone("tampon", 26))
+		infos.add_child(Ui.label(str(Game.tampons.size()), 22, Ui.BLANC, true))
+		vv.add_child(infos)
+		h.add_child(vv)
+		v.add_child(h)
+	else:
+		var bienvenue := Ui.label("Bienvenue, supporter !", 34, Ui.JAUNE, true, 6)
+		bienvenue.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		v.add_child(bienvenue)
+	var jouer := _bouton(v, "CONTINUER" if Game.club_cree() else "JOUER", Ui.JAUNE, 60, 130, true)
+	jouer.pressed.connect(_jouer)
+	jouer.grab_focus.call_deferred()
+	_pulser(jouer)
+	var ligne := _bouton(v, "EN LIGNE", Ui.BLEU, 38, 90)
+	ligne.tooltip_text = "Défie un ami ou un autre joueur"
+	ligne.pressed.connect(_en_ligne)
+	var h2 := Ui.hbox(14)
+	v.add_child(h2)
+	var opt := _bouton(h2, "OPTIONS", Ui.VIOLET, 32, 80)
+	opt.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	opt.pressed.connect(_ouvrir_options)
+	var quitter := _bouton(h2, "QUITTER", Ui.NUIT_CLAIR, 32, 80)
+	quitter.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	quitter.pressed.connect(func(): get_tree().quit())
+	_etat = Ui.label("", 19, Ui.GRIS)
+	_etat.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_etat.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	v.add_child(_etat)
+	# le menu glisse depuis la droite
+	p.position.x += 700
+	p.create_tween().tween_property(p, "position:x", 1240.0, 0.5).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT).set_delay(0.15)
+
+
+func _bouton(parent: Control, texte: String, couleur: Color, taille: int, haut: int, sombre := false) -> Button:
+	var b := Ui.bouton(texte, couleur, taille)
+	if sombre:
+		Ui.colorer_bouton(b, couleur, true)
+	b.custom_minimum_size.y = haut
+	b.mouse_entered.connect(func(): Ui.pop(b, 1.04))
+	b.resized.connect(func(): b.pivot_offset = b.size / 2.0)
+	parent.add_child(b)
+	return b
+
+
+func _pulser(b: Control) -> void:
+	var t := b.create_tween().set_loops()
+	t.tween_property(b, "scale", Vector2.ONE * 1.04, 0.7).set_trans(Tween.TRANS_SINE)
+	t.tween_property(b, "scale", Vector2.ONE, 0.7).set_trans(Tween.TRANS_SINE)
+
+
+func _maj() -> void:
+	var n := Donnees.matchs().size()
+	var d := Donnees.matchs().filter(func(m): return Donnees.en_direct(m)).size()
+	_etat.text = "%d vrais matchs cette semaine · %d en direct" % [n, d]
+
+
+func _jouer() -> void:
+	if not Game.club_cree():
+		# Nouveau joueur : le tutoriel l'accompagne (sauf s'il l'a déjà passé).
+		if not Tutoriel.fini:
+			Tutoriel.demarrer()
+		Game.aller(Game.SCENE_CREATION_CLUB)
+		return
+	Game.aller(Game.SCENE_CARTE)
+
+
+func _en_ligne() -> void:
+	Game.aller(Game.SCENE_SALON)
+
+
+# ---------------------------------------------------------------- options
+
+func _ouvrir_options() -> void:
+	if _options:
+		_options.queue_free()
+	_options = _fenetre("Options")
+	var v: VBoxContainer = _options.get_meta("contenu")
+	for ligne in Reglages.VOLUMES:
+		var h := Ui.hbox(16)
+		var l := Ui.label(ligne[1], 24, Ui.BLANC, true)
+		l.custom_minimum_size.x = 270
+		h.add_child(l)
+		var s := HSlider.new()
+		s.min_value = 0.0
+		s.max_value = 1.0
+		s.step = 0.05
+		s.value = Reglages.volume(ligne[0])
+		s.custom_minimum_size = Vector2(340, 40)
+		s.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+		var pc := Ui.label("%d %%" % roundi(s.value * 100), 22, Ui.JAUNE, true)
+		pc.custom_minimum_size.x = 80
+		var cle: String = ligne[0]
+		s.value_changed.connect(func(x: float):
+			Reglages.regler_volume(cle, x)
+			pc.text = "%d %%" % roundi(x * 100))
+		h.add_child(s)
+		h.add_child(pc)
+		v.add_child(h)
+	var pe := CheckButton.new()
+	pe.text = "Plein écran"
+	pe.add_theme_font_override("font", Ui.police_titre())
+	pe.add_theme_font_size_override("font_size", 24)
+	for k in ["normal", "hover", "pressed", "hover_pressed", "focus"]:
+		pe.add_theme_stylebox_override(k, StyleBoxEmpty.new())
+	pe.button_pressed = Reglages.plein_ecran()
+	pe.toggled.connect(Reglages.regler_plein_ecran)
+	v.add_child(pe)
+	v.add_child(Ui.label("Partie", 26, Ui.JAUNE, true))
+	var h2 := Ui.hbox(14)
+	v.add_child(h2)
+	var tuto := Ui.bouton("Revoir le tutoriel", Ui.VERT, 24)
+	tuto.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	tuto.tooltip_text = "Ton FANZZY te guide à nouveau pas à pas"
+	tuto.pressed.connect(func():
+		Tutoriel.demarrer()
+		Game.aller(Game.SCENE_CLUB if Game.club_cree() else Game.SCENE_CREATION_CLUB))
+	h2.add_child(tuto)
+	var raz := Ui.bouton("Recommencer à zéro", Ui.ROUGE, 24)
+	raz.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	raz.pressed.connect(_confirmer_raz)
+	h2.add_child(raz)
+
+
+func _confirmer_raz() -> void:
+	_confirmation = _fenetre("Tout recommencer ?")
+	var v: VBoxContainer = _confirmation.get_meta("contenu")
+	var l := Ui.label("Ton fan club, tes Jetons, tes tampons et tes FANZZY seront effacés. Impossible de revenir en arrière !", 24, Ui.BLANC)
+	l.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	l.custom_minimum_size.x = 640
+	v.add_child(l)
+	var h := Ui.hbox(14)
+	v.add_child(h)
+	var non := Ui.bouton("Non, je garde tout", Ui.VERT, 26)
+	non.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	non.pressed.connect(func(): _confirmation.queue_free())
+	h.add_child(non)
+	var oui := Ui.bouton("Oui, tout effacer", Ui.ROUGE, 26)
+	oui.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	oui.pressed.connect(func():
+		Game.reinitialiser()
+		Tutoriel.effacer()
+		Game.aller(Game.SCENE_TITRE))
+	h.add_child(oui)
+
+
+## Fenêtre au centre sur un voile sombre, avec titre et bouton Fermer.
+func _fenetre(titre: String) -> Control:
+	var voile := ColorRect.new()
+	voile.color = Color(0.05, 0.03, 0.15, 0.7)
+	voile.set_anchors_preset(Control.PRESET_FULL_RECT)
+	voile.mouse_filter = Control.MOUSE_FILTER_STOP
+	add_child(voile)
+	var c := CenterContainer.new()
+	c.set_anchors_preset(Control.PRESET_FULL_RECT)
+	voile.add_child(c)
+	var p := Ui.panneau(Ui.NUIT, 32, 6)
+	c.add_child(p)
+	var v := Ui.vbox(18)
+	p.add_child(Ui.marge(v, 20, 12, 20, 12))
+	var h := Ui.hbox(12)
+	var t := Ui.label(titre, 44, Ui.JAUNE, true, 8)
+	t.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	h.add_child(t)
+	var fermer := Ui.bouton("X", Ui.NUIT_CLAIR, 24)
+	fermer.custom_minimum_size = Vector2(60, 60)
+	fermer.pressed.connect(func(): voile.queue_free())
+	h.add_child(fermer)
+	v.add_child(h)
+	var contenu := Ui.vbox(18)
+	v.add_child(contenu)
+	voile.set_meta("contenu", contenu)
+	Ui.pop(p, 1.05)
+	return voile
+
+
+func _unhandled_input(e: InputEvent) -> void:
+	if e.is_action_pressed("ui_cancel"):
+		for f in [_confirmation, _options]:
+			if f and is_instance_valid(f) and not f.is_queued_for_deletion():
+				f.queue_free()
+				get_viewport().set_input_as_handled()
+				return

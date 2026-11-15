@@ -26,6 +26,7 @@ config/icon="res://icon.svg"
 Game="*res://scripts/autoload/game.gd"
 Donnees="*res://scripts/autoload/donnees.gd"
 Reseau="*res://scripts/autoload/reseau.gd"
+Tutoriel="*res://scripts/autoload/tutoriel.gd"
 
 [display]
 

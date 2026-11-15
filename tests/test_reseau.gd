@@ -12,6 +12,7 @@ func _init() -> void:
 	_tester_jauge()
 	_tester_annonces()
 	_tester_poussee()
+	_tester_arene()
 	print("Tests réseau : %d vérifications, %s" % [_verifs, "OK" if _echecs == 0 else "%d ÉCHEC(S)" % _echecs])
 	quit(1 if _echecs > 0 else 0)
 
@@ -122,3 +123,25 @@ func _tester_poussee() -> void:
 	var t := Rect2(150, 176, 1620, 630)
 	_verifier(is_equal_approx(Protocole.miroir_x(200.0, t), 1720.0), "terrain retourné pour l'invité")
 	_verifier(is_equal_approx(Protocole.miroir_x(Protocole.miroir_x(321.0, t), t), 321.0), "retourner deux fois = rien")
+
+
+func _tester_arene() -> void:
+	_verifier(Protocole.valide(Protocole.msg("lancer", {"jeu": "arene"})), "lancer l'Arène")
+	_verifier(Protocole.valide(Protocole.msg("cmd", {"d": [1.0, 0.0], "v": [900.0, 500.0], "c": 1, "n": 42})), "commande valide")
+	_verifier(not Protocole.valide(Protocole.msg("cmd", {"d": [1.0, 0.0], "v": [900.0, 500.0], "c": 5, "n": 42})), "FANZZY dirigé inconnu refusé")
+	_verifier(Protocole.valide(Protocole.msg("act", {"a": "super", "x": 1.0, "y": 2.0})), "action valide")
+	_verifier(not Protocole.valide(Protocole.msg("act", {"a": "teleporter", "x": 1.0, "y": 2.0})), "action inconnue refusée")
+	var j := [800.0, 500.0, 100.0, 3.0, 0.5, 0, 2, 1, 0, 0.0]
+	var inst := Protocole.msg("arene", {"tps": 30.0, "bd": [10.0, 20.0], "to": [3, 4], "ack": 120, "ctl": 0,
+		"j": [j, j, j, j, j, j], "bl": [[500.0, 400.0, 1, 13.0]], "mu": [[1.0, 2.0, 3.0, 4.0, 0, 2.5]],
+		"nu": [[600.0, 600.0, 170.0, 1, 3.0]], "on": [[700.0, 500.0, 1.0, 0.0, 50.0, 400.0, "cone", 0, 0.3]]})
+	_verifier(Protocole.valide(inst), "instantané d'Arène valide")
+	var faux := inst.duplicate(true)
+	faux["j"] = [j, j, j]
+	_verifier(not Protocole.valide(faux), "il faut 6 FANZZY")
+	faux = inst.duplicate(true)
+	faux["on"][0][6] = "laser"
+	_verifier(not Protocole.valide(faux), "onde inconnue refusée")
+	_verifier(Protocole.valide(Protocole.msg("fin_a", {"bd": [100.0, 40.0], "to": [9, 7], "ne": [1, 0]})), "fin d'Arène valide")
+	var p := Protocole.profil_propre(Protocole.profil("A", [Color.RED, Color.BLUE], ["AN1B"], 3, ["AN1", "../x"]))
+	_verifier(p["ids"] == ["AN1", ""], "FANZZY de l'adversaire filtrés")
