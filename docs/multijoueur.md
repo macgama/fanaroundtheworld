@@ -85,7 +85,8 @@ hébergé sur Codeberg) est dans `addons/godotsteam/` : Windows 64 bits, Linux 6
 macOS. `SteamMultiplayerPeer` en fait partie. Elle se charge ; le jeu passe tout seul en
 réseau local si Steam n'est pas lancé.
 
-1. Lancer avec Steam ouvert (test : `godot --path . -- --scene=salon --salon=steam --journal`).
+1. Vérifié le 15 nov. sur le PC de Gaël : Steam initialisé, salon d'amis et recherche d'adversaire ouverts du premier coup. Reste à tester une invitation avec un 2e compte sur un autre PC.
+   Lancer avec Steam ouvert (test : `godot --path . -- --scene=salon --salon=steam --journal`).
 2. `steam_appid.txt` contient 480. Tant que le jeu n'a pas son App ID (100 $ de frais Steam
    Direct, pas encore payés), `Reseau.APP_ID_STEAM = 480` : l'appli de test de Valve
    (« Spacewar »). Les salons sont filtrés par `jeu = fanaroundtheworld` et la version.

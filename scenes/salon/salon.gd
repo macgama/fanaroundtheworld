@@ -132,6 +132,9 @@ func _bouton(texte: String, couleur: Color, action: Callable, sombre := false) -
 func _maj() -> void:
 	if not is_inside_tree():
 		return
+	if Reseau.hote and Reseau.match_salon.is_empty():
+		# salon ouvert par la recherche d'adversaire : l'hôte n'avait pas encore de match
+		Reseau.choisir_match(_match_par_defaut(), str(Game.params.get("camp", "home")))
 	_statut.text = Reseau.statut
 	if "--journal" in OS.get_cmdline_user_args():
 		print("SALON [%s%s] %s" % [Reseau.transport, " hôte" if Reseau.hote else "", Reseau.statut])

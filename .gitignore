@@ -30,3 +30,6 @@ desktop.ini
 .vscode/
 .idea/
 *.tmp
+
+# copies temporaires des extensions créées par Godot sous Windows
+~*.dll
