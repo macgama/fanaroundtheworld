@@ -24,6 +24,9 @@ et, plus tard, sur mobile.
    zoomer, glisser pour déplacer.
 3. Choisis un match : à droite, choisis ton camp et **où suivre le match** (stade,
    écran géant, pub, maison), puis **C'EST PARTI !**
+   Dans la même fiche, **Ton pronostic** : un score et l'équipe qui marque en premier,
+   gratuit et modifiable jusqu'au coup d'envoi. Le bouton **Pronos** liste tes
+   pronostics et ta série (voir `docs/pronostics.md`).
 4. Au stade : le car du fan club voyage jusqu'au stade, qui est **tamponné**.
 5. **Ta tribune** : choisis tes 3 FANZZY (Chant, Tifo, Ola) et leurs skins.
 6. **Duel d'ambiance** (90 s) :
@@ -41,9 +44,10 @@ Supprime ce fichier pour recommencer à zéro.
 
 | Dossier | Contenu |
 | --- | --- |
-| `scenes/` | Scènes Godot (`.tscn`) et leurs scripts, un sous-dossier par écran (`main/`, `carte/`, `voyage/`, `tribune/`, `duel/`) |
+| `scenes/` | Scènes Godot (`.tscn`) et leurs scripts, un sous-dossier par écran (`main/`, `carte/`, `voyage/`, `tribune/`, `duel/`, `pronostics/`) |
 | `scripts/autoload/` | Scripts globaux chargés au démarrage (`Game` : état du jeu et sauvegarde, `Donnees` : vrais matchs) |
 | `scripts/donnees/` | Noms fictifs (`fiction.gd`), placement sur la carte (`geo.gd`), fiche d'un match |
+| `scripts/jeu/` | Règles du jeu sans écran (pronostics) |
 | `scripts/carte/` | La carte du monde dessinée |
 | `scripts/ui/` | Style commun de l'interface (couleurs, boutons, icônes) |
 | `assets/fanzzy/` | Les FANZZY (personnages jouables, avec leurs skins cosmétiques), importés depuis thebestfan.online |
@@ -55,7 +59,7 @@ Supprime ce fichier pour recommencer à zéro.
 | `tools/` | Scripts de préparation des données (carte du monde) |
 | `mods/` | Format des mods Steam Workshop (noms et couleurs de clubs) |
 | `docs/` | Game design et maquettes |
-| `tests/` | Tests automatiques (`godot --headless --path . --script tests/test_logique.gd`) |
+| `tests/` | Tests automatiques (`godot --headless --path . --script tests/test_logique.gd`, `tests/test_pronostics.gd`, et le parcours complet : `godot --headless --path . res://tests/test_pronostics_jeu.tscn -- --hors-ligne`) |
 
 ## Règles du projet
 

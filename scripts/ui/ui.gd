@@ -279,6 +279,12 @@ class Icone extends Control:
 				draw_colored_polygon(PackedVector2Array([c + Vector2(-s * 0.3, 0), c + Vector2(s * 0.3, 0), c + Vector2(0, s * 0.48)]), Ui.CONTOUR)
 				draw_circle(c - Vector2(0, s * 0.1), s * 0.25, Ui.ROSE)
 				draw_circle(c - Vector2(0, s * 0.1), s * 0.1, Ui.BLANC)
+			"cible":
+				draw_circle(c, s * 0.48, Ui.CONTOUR)
+				draw_circle(c, s * 0.40, Ui.BLANC)
+				draw_circle(c, s * 0.29, Ui.ROSE)
+				draw_circle(c, s * 0.18, Ui.BLANC)
+				draw_circle(c, s * 0.08, Ui.ROSE)
 			"direct":
 				draw_circle(c, s * 0.3, Ui.CONTOUR)
 				draw_circle(c, s * 0.22, Ui.ROUGE)
