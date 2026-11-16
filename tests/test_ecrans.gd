@@ -43,6 +43,7 @@ var _ecrans := {
 		[KEY_1, KEY_2, KEY_3, KEY_4, KEY_ESCAPE]],
 	"buvette": [Game.SCENE_BUVETTE, {}, [KEY_1, KEY_2, KEY_3, KEY_4, KEY_ENTER, KEY_SPACE, KEY_BACKSPACE, KEY_ESCAPE]],
 	"boulots": [Game.SCENE_BOULOTS, {}, []],
+	"speaker": [Game.SCENE_SPEAKER, {}, [KEY_1, KEY_2, KEY_3, KEY_4, KEY_ESCAPE]],
 	"pronos": [Game.SCENE_PRONOS, {}, []],
 	"missions": [Game.SCENE_MISSIONS, {}, []],
 	"favoris": [Game.SCENE_FAVORIS, {}, []],

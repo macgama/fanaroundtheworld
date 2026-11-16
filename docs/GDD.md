@@ -182,6 +182,15 @@ Un bon service rapporte autour de 25 à 45 Jetons, moins qu'un bon duel au stade
 de 3 services dans la journée, la paye est divisée par deux pour que le petit boulot
 complète les duels sans les remplacer. Chaque client servi donne aussi 2 XP au fan club.
 
+Petit boulot **speaker du stade** (≈ 1 min, 7 buts dont 2 des visiteurs). À chaque but local,
+l'écran géant montre le numéro du buteur ; le joueur choisit son nom parmi 4 sur la feuille
+de match et lance l'annonce sur le 1er temps de la mesure : il crie le prénom, la tribune
+répond le nom (trois appels par but, jugés comme les notes du duel : parfait 3 Jetons, bien 2,
+mauvais joueur ou hors tempo 0). Trois appels justes : +2. But des visiteurs : ne rien
+annoncer rapporte +1, annoncer quand même fait siffler. Le tempo monte de 96 à 120 BPM et
+les boutons sont mélangés à partir du 3e but. Match parfait ≈ 57 Jetons, joueur moyen ≈ 30 ;
+paye ÷ 2 après 3 matchs dans la journée ; 2 XP par but annoncé.
+
 ## 8. Le PASS saisonnier
 
 - Inspiré des passes saisonniers des jeux free-to-play : paliers gagnés avec l'XP.
