@@ -18,6 +18,8 @@ const RAYON := 30.0
 const HAUTEUR_FANZZY := 135.0
 
 var fiche: Dictionary
+var _ecran := 0.0 # secousse de l'écran en cours
+var _ecran_decal := Vector2.ZERO
 var camp := "home"
 var mode_suivi := "stade"
 var actions: Array = []
@@ -235,6 +237,7 @@ func annoncer(texte: String, couleur: Color) -> void:
 # ------------------------------------------------------------------ boucle
 
 func _process(delta: float) -> void:
+	_trembler_ecran(delta)
 	if not en_cours or termine:
 		_animer_effets(delta)
 		_sol.queue_redraw()
@@ -392,6 +395,7 @@ func super_geste(j: Joueur, cible: Vector2) -> void:
 	var sup: Dictionary = AreneRegles.SUPERS.get(j.famille, AreneRegles.SUPERS["voix"])
 	texte(j.position + Vector2(0, -170), sup["nom"].to_upper(), couleurs[j.equipe])
 	j.celebrer_court()
+	secouer_ecran(0.45)
 	match j.famille:
 		"voix":
 			ondes.append({"pos": j.position, "dir": dir, "rayon": 0.0, "max": 400.0, "reste": 0.5, "type": "cone", "equipe": j.equipe})
@@ -432,9 +436,12 @@ func toucher(o: Joueur, degat: float, par: Joueur) -> void:
 	touches[par.equipe] += 1
 	par.charge_super = minf(par.charge_super + AreneRegles.CHARGE_SUPER_PAR_TOUCHE * degat / AreneRegles.DEGAT_BALLON, 1.0)
 	_pluie(o.position + Vector2(0, -60), couleurs[par.equipe], 10)
-	o.secouer()
+	o.secouer(par.global_position)
+	if o == controle or par == controle:
+		secouer_ecran(0.25)
 	if o.pv <= 0.0:
 		o.aller_au_banc()
+		secouer_ecran(0.7)
 		texte(o.position + Vector2(0, -150), "PLEIN DE CONFETTIS !", couleurs[par.equipe])
 		_pluie(o.position + Vector2(0, -60), couleurs[par.equipe], 60)
 
@@ -838,6 +845,20 @@ func _pluie(pos: Vector2, couleur: Color, n: int) -> void:
 			"col": cols[i % cols.size()], "vie": _rng.randf_range(0.5, 1.1), "rot": _rng.randf() * TAU})
 
 
+## Secousse de l'écran (KO, super, coup reçu par ton FANZZY), 0..1.
+func secouer_ecran(force: float) -> void:
+	_ecran = maxf(_ecran, force)
+
+
+func _trembler_ecran(delta: float) -> void:
+	if _ecran <= 0.0 and _ecran_decal == Vector2.ZERO:
+		return
+	_ecran = maxf(_ecran - delta * 2.2, 0.0)
+	var d := Vector2(_rng.randf_range(-1, 1), _rng.randf_range(-1, 1)) * 16.0 * _ecran * _ecran
+	position += d - _ecran_decal
+	_ecran_decal = d
+
+
 func texte(pos: Vector2, t: String, couleur: Color) -> void:
 	textes.append({"pos": pos, "texte": t, "col": couleur, "vie": 1.3})
 
@@ -928,6 +949,7 @@ class Joueur extends Node2D:
 		add_child(corps)
 		var h := corps._rect.size.y if corps._rect.size.y > 0.0 else 900.0
 		corps.scale = Vector2.ONE * (HAUTEUR_FANZZY / h)
+		corps.couleur_trainee = couleur
 		_cap = 1.0 if equipe == 0 else -1.0
 		_jouer(&"repos")
 
@@ -954,6 +976,8 @@ class Joueur extends Node2D:
 				invulnerable = 1.2
 				modulate.a = 1.0
 				corps.jouer(&"lever_bras", 0.8)
+				corps.rebondir(1.3)
+				corps.trainee = 0.2
 			return
 		for k in ["recharge", "etourdi", "ralenti", "sprint", "invulnerable", "recharge_roulade", "_secousse"]:
 			set(k, maxf(get(k) - delta, 0.0))
@@ -981,7 +1005,15 @@ class Joueur extends Node2D:
 				_jouer(&"repos")
 		modulate.a = 0.55 if invulnerable > 0.0 and int(invulnerable * 10.0) % 2 == 0 else 1.0
 		corps.position.x = sin(_secousse * 60.0) * 6.0 * _secousse * 4.0
+		_jus_etats()
 		queue_redraw()
+
+	## Étoiles d'étourdissement et traînée de sprint, suivant l'état.
+	func _jus_etats() -> void:
+		if etourdi > 0.0 and corps._etourdi <= 0.05:
+			corps.etourdir(maxf(etourdi, 0.3))
+		if sprint > 0.0 and direction.length() > 0.1:
+			corps.trainee = maxf(corps.trainee, 0.06)
 
 	## Les FANZZY sont dessinés de face : on ne les retourne pas (le texte
 	## des écharpes serait à l'envers), seule la penche indique la direction.
@@ -1009,9 +1041,10 @@ class Joueur extends Node2D:
 	func pousser(v: Vector2) -> void:
 		_poussee += v
 
-	func secouer() -> void:
+	func secouer(depuis := Vector2.INF) -> void:
 		coups += 1
 		_secousse = 0.25
+		corps.impact(depuis, 0.9)
 
 	## Invité : seulement l'animation, la position vient de l'hôte.
 	func animer(delta: float, v: Vector2) -> void:
@@ -1028,6 +1061,10 @@ class Joueur extends Node2D:
 				_jouer(&"repos")
 		modulate.a = 0.0 if banc > 0.0 else (0.55 if invulnerable > 0.0 and int(Time.get_ticks_msec() / 100) % 2 == 0 else 1.0)
 		corps.position.x = sin(_secousse * 60.0) * 6.0 * _secousse * 4.0
+		if etourdi > 0.0 and corps._etourdi <= 0.05:
+			corps.etourdir(0.5)
+		if sprint > 0.0 and v.length() > 0.6:
+			corps.trainee = maxf(corps.trainee, 0.06)
 		queue_redraw()
 
 	func rouler() -> void:
@@ -1035,6 +1072,9 @@ class Joueur extends Node2D:
 			return
 		var d := direction if direction != Vector2.ZERO else Vector2(_cap, 0)
 		_poussee = d.normalized() * 900.0
+		corps.trainee = 0.3
+		corps.poussiere(4, 1.0, -signf(d.x) if absf(d.x) > 0.1 else 0.0)
+		corps.pop(1.2)
 		roulade = 0.24
 		invulnerable = 0.3
 		recharge_roulade = 3.0
@@ -1043,6 +1083,8 @@ class Joueur extends Node2D:
 		banc = AreneRegles.TEMPS_BANC
 		pv = 0.0
 		direction = Vector2.ZERO
+		corps.impact(Vector2.INF, 1.6)
+		corps.etourdir(0.8)
 		corps.jouer(&"depit")
 		create_tween().tween_property(self, "modulate:a", 0.0, 0.6)
 

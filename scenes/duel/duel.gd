@@ -184,6 +184,9 @@ func _construire() -> void:
 	for i in 3:
 		var mar := Marionnette.new()
 		mar.texture = Game.texture_fanzzy(str(Game.equipe[i]))
+		mar.fanzzy_id = Game.skin_de(str(Game.equipe[i]))
+		mar.couleurs = PackedColorArray([_decor.c_nous, Color(_decor.c_nous2)])
+		mar.action_fond = [&"chanter", &"agiter_echarpe", &"encourager"][i]
 		mar.position = Vector2(560 + i * 300, 1090)
 		mar.hauteur = 430.0 if i == 1 else 390.0
 		mar.phase = i * 0.9
@@ -416,7 +419,7 @@ func _process(delta: float) -> void:
 			_dernier_beat = b
 			_jouer("tambour", -12.0)
 			for mar in _fanzzy:
-				mar.battement()
+				mar.battement(60.0 / _beat)
 	else:
 		_jouer_chant()
 
@@ -554,6 +557,8 @@ func _chant() -> void:
 		_decor.confettis(40)
 		_fanzzy[1].sauter(1.0)
 		_fanzzy[2].sauter(1.0)
+		_fanzzy[1].geste(&"applaudir", 1.6)
+		_fanzzy[2].geste(&"applaudir", 1.6)
 	_maj_combo()
 	if _fins_couplet.has(t_note):
 		_fin_de_couplet(int(_fins_couplet[t_note]))
@@ -593,6 +598,7 @@ func _tifo() -> void:
 	_decor.confettis(120)
 	for mar in _fanzzy:
 		mar.sauter(1.3)
+		mar.geste(&"agiter_echarpe", 3.0)
 	_annonce("TIFO DÉPLOYÉ ! +%d" % int(gain), Ui.ROSE)
 
 
@@ -651,6 +657,7 @@ func _ola_finir(reussie: bool) -> void:
 		_jouer("foule", -3.0)
 		for i in _fanzzy.size():
 			_fanzzy[i].sauter(1.2, i * 0.12)
+			_fanzzy[i].geste(&"lever_bras", 1.4, i * 0.12)
 		_annonce("OLA RÉUSSIE ! +%d" % int(gain), Ui.JAUNE)
 	else:
 		_signaler("ola_ratee")
@@ -667,12 +674,13 @@ func _but(pour_nous: bool) -> void:
 		_jouer("foule", 3.0)
 		for mar in _fanzzy:
 			mar.sauter(1.6)
+			mar.geste(&"celebrer", 2.5)
 	else:
 		_pousser(-10.0)
 		_annonce("But adverse… relance la tribune !", Ui.ROUGE)
 		_decor.secousse_eux = 1.0
 		for mar in _fanzzy:
-			mar.trembler()
+			mar.geste(&"depit", 2.2)
 
 
 func _annonce(texte: String, couleur: Color) -> void:
@@ -886,7 +894,11 @@ func _finir() -> void:
 		_decor.confettis(300)
 		for mar in _fanzzy:
 			mar.sauter(1.5)
+			mar.geste(&"celebrer", 30.0)
 		_jouer("foule", 2.0)
+	else:
+		for mar in _fanzzy:
+			mar.geste(&"depit", 30.0)
 
 	var voile := ColorRect.new()
 	voile.color = Color(0.05, 0.03, 0.15, 0.0)
@@ -1012,7 +1024,7 @@ func _jouer_chant() -> void:
 			_sons_chant.jouer(groupe, {"volume_db": linear_to_db(maxf(float(f["force"]), 0.05)) - 4.0})
 		if f["voix"] == "T" and float(f["force"]) >= 0.9:
 			for mar in _fanzzy:
-				mar.battement()
+				mar.battement(60.0 / _beat)
 	while _lignes.size() > 1 and _lignes[0]["t1"] < temps:
 		_lignes.pop_front()
 	if _lignes.is_empty() or _lignes[0]["t0"] > temps:
@@ -1097,56 +1109,56 @@ func _jouer(nom: String, volume := 0.0, hauteur := 1.0) -> void:
 
 # ================================================================== éléments dessinés
 
-## Un FANZZY animé façon marionnette : respiration, sauts, tremblements.
-## (Les expressions neutre / pousse / joie / dépit / colère viendront remplacer
-## l'image selon l'action quand elles seront importées.)
+## Un FANZZY de notre tribune, au premier plan : FanzzyAnime (expressions,
+## bras, squelette) plus le « jus » (élastique sur le temps, bonds, impacts).
+## Il chante en fond et réagit aux temps forts du duel.
 class Marionnette extends Node2D:
-	var texture: Texture2D
+	var texture: Texture2D           # image de secours si le FANZZY n'a pas d'expressions
+	var fanzzy_id := ""
+	var couleurs := PackedColorArray([Color("1e6bff"), Color.WHITE])
 	var hauteur := 400.0
 	var phase := 0.0
-	var _saut := 0.0
-	var _ecrase := 0.0
-	var _tremble := 0.0
-	var _t := 0.0
+	var action_fond := &"chanter"   # geste en boucle quand il ne se passe rien
+	var corps: FanzzyAnime
 
-	func _process(delta: float) -> void:
-		_t += delta
-		_tremble = maxf(0.0, _tremble - delta * 3.0)
-		queue_redraw()
+	func _ready() -> void:
+		corps = FanzzyAnime.creer(fanzzy_id) if fanzzy_id != "" else FanzzyAnime.new()
+		if corps.texture == null and texture:
+			corps.texture = texture
+		if corps.texture == null:
+			return
+		corps.couleurs_echarpe = couleurs
+		corps.couleur_trainee = couleurs[0]
+		corps.decalage = phase * 0.07
+		add_child(corps)
+		corps.scale = Vector2.ONE * hauteur / maxf(corps._rect.size.y, 1.0)
+		corps.jouer(action_fond)
+		corps.action_terminee.connect(func(_a: StringName) -> void:
+			if corps.action == &"repos":
+				corps.jouer(action_fond))
 
-	func battement() -> void:
-		_ecrase = 0.06
+	## Sur chaque temps du tambour : petit coup d'élastique, tempo partagé.
+	func battement(bpm := 0.0) -> void:
+		if corps == null:
+			return
+		if bpm > 0.0:
+			corps.bpm = bpm
+		corps.pop(0.35)
 
 	func sauter(force := 1.0, delai := 0.0) -> void:
-		var tw := create_tween()
-		if delai > 0:
-			tw.tween_interval(delai)
-		tw.tween_property(self, "_ecrase", 0.12 * force, 0.06)
-		tw.tween_property(self, "_saut", 60.0 * force, 0.16).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
-		tw.parallel().tween_property(self, "_ecrase", -0.08 * force, 0.16)
-		tw.tween_property(self, "_saut", 0.0, 0.18).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
-		tw.parallel().tween_property(self, "_ecrase", 0.08, 0.18)
-		tw.tween_property(self, "_ecrase", 0.0, 0.12)
+		if corps:
+			corps.rebondir(force, delai)
 
+	## Raté : il encaisse (éclair rouge, recul) et râle un instant.
 	func trembler() -> void:
-		_tremble = 1.0
+		if corps:
+			corps.impact(Vector2.INF, 0.6, Color("ff7b7b"))
+			corps.jouer(&"huer", 1.0)
 
-	func _draw() -> void:
-		if texture == null:
-			return
-		_ecrase = lerpf(_ecrase, 0.0, 0.08)
-		var respir := sin(_t * 2.4 + phase) * 0.015
-		var sx := 1.0 + _ecrase * 0.8
-		var sy := 1.0 - _ecrase + respir
-		var h := hauteur * sy
-		var w := hauteur * texture.get_width() / float(texture.get_height()) * sx
-		var bascule := sin(_t * 1.7 + phase) * 0.03 + sin(_t * 40.0) * 0.05 * _tremble
-		# ombre au sol
-		draw_set_transform(Vector2.ZERO, 0, Vector2(1, 0.25))
-		draw_circle(Vector2.ZERO, w * 0.32 * (1.0 - _saut / 200.0), Color(0, 0, 0, 0.3))
-		draw_set_transform(Vector2(0, -_saut), bascule, Vector2.ONE)
-		draw_texture_rect(texture, Rect2(Vector2(-w / 2.0, -h), Vector2(w, h)), false)
-		draw_set_transform(Vector2.ZERO, 0, Vector2.ONE)
+	## Un geste pour un temps (célébrer, dépit, lever les bras...), puis retour au chant.
+	func geste(action: StringName, duree := -1.0, delai := 0.0) -> void:
+		if corps:
+			corps.jouer(action, duree, delai)
 
 
 ## Le décor : ciel, tribune adverse, terrain (ou écran), notre tribune, confettis.
