@@ -889,6 +889,7 @@ func _finir() -> void:
 	var pop := Game.noter_duel_favori(fiche["m"], camp, gagne, mode)
 	Game.gagner_jetons(jetons)
 	Game.ajouter_xp(xp)
+	var xp_pass := Game.xp_pass_duel(gagne, clampf(points / 2400.0, 0.0, 1.0), part)
 	var ev := Game.recompense_evenement(fiche["m"], jetons)
 	var tour := {} if en_ligne else Game.noter_duel_tournoi(fiche["m"], gagne, mode)
 	if gagne:
@@ -910,7 +911,7 @@ func _finir() -> void:
 	pan.set_anchors_preset(Control.PRESET_CENTER)
 	pan.offset_left = -460
 	pan.offset_right = 460
-	var demi_h := 330 + 24 * maxi(0, FinDuel.lignes_evenement(ev).size() + (1 if pop > 0 else 0) + FinDuel.ligne_tournoi(tour).size() - 2)
+	var demi_h := 330 + 24 * maxi(0, FinDuel.lignes_evenement(ev).size() + (1 if pop > 0 else 0) + FinDuel.ligne_tournoi(tour).size() - 1)
 	pan.offset_top = -demi_h
 	pan.offset_bottom = demi_h
 	add_child(pan)
@@ -933,6 +934,7 @@ func _finir() -> void:
 		["Bonus « ton équipe gagne vraiment »", "x1,3" if equipe_gagne else "non"],
 		[Game.libelle_rejeu(part), "+%d" % jetons],
 		["XP du fan club", "+%d" % xp],
+		["XP du PASS", "+%d" % xp_pass],
 	] + FinDuel.ligne_popularite({"popularite": pop, "equipe": (fiche["dom"] if camp == "home" else fiche["ext"])["nom"]}) + FinDuel.lignes_evenement(ev) + FinDuel.ligne_tournoi(tour)
 	for l in lignes:
 		var h := Ui.hbox(10)

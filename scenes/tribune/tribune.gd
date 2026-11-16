@@ -143,7 +143,7 @@ func _colonne(i: int) -> Control:
 	# skins (cosmétiques)
 	var hs := Ui.hbox(8)
 	hs.alignment = BoxContainer.ALIGNMENT_CENTER
-	var skins: Array = z["skins"]
+	var skins: Array = Game.skins_possibles(z)
 	var idx := skins.map(func(s): return s["id"]).find(Game.skin_de(z["id"]))
 	var g := Ui.bouton("<", Ui.NUIT_CLAIR, 24)
 	var d := Ui.bouton(">", Ui.NUIT_CLAIR, 24)
@@ -183,14 +183,14 @@ func _colonne(i: int) -> Control:
 
 func _nom_skin(z: Dictionary) -> String:
 	var s := Game.skin_de(z["id"])
-	for sk in z["skins"]:
+	for sk in Game.skins_possibles(z):
 		if sk["id"] == s:
 			return sk["nom"]
 	return z["nom"]
 
 
 func _changer_skin(z: Dictionary, sens: int) -> void:
-	var ids: Array = z["skins"].map(func(s): return s["id"])
+	var ids: Array = Game.skins_possibles(z).map(func(s): return s["id"])
 	var i := ids.find(Game.skin_de(z["id"]))
 	Game.skins[z["id"]] = ids[posmod(i + sens, ids.size())]
 	Game.sauver()

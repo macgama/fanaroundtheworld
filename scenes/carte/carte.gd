@@ -247,8 +247,7 @@ func _construire_interface() -> void:
 	bas.add_child(b_ligne)
 	var b_pass := Ui.bouton("PASS", Ui.NUIT_CLAIR, 30)
 	b_pass.custom_minimum_size = Vector2(196, 88)
-	b_pass.disabled = true
-	b_pass.tooltip_text = "Bientôt"
+	Game.preparer_bouton_pass(b_pass, {"niveau": niveau, "continent": continent, "pays": pays})
 	bas.add_child(b_pass)
 
 	_placer_vue()

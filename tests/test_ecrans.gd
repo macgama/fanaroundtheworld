@@ -60,6 +60,7 @@ var _ecrans := {
 	"succes": [Game.SCENE_COLLECTION, {"onglet": "succes"}, []],
 	"salon": [Game.SCENE_SALON, {}, []],
 	"classement": [Game.SCENE_CLASSEMENT, {}, []],
+	"pass": [Game.SCENE_PASS, {}, [KEY_RIGHT, KEY_LEFT, KEY_ESCAPE]],
 	"tournoi": [Game.SCENE_TOURNOI, {}, []],
 }
 

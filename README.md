@@ -85,6 +85,12 @@ et, plus tard, sur mobile.
 et de l'XP de PASS. Une mission du jour peut être changée une fois par jour, et une mission
 terminée mais oubliée est versée automatiquement. Détails dans [docs/missions.md](docs/missions.md).
 
+**PASS** (bouton en bas de la carte et du fan club) : la saison en 100 paliers de 1 000 XP,
+d'août à fin mai, en 4 chapitres (Halloween, préhistorique, apocalyptique, doré). Piste gratuite :
+8 recrues FANZZY jouables, Jetons, quelques skins. Piste Premium (7,99 € en DLC Steam, pas encore
+en vente) : uniquement de l'apparence. L'XP vient des missions, duels, nouveaux stades et pronostics ;
+rattrapage (missions ×2) pour qui est en retard. Détails dans [docs/pass.md](docs/pass.md).
+
 **Événements** : les derbys, Grand Choc, finales, demi-finales, quarts et matchs des
 grandes compétitions de sélections sont repérés tout seuls dans le calendrier. Pastille sur
 le match, onglet **Fêtes** dans la liste, bandeau dans la fiche. De la veille du match à 6 h
