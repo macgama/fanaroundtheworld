@@ -32,6 +32,7 @@ const SCENE_SALON := "res://scenes/salon/salon.tscn"
 const SCENE_MISSIONS := "res://scenes/missions/missions.tscn"
 const SCENE_COLLECTION := "res://scenes/collection/collection.tscn"
 const SCENE_CLASSEMENT := "res://scenes/classement/classement.tscn"
+const SCENE_TOURNOI := "res://scenes/tournoi/tournoi.tscn"
 
 ## Paramètres passés d'un écran à l'autre (match choisi, camp supporté…).
 var params: Dictionary = {}
@@ -76,6 +77,8 @@ const RENDEMENT_REJEU := [1.0, 0.5, 0.25]
 var evenements: Dictionary = {"primes": {}}
 ## Matchs du calendrier avec un événement en cours ou à venir (recalculé à chaque mise à jour).
 var nb_evenements := 0
+## Tournoi des fan clubs du week-end (règles dans Tournoi, réseau dans EnLigne).
+var tournoi: Dictionary = Tournoi.vide()
 
 ## Où suivre le match. Au stade : billet + trajet, tampon du stade, plus de Jetons.
 const MODES_SUIVI := {
@@ -132,7 +135,7 @@ func _outils_de_test() -> void:
 		var scenes := {"carte": SCENE_CARTE, "voyage": SCENE_VOYAGE, "tribune": SCENE_TRIBUNE, "duel": SCENE_DUEL,
 			"arene": SCENE_ARENE, "poussee": SCENE_POUSSEE,
 			"pronos": SCENE_PRONOS, "missions": SCENE_MISSIONS, "favoris": SCENE_FAVORIS, "club": SCENE_CLUB, "creation": SCENE_CREATION_CLUB, "buvette": SCENE_BUVETTE, "boulots": SCENE_BOULOTS, "speaker": SCENE_SPEAKER, "tifo": SCENE_TIFO,
-			"salon": SCENE_SALON, "collection": SCENE_COLLECTION, "classement": SCENE_CLASSEMENT}
+			"salon": SCENE_SALON, "collection": SCENE_COLLECTION, "classement": SCENE_CLASSEMENT, "tournoi": SCENE_TOURNOI}
 		for b in ListeBoulots.LISTE:
 			scenes[b["id"]] = b["scene"]  # chaque petit boulot : --scene=<id>
 		if args.has("onglet"):
@@ -514,7 +517,7 @@ func _annoncer(points: int, raison: String, cle := "") -> void:
 
 func _ctx_missions() -> Dictionary:
 	return {"club": club_cree(), "favoris": not Supporters.cles_favorites(supporters).is_empty(),
-		"evenements": nb_evenements > 0}
+		"evenements": nb_evenements > 0, "tournoi": club_cree()}
 
 
 static func heure_locale() -> int:
@@ -646,6 +649,70 @@ func recompense_evenement(m: Dictionary, jetons_duel: int) -> Dictionary:
 	return r
 
 
+# ---------------------------------------------------------------- tournoi des fan clubs
+
+## Passe au tournoi du week-end en cours (le précédent attend sa récompense).
+func actualiser_tournoi() -> Dictionary:
+	if Tournoi.actualiser(tournoi, maintenant()):
+		sauver()
+	return Tournoi.fenetre(maintenant())
+
+
+func inscrire_tournoi(nom: Array, couleurs: Array) -> bool:
+	var f := actualiser_tournoi()
+	if f["etat"] != "actif" or not club_cree():
+		return false
+	tournoi["nom"] = Tournoi.nom_valide(nom)
+	tournoi["couleurs"] = [clampi(int(couleurs[0]), 0, FanClub.COULEURS.size() - 1), clampi(int(couleurs[1]), 0, FanClub.COULEURS.size() - 1)]
+	tournoi["inscrit"] = true
+	tournoi["inscrit_serveur"] = false
+	sauver()
+	return true
+
+
+## Couleurs du fan club en numéros de FanClub.COULEURS (pour le nom de tournoi).
+func couleurs_club_index() -> Array:
+	var c: Array = club.get("couleurs", [FanClub.COULEURS[0], FanClub.COULEURS[7]])
+	return [Tournoi.index_couleur(str(c[0])), Tournoi.index_couleur(str(c[1]))]
+
+
+## Le club adverse si un duel sur ce match compte pour le tournoi, sinon {}.
+## Les duels en ligne contre un vrai joueur ne comptent pas (ils ont leur salon).
+func adversaire_tournoi(m: Dictionary) -> Dictionary:
+	if m.is_empty() or bool(params.get("en_ligne", false)):
+		return {}
+	actualiser_tournoi()
+	if Tournoi.raison_refus(tournoi, str(m.get("id", "")), Donnees.heure_unix(m), maintenant()) != "":
+		return {}
+	return Tournoi.adversaire(tournoi)
+
+
+## Fin d'un duel (trois modes) : compte pour le tournoi si le match est du week-end.
+## Renvoie la ligne du duel {nom_adv, pts, gagne…} ou {}.
+func noter_duel_tournoi(m: Dictionary, gagne: bool, mode_suivi: String) -> Dictionary:
+	if adversaire_tournoi(m).is_empty():
+		return {}
+	var ev := not evenement_de(m).is_empty() and etat_evenement(m) == "actif"
+	var d := Tournoi.noter_duel(tournoi, str(m.get("id", "")), Donnees.heure_unix(m), gagne, mode_suivi == "stade", ev, maintenant())
+	if d.is_empty():
+		return {}
+	sauver()
+	noter_mission("tournoi")
+	EnLigne.synchroniser_tournoi()
+	return d
+
+
+## Récompense du tournoi fini (Jetons + XP de PASS). {} s'il n'y en a pas.
+func reclamer_tournoi() -> Dictionary:
+	var g := Tournoi.reclamer(tournoi)
+	if g.is_empty():
+		return {}
+	jetons += int(g["jetons"])
+	xp_pass += int(g["xp_pass"])
+	sauver()
+	return g
+
+
 # ---------------------------------------------------------------- collection
 
 ## Les FANZZY de la tribune (et leurs skins) entrent dans l'album.
@@ -763,6 +830,7 @@ func sauver() -> void:
 		"collection": collection,
 		"duels_par_match": duels_par_match,
 		"evenements": evenements,
+		"tournoi": tournoi,
 	}
 	var f := FileAccess.open(CHEMIN_SAUVEGARDE, FileAccess.WRITE)
 	if f:
@@ -806,6 +874,7 @@ func charger() -> void:
 	duels_par_match = dm if dm is Dictionary else {}
 	var ev: Variant = d.get("evenements", null)
 	evenements = ev if ev is Dictionary and ev.get("primes") is Dictionary else {"primes": {}}
+	tournoi = Tournoi.reparer(d.get("tournoi", null))
 	# Un FANZZY retiré du catalogue ne doit pas casser la tribune.
 	for i in equipe.size():
 		if fanzzy_par_id(str(equipe[i])).is_empty():
@@ -838,4 +907,5 @@ func reinitialiser() -> void:
 	collection = Collection.vide()
 	duels_par_match = {}
 	evenements = {"primes": {}}
+	tournoi = Tournoi.vide()
 	equipe = equipe_par_defaut()

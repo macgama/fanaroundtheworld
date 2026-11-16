@@ -56,6 +56,7 @@ var _ecrans := {
 	"album": [Game.SCENE_COLLECTION, {"onglet": "album"}, []],
 	"salon": [Game.SCENE_SALON, {}, []],
 	"classement": [Game.SCENE_CLASSEMENT, {}, []],
+	"tournoi": [Game.SCENE_TOURNOI, {}, []],
 }
 
 var _compteur := Compteur.new()
