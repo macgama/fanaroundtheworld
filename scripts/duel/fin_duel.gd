@@ -28,9 +28,8 @@ static func equipe_gagne(fiche: Dictionary, camp: String) -> bool:
 static func enregistrer(gagne: bool, perf: float, fiche: Dictionary, camp: String, mode_suivi: String) -> Dictionary:
 	var eg := equipe_gagne(fiche, camp)
 	var g := gains(gagne, perf, mode_suivi, eg)
-	g["rejoue"] = Game.noter_duel_match(str(fiche.get("id", fiche.get("m", {}).get("id", "")))) < 1.0
-	if g["rejoue"]:
-		g["jetons"] = int(round(g["jetons"] * 0.5))
+	g["part"] = Game.noter_duel_match(str(fiche.get("id", fiche.get("m", {}).get("id", ""))))
+	g["jetons"] = int(round(g["jetons"] * g["part"]))
 	g["equipe_gagne"] = eg
 	Game.duels_joues += 1
 	if gagne:

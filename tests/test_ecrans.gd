@@ -157,9 +157,10 @@ func _tester_pause(nom: String, e: Array) -> void:
 	if ab:
 		var jetons := Game.jetons
 		ab.pressed.emit()
+		# vérifié avant l'arrivée sur la carte, qui peut verser des missions d'hier
+		_verifier_ici(Game.jetons == jetons, nom, "abandon sans gains")
 		await _attendre(0.6)
 		_verifier_ici(not get_tree().paused and get_tree().current_scene.scene_file_path == Game.SCENE_CARTE, nom, "Abandonner ramène à la carte")
-		_verifier_ici(Game.jetons == jetons, nom, "abandon sans gains")
 	get_tree().paused = false
 	_noter(nom, "pause")
 
