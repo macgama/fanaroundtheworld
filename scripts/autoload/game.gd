@@ -21,6 +21,7 @@ const SCENE_ARENE := "res://scenes/arene/arene.tscn"
 const SCENE_POUSSEE := "res://scenes/poussee/poussee.tscn"
 const SCENE_BUVETTE := "res://scenes/buvette/buvette.tscn"
 const SCENE_BOULOTS := "res://scenes/boulots/boulots.tscn"
+const SCENE_TIFO := "res://scenes/tifo/tifo.tscn"
 const SCENE_CLUB := "res://scenes/club/club.tscn"
 const SCENE_CREATION_CLUB := "res://scenes/club/creation_club.tscn"
 const SCENE_PRONOS := "res://scenes/pronostics/pronostics.tscn"
@@ -108,7 +109,7 @@ func _ready() -> void:
 
 
 ## Options de ligne de commande pour les tests automatiques (après « -- ») :
-##   --scene=carte|voyage|tribune|duel|arene|poussee|buvette|boulots   ouvre directement un écran
+##   --scene=carte|voyage|tribune|duel|arene|poussee|buvette|boulots|tifo   ouvre directement un écran
 ##   --capture=chemin.png --apres=3      enregistre une capture puis quitte
 func _outils_de_test() -> void:
 	var args := {}
@@ -127,7 +128,7 @@ func _outils_de_test() -> void:
 				p["auto"] = true  # Arène / Poussée : ton camp joue tout seul (démo)
 		var scenes := {"carte": SCENE_CARTE, "voyage": SCENE_VOYAGE, "tribune": SCENE_TRIBUNE, "duel": SCENE_DUEL,
 			"arene": SCENE_ARENE, "poussee": SCENE_POUSSEE,
-			"pronos": SCENE_PRONOS, "missions": SCENE_MISSIONS, "favoris": SCENE_FAVORIS, "club": SCENE_CLUB, "creation": SCENE_CREATION_CLUB, "buvette": SCENE_BUVETTE, "boulots": SCENE_BOULOTS,
+			"pronos": SCENE_PRONOS, "missions": SCENE_MISSIONS, "favoris": SCENE_FAVORIS, "club": SCENE_CLUB, "creation": SCENE_CREATION_CLUB, "buvette": SCENE_BUVETTE, "boulots": SCENE_BOULOTS, "tifo": SCENE_TIFO,
 			"salon": SCENE_SALON, "collection": SCENE_COLLECTION, "classement": SCENE_CLASSEMENT}
 		if args.has("onglet"):
 			p["onglet"] = args["onglet"]  # collection : « carnet » ou « album »
