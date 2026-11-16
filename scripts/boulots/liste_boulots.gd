@@ -15,6 +15,8 @@ const LISTE := [
 		"scene": "res://scenes/buvette/buvette.tscn", "couleur": "#ff3d7f"},
 	{"id": "ramasseur", "titre": "Ramasseur de balles", "texte": "Cours le long de la touche, attrape les ballons qui sortent et relance-les vite.",
 		"scene": "res://scenes/ramasseur/ramasseur.tscn", "couleur": "#1e6bff"},
+	{"id": "speaker", "titre": "Speaker du stade", "texte": "Annonce les buteurs au micro, dans le tempo, et fais répondre toute la tribune.",
+		"scene": "res://scenes/speaker/speaker.tscn", "couleur": "#ff8a2b"},
 	{"id": "tifo", "titre": "Peintre de tifo", "texte": "Peins les grandes bâches du capo d'après son modèle, avant l'entrée des joueurs.",
 		"scene": "res://scenes/tifo/tifo.tscn", "couleur": "#8b5cff"},
 	{"id": "echarpes", "titre": "Stand d'écharpes", "texte": "Tends à chaque supporter l'écharpe aux couleurs de son club.",

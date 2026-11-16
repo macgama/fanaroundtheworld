@@ -57,6 +57,11 @@ et, plus tard, sur mobile.
    - **1 à 4** (ou clic) : poser une boisson, un hot-dog, des frites, une gaufre ;
    - **ENTRÉE** ou **ESPACE** : servir · **RETOUR ARRIÈRE** : vider le plateau ;
    - à 30 s, c'est la mi-temps : le rush. Après 3 services dans la journée, la paye est divisée par deux.
+   **Speaker du stade** (écran *Petits boulots*) : un match d'une minute, 7 buts. Quand les
+   locaux marquent, l'écran géant montre le numéro du buteur : retrouve-le sur la feuille de
+   match (**1 à 4** ou clic) et annonce-le quand la note touche le micro. Tu cries le prénom,
+   la tribune répond le nom, trois fois ; le tempo monte à chaque but. But des visiteurs :
+   pas d'annonce (bonus fair-play). Paye ÷ 2 après 3 matchs dans la journée.
    **Stand d'écharpes** (écran *Boulots*, 60 s) : chaque FANZZY montre l'écusson de son club et
    tu lui tends l'écharpe aux mêmes couleurs (les écharpes n'ont pas de nom) :
    - **1 à 6** (ou clic) : tendre l'écharpe de ce crochet · **R** : aller au carton (réassort) ;
@@ -120,6 +125,7 @@ Supprime ce fichier pour recommencer à zéro.
 | `scripts/club/` | Règles du fan club (`fan_club.gd` : membres, cotisations, buvette, écharpes) |
 | `scripts/carte/` | La carte du monde dessinée |
 | `scripts/buvette/` | Règles du petit boulot de buvette (commandes, paye), sans affichage |
+| `scripts/speaker/` | Règles du petit boulot de speaker du stade (feuille de match, tempo des annonces, paye), sans affichage |
 | `scripts/tifo/` | Règles du petit boulot de peintre de tifo (modèles, seau, ressemblance, paye), sans affichage |
 | `scripts/echarpes/` | Règles du stand d'écharpes (portant, commandes, paye), sans affichage |
 | `scripts/ramasseur/` | Règles du ramasseur de balles (tirs, prise, paye), sans affichage |
@@ -134,7 +140,7 @@ Supprime ce fichier pour recommencer à zéro.
 | `tools/` | Scripts de préparation des données (carte du monde, repérage des bras des FANZZY) |
 | `mods/` | Format des mods Steam Workshop (noms et couleurs de clubs) |
 | `docs/` | Game design et maquettes |
-| `tests/` | Tests automatiques (`godot --headless --path . --script tests/test_logique.gd`, `tests/test_pronostics.gd`, `tests/test_club.gd`, `tests/test_supporters.gd`, `tests/test_classement.gd`, `tests/test_buvette.gd`, `tests/test_tifo.gd`, `tests/test_echarpes.gd`, `tests/test_ramasseur.gd`, `tests/test_collection.gd`, `tests/test_evenements.gd`, `tests/test_audio.gd`, et le parcours complet : `godot --headless --path . res://tests/test_pronostics_jeu.tscn -- --hors-ligne`, le tutoriel : `res://tests/test_tutoriel.tscn -- --hors-ligne`, le classement en ligne : `res://tests/test_classement_jeu.tscn -- --hors-ligne`, le tour de tous les écrans (chaque bouton pressé, parties au clavier, pause) : `res://tests/test_ecrans.tscn -- --hors-ligne`) |
+| `tests/` | Tests automatiques (`godot --headless --path . --script tests/test_logique.gd`, `tests/test_pronostics.gd`, `tests/test_club.gd`, `tests/test_supporters.gd`, `tests/test_classement.gd`, `tests/test_buvette.gd`, `tests/test_tifo.gd`, `tests/test_echarpes.gd`, `tests/test_speaker.gd`, `tests/test_ramasseur.gd`, `tests/test_collection.gd`, `tests/test_evenements.gd`, `tests/test_audio.gd`, et le parcours complet : `godot --headless --path . res://tests/test_pronostics_jeu.tscn -- --hors-ligne`, le tutoriel : `res://tests/test_tutoriel.tscn -- --hors-ligne`, le classement en ligne : `res://tests/test_classement_jeu.tscn -- --hors-ligne`, le tour de tous les écrans (chaque bouton pressé, parties au clavier, pause) : `res://tests/test_ecrans.tscn -- --hors-ligne`) |
 
 ## Règles du projet
 
