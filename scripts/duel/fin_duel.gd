@@ -41,7 +41,21 @@ static func enregistrer(gagne: bool, perf: float, fiche: Dictionary, camp: Strin
 	Game.ajouter_xp(g["xp"])
 	g["xp_pass"] = Game.xp_pass_duel(gagne, perf, g["part"])
 	g["evenement"] = Game.recompense_evenement(fiche.get("m", {}), int(g["jetons"]))
+	g["tournoi"] = Game.noter_duel_tournoi(fiche.get("m", {}), gagne, mode_suivi)
 	return g
+
+
+## Ligne « Tournoi du week-end » du panneau de fin, ou [] si le duel n'y comptait pas.
+static func ligne_tournoi(d: Variant) -> Array:
+	if not d is Dictionary or d.is_empty():
+		return []
+	return [["Tournoi · %s contre %s" % ["victoire" if d["gagne"] else "défaite", Tournoi.nom_texte(d["nom_adv"])], "+%d pt%s" % [int(d["pts"]), "" if int(d["pts"]) == 1 else "s"]]]
+
+
+## Nom affiché pour la tribune d'en face : le club adverse du tournoi, sinon celle de l'équipe.
+static func nom_adverse(m: Dictionary, equipe: String) -> String:
+	var adv := Game.adversaire_tournoi(m)
+	return Tournoi.nom_texte(adv["nom"]) if not adv.is_empty() else "Tribune " + equipe
 
 
 ## Lignes « Bonus Derby » et « Prime de la soirée » du panneau de fin, ou [].
