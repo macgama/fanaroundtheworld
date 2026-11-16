@@ -109,6 +109,8 @@ func _ready() -> void:
 func _unhandled_input(ev: InputEvent) -> void:
 	if not ev is InputEventKey or not ev.pressed or _defile == null:
 		return
+	if ev.keycode in [KEY_LEFT, KEY_RIGHT, KEY_ESCAPE]:
+		get_viewport().set_input_as_handled()
 	match ev.keycode:
 		KEY_LEFT:
 			_defile.scroll_horizontal -= LARGEUR_COL + 10
@@ -116,9 +118,6 @@ func _unhandled_input(ev: InputEvent) -> void:
 			_defile.scroll_horizontal += LARGEUR_COL + 10
 		KEY_ESCAPE:
 			_retour()
-		_:
-			return
-	get_viewport().set_input_as_handled()
 
 
 func _retour() -> void:
