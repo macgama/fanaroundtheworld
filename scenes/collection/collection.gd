@@ -2,15 +2,17 @@ extends Control
 ## Collection : le carnet de voyage (un tampon par stade visité) et l'album
 ## des FANZZY (ceux qui ont joué un duel avec toi, et les skins portés).
 ## À droite, les séries : chaque série complète donne une prime en Jetons.
+## Onglet « Succès » : les succès Steam (gagnés aussi hors Steam, voir Succes).
 ## Règles dans scripts/jeu/collection.gd.
 
 const Voyage := preload("res://scenes/voyage/voyage.gd")
 const SonsScript := preload("res://scripts/audio/sons.gd")
-const ONGLETS := [["carnet", "Carnet de voyage"], ["album", "Album FANZZY"]]
+const ONGLETS := [["carnet", "Carnet de voyage"], ["album", "Album FANZZY"], ["succes", "Succès"]]
 
 var _onglet := "carnet"
 var _boutons_onglets: Dictionary = {}
 var _titre: Label
+var _titre_droite: Label
 var _gauche: VBoxContainer
 var _droite: VBoxContainer
 var _jetons: Label
@@ -35,7 +37,7 @@ func _ready() -> void:
 	haut.add_child(Ui.label("COLLECTION", 60, Ui.JAUNE, true, 10))
 	for o in ONGLETS:
 		var b := Ui.bouton(o[1], Ui.NUIT, 26)
-		b.custom_minimum_size = Vector2(280, 70)
+		b.custom_minimum_size = Vector2(240, 70)
 		b.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 		b.pressed.connect(func(): _choisir(o[0]))
 		_boutons_onglets[o[0]] = b
@@ -74,7 +76,8 @@ func _ready() -> void:
 	corps.add_child(pd)
 	var vd := Ui.vbox(12)
 	pd.add_child(vd)
-	vd.add_child(Ui.label("SÉRIES ET PRIMES", 34, Ui.JAUNE, true, 6))
+	_titre_droite = Ui.label("SÉRIES ET PRIMES", 34, Ui.JAUNE, true, 6)
+	vd.add_child(_titre_droite)
 	var sd := ScrollContainer.new()
 	sd.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
 	sd.size_flags_vertical = Control.SIZE_EXPAND_FILL
@@ -94,7 +97,8 @@ func _ready() -> void:
 	_sons = SonsScript.new()
 	add_child(_sons)
 	Donnees.mis_a_jour.connect(_remplir)
-	if str(Game.params.get("onglet", "")) in ["carnet", "album"]:
+	Game.succes_gagnes.connect(func(_l): _remplir())
+	if str(Game.params.get("onglet", "")) in ["carnet", "album", "succes"]:
 		_onglet = str(Game.params["onglet"])
 	_choisir(_onglet)
 
@@ -120,6 +124,10 @@ func _remplir() -> void:
 	_jetons.text = "%d" % Game.jetons
 	_vider(_gauche)
 	_vider(_droite)
+	_titre_droite.text = "SÉRIES ET PRIMES"
+	if _onglet == "succes":
+		_remplir_succes()
+		return
 	var series: Array
 	if _onglet == "carnet":
 		_remplir_carnet()
@@ -337,3 +345,89 @@ func _reclamer(id: String, b: Button) -> void:
 	_jetons.text = "%d" % Game.jetons
 	Ui.pop(_jetons)
 	get_tree().create_timer(0.6).timeout.connect(_remplir)
+
+
+# ---------------------------------------------------------------- succès
+
+func _remplir_succes() -> void:
+	var etat := Game.etat_succes()
+	var n := Game.succes.size()
+	_titre.text = "SUCCÈS · %d / %d" % [n, Succes.LISTE.size()]
+	# Gagnés d'abord (les plus récents en tête), puis les plus avancés.
+	var liste: Array = Succes.LISTE.duplicate()
+	var rang := func(x: Dictionary) -> float:
+		if Game.succes.has(x["id"]):
+			return 2.0 + float(Game.succes[x["id"]]) / 1e11
+		var p := Succes.progres(x, etat)
+		return float(p.x) / float(maxi(p.y, 1))
+	liste.sort_custom(func(a, b): return rang.call(a) > rang.call(b))
+	var flux := HFlowContainer.new()
+	flux.add_theme_constant_override("h_separation", 14)
+	flux.add_theme_constant_override("v_separation", 14)
+	for x in liste:
+		flux.add_child(_carte_succes(x, etat))
+	_gauche.add_child(flux)
+
+	_titre_droite.text = "TES SUCCÈS"
+	var pan := Ui.panneau(Ui.NUIT_CLAIR, 18, 4)
+	var v := Ui.vbox(10)
+	pan.add_child(v)
+	v.add_child(Ui.label("%d succès gagnés sur %d" % [n, Succes.LISTE.size()], 28, Ui.BLANC, true, 4))
+	var barre := _barre(n, Succes.LISTE.size(), Ui.JAUNE)
+	v.add_child(barre)
+	_droite.add_child(pan)
+	var txt := "Tes succès sont aussi envoyés à Steam : ils apparaissent sur ton profil." if Plateforme.steam_ok \
+		else "Steam n'est pas lancé : tes succès sont gardés ici et seront envoyés à Steam la prochaine fois."
+	for t in [txt, Plateforme.texte_sauvegarde(), "Les succès ne donnent ni Jetons ni skins : ce sont des souvenirs de supporter."]:
+		var l := Ui.label(t, 18, Ui.GRIS)
+		l.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		_droite.add_child(l)
+
+
+func _carte_succes(x: Dictionary, etat: Dictionary) -> Control:
+	var gagne := Game.succes.has(x["id"])
+	var coul := Color(x["couleur"])
+	var pan := Ui.panneau(coul.darkened(0.55) if gagne else Color("#2a2560"), 16, 4)
+	pan.custom_minimum_size = Vector2(500, 0)
+	pan.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	var h := Ui.hbox(14)
+	pan.add_child(h)
+	var rond := Ui.panneau(coul if gagne else Color("#4a4580"), 40, 4)
+	rond.custom_minimum_size = Vector2(76, 76)
+	rond.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	var ic := Ui.icone(str(x["icone"]), 46)
+	ic.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	if not gagne:
+		ic.modulate = Color(1, 1, 1, 0.35)
+	rond.add_child(ic)
+	h.add_child(rond)
+	var v := Ui.vbox(4)
+	v.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	h.add_child(v)
+	v.add_child(Ui.label(x["titre"], 24, Ui.BLANC if gagne else Ui.GRIS, true, 4))
+	var t := Ui.label(x["texte"], 16, Ui.BLANC if gagne else Ui.GRIS)
+	t.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	v.add_child(t)
+	if gagne:
+		var d := Time.get_date_dict_from_unix_time(int(Game.succes[x["id"]]))
+		v.add_child(Ui.label("Gagné le %02d/%02d/%d" % [d["day"], d["month"], d["year"]], 16, Ui.JAUNE, true))
+	else:
+		var p := Succes.progres(x, etat)
+		var hb := Ui.hbox(8)
+		hb.add_child(_barre(p.x, p.y, coul))
+		hb.add_child(Ui.label("%d / %d" % [p.x, p.y], 16, Ui.BLANC, true))
+		v.add_child(hb)
+	return pan
+
+
+func _barre(fait: int, total: int, coul: Color) -> ProgressBar:
+	var barre := ProgressBar.new()
+	barre.custom_minimum_size = Vector2(0, 14)
+	barre.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	barre.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	barre.show_percentage = false
+	barre.max_value = maxi(total, 1)
+	barre.value = fait
+	barre.add_theme_stylebox_override("background", Ui.boite(Color("#1a1640"), 8, 3))
+	barre.add_theme_stylebox_override("fill", Ui.boite(coul, 8, 0))
+	return barre

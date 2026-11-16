@@ -23,6 +23,7 @@ config/icon="res://icon.svg"
 
 [autoload]
 
+Plateforme="*res://scripts/autoload/plateforme.gd"
 Game="*res://scripts/autoload/game.gd"
 Donnees="*res://scripts/autoload/donnees.gd"
 Reseau="*res://scripts/autoload/reseau.gd"

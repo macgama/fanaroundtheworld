@@ -54,6 +54,7 @@ var _ecrans := {
 	"creation": [Game.SCENE_CREATION_CLUB, {}, []],
 	"collection": [Game.SCENE_COLLECTION, {}, []],
 	"album": [Game.SCENE_COLLECTION, {"onglet": "album"}, []],
+	"succes": [Game.SCENE_COLLECTION, {"onglet": "succes"}, []],
 	"salon": [Game.SCENE_SALON, {}, []],
 	"classement": [Game.SCENE_CLASSEMENT, {}, []],
 }

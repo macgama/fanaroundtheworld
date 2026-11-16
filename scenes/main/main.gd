@@ -225,6 +225,10 @@ func _ouvrir_options() -> void:
 	pe.toggled.connect(Reglages.regler_plein_ecran)
 	v.add_child(pe)
 	v.add_child(Ui.label("Partie", 26, Ui.JAUNE, true))
+	var sauv := Ui.label(Plateforme.texte_sauvegarde(), 18, Ui.GRIS)
+	sauv.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	sauv.custom_minimum_size.x = 700
+	v.add_child(sauv)
 	var h2 := Ui.hbox(14)
 	v.add_child(h2)
 	var tuto := Ui.bouton("Revoir le tutoriel", Ui.VERT, 24)
