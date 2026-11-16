@@ -223,11 +223,11 @@ func _construire_interface() -> void:
 	b_pronos.tooltip_text = "Tes pronostics sur les vrais matchs (gratuits, sans mise)"
 	b_pronos.pressed.connect(func(): Game.aller(Game.SCENE_PRONOS, {"niveau": niveau, "continent": continent, "pays": pays}))
 	bas.add_child(b_pronos)
-	var b_buvette := Ui.bouton("Buvette", Ui.ROSE, 30)
-	b_buvette.custom_minimum_size = Vector2(196, 88)
-	b_buvette.tooltip_text = "Petit boulot : vendeur à la buvette (60 s) pour gagner des Jetons"
-	b_buvette.pressed.connect(func(): Game.aller(Game.SCENE_BUVETTE, {"niveau": niveau, "continent": continent, "pays": pays}))
-	bas.add_child(b_buvette)
+	var b_boulots := Ui.bouton("Boulots", Ui.ROSE, 30)
+	b_boulots.custom_minimum_size = Vector2(196, 88)
+	b_boulots.tooltip_text = "Petits boulots au stade (buvette…) pour gagner des Jetons"
+	b_boulots.pressed.connect(func(): Game.aller(Game.SCENE_BOULOTS, {"niveau": niveau, "continent": continent, "pays": pays}))
+	bas.add_child(b_boulots)
 	var b_fav := Ui.bouton("Équipes", Ui.VERT, 30)
 	Ui.colorer_bouton(b_fav, Ui.VERT, true)
 	b_fav.custom_minimum_size = Vector2(196, 88)
