@@ -13,6 +13,8 @@ extends RefCounted
 const LISTE := [
 	{"id": "buvette", "titre": "Vendeur à la buvette", "texte": "Sers les commandes des supporters avant qu'ils perdent patience.",
 		"scene": "res://scenes/buvette/buvette.tscn", "couleur": "#ff3d7f"},
+	{"id": "ramasseur", "titre": "Ramasseur de balles", "texte": "Cours le long de la touche, attrape les ballons qui sortent et relance-les vite.",
+		"scene": "res://scenes/ramasseur/ramasseur.tscn", "couleur": "#3ddc84"},
 ]
 
 
