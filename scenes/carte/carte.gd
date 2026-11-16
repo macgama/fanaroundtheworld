@@ -127,6 +127,7 @@ func _construire_interface() -> void:
 	haut.add_child(etat)
 	haut.add_child(_bouton_missions())
 	haut.add_child(_bouton_classement())
+	haut.add_child(_bouton_tournoi())
 	var jet := Ui.panneau(Ui.NUIT, 20, 5)
 	var hj := Ui.hbox(8)
 	hj.add_child(Ui.icone("jeton", 36))
@@ -275,6 +276,28 @@ func _bouton_classement() -> Control:
 	b.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	b.tooltip_text = "Les meilleurs fans et les équipes les plus soutenues, en ligne"
 	b.pressed.connect(func(): Game.aller(Game.SCENE_CLASSEMENT, {"niveau": niveau, "continent": continent, "pays": pays}))
+	return b
+
+
+## Bouton « Tournoi » (fan clubs, le week-end) : « en cours » ou « récompense ! ».
+func _bouton_tournoi() -> Control:
+	var f := Game.actualiser_tournoi()
+	var t: Dictionary = Game.tournoi
+	var texte := "Tournoi"
+	var couleur := Ui.NUIT
+	if not (t["a_reclamer"] as Dictionary).is_empty():
+		texte = "Tournoi · récompense !"
+		couleur = Ui.JAUNE
+	elif f["etat"] == "actif":
+		texte = tr("Tournoi · %d pts") % Tournoi.points(t) if bool(t["inscrit"]) else tr("Tournoi · en cours")
+		couleur = Ui.ROSE
+	var b := Ui.bouton(texte, couleur, 24)
+	if couleur == Ui.JAUNE:
+		Ui.colorer_bouton(b, Ui.JAUNE, true)
+	b.custom_minimum_size = Vector2(0, 64)
+	b.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	b.tooltip_text = "Tournoi des fan clubs : du vendredi au lundi midi, sur les vrais matchs du week-end"
+	b.pressed.connect(func(): Game.aller(Game.SCENE_TOURNOI, {"niveau": niveau, "continent": continent, "pays": pays}))
 	return b
 
 

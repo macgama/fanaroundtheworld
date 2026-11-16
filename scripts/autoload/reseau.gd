@@ -20,8 +20,7 @@ signal salons_steam_trouves(liste: Array)  # [{id, nom, match}]
 
 const PORT := 24680
 const PORT_ANNONCE := 24681
-## App ID Steam : 480 (« Spacewar », l'appli de test de Valve) tant que le jeu n'a pas le sien.
-const APP_ID_STEAM := 480
+## App ID Steam : voir Plateforme.APP_ID_STEAM (Steam est ouvert par l'autoload Plateforme).
 
 var transport := ""          # "", "lan" ou "steam"
 var hote := false
@@ -54,8 +53,6 @@ func _ready() -> void:
 
 
 func _process(delta: float) -> void:
-	if steam_ok:
-		_steam.call("run_callbacks")
 	if _annonce:
 		_t_annonce -= delta
 		if _t_annonce <= 0.0:
@@ -320,22 +317,16 @@ func salons_lan() -> Array:
 
 # ---------------------------------------------------------------- Steam (GodotSteam)
 
-## Steam n'est utilisé que si l'extension GodotSteam (singleton « Steam ») et sa
-## SteamMultiplayerPeer sont là, et que le client Steam tourne. Sinon : réseau local.
+## Steam n'est utilisé que si Plateforme a ouvert Steam (extension GodotSteam
+## présente, client Steam lancé) et que SteamMultiplayerPeer existe. Sinon : réseau local.
 func _initialiser_steam() -> void:
-	if not Engine.has_singleton("Steam") or not ClassDB.class_exists("SteamMultiplayerPeer"):
-		if Engine.has_singleton("Steam"):
-			print("Steam : extension trouvée mais pas SteamMultiplayerPeer")  # sans_traduction
+	if not Plateforme.steam_ok:
 		return
-	_steam = Engine.get_singleton("Steam")
-	OS.set_environment("SteamAppId", str(APP_ID_STEAM))  # sans_traduction
-	OS.set_environment("SteamGameId", str(APP_ID_STEAM))  # sans_traduction
-	var r: Variant = _steam.call("steamInitEx")  # sans_traduction
-	steam_ok = r is Dictionary and int(r.get("status", 1)) == 0
-	print("Steam : %s" % str(r))
-	if not steam_ok:
-		push_warning("Steam pas disponible : %s" % str(r))  # sans_traduction
+	if not ClassDB.class_exists("SteamMultiplayerPeer"):
+		print("Steam : extension trouvée mais pas SteamMultiplayerPeer")  # sans_traduction
 		return
+	_steam = Plateforme.steam
+	steam_ok = true
 	_steam.connect("lobby_created", _sur_lobby_cree)
 	_steam.connect("lobby_joined", _sur_lobby_rejoint)
 	_steam.connect("lobby_match_list", _sur_liste_lobbies)

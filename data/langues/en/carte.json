@@ -97,5 +97,10 @@
 	"Changement de favori possible dans %s": "You can change favourite in %s",
 	"cache": "cache",
 	"exemple": "sample",
-	"aucune": "none"
+	"aucune": "none",
+	"Tournoi": "Tournament",
+	"Tournoi · récompense !": "Tournament · reward!",
+	"Tournoi · %d pts": "Tournament · %d pts",
+	"Tournoi · en cours": "Tournament · in progress",
+	"Tournoi des fan clubs : du vendredi au lundi midi, sur les vrais matchs du week-end": "Fan club tournament: from Friday to Monday noon, on the weekend's real matches"
 }

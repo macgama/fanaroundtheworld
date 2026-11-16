@@ -5,6 +5,9 @@ extends Control
 ##   Chant (ESPACE ou clic) : appuie quand la note arrive dans le cercle.
 ##   Tifo (T) : se charge avec les bons chants, puis gros boost.
 ##   Ola (O) : prête toutes les 20 s, enchaîne 4 flèches à temps.
+## Si le fan club a composé son chant (créateur de chants, ChantClub), la
+## piste suit ce chant, à son tempo, avec ses paroles façon karaoké ; chaque
+## couplet sans erreur charge le tifo. Sinon, des motifs au hasard.
 ## La jauge d'ambiance dit qui domine. Le vrai score du match donne un bonus,
 ## et un vrai but pendant le duel fait exploser la tribune.
 ## Touches de test : B = simuler un but pour toi, N = but adverse.
@@ -52,6 +55,18 @@ var _prochain_chant_adverse := 12.0
 var _bonus_score := 1.0
 var _score_vu := Vector2i(-1, -1)
 
+# chant du club (vide : motifs au hasard)
+var _chant_club: Array = []            # ChantClub.programme
+var _chant_nom := ""
+var _mesure_chant := 0            # mesures préparées depuis le début
+var _frappes_chant: Array = []    # [{t, voix, force}] à jouer
+var _lignes: Array = []           # [{t0, t1, i, cycle, appuis}] pour le karaoké
+var _fins_couplet := {}           # instant de la dernière note d'un couplet -> n° du couplet
+var _couplets_rates := {}         # n° du couplet -> true dès une erreur
+var couplets_parfaits := 0
+var _sons_chant: Node
+var _paroles: RichTextLabel
+
 # bonus des FANZZY (multiplicatifs)
 var mods := {}
 
@@ -97,6 +112,7 @@ func _ready() -> void:
 	camp = p.get("camp", "home")
 	mode = p.get("mode", "stade")
 	mods = Duel.mods_equipe()
+	_preparer_chant()
 	_preparer_sons()
 	_construire()
 	_calculer_bonus_score(true)
@@ -168,6 +184,9 @@ func _construire() -> void:
 	for i in 3:
 		var mar := Marionnette.new()
 		mar.texture = Game.texture_fanzzy(str(Game.equipe[i]))
+		mar.fanzzy_id = Game.skin_de(str(Game.equipe[i]))
+		mar.couleurs = PackedColorArray([_decor.c_nous, Color(_decor.c_nous2)])
+		mar.action_fond = [&"chanter", &"agiter_echarpe", &"encourager"][i]
 		mar.position = Vector2(560 + i * 300, 1090)
 		mar.hauteur = 430.0 if i == 1 else 390.0
 		mar.phase = i * 0.9
@@ -181,6 +200,21 @@ func _construire() -> void:
 	_piste.size = Vector2(1160, 110)
 	_piste.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(_piste)
+
+	# paroles du chant du club, au-dessus de la piste
+	_paroles = RichTextLabel.new()
+	_paroles.bbcode_enabled = true
+	_paroles.scroll_active = false
+	_paroles.autowrap_mode = TextServer.AUTOWRAP_OFF
+	_paroles.position = Vector2(380, 488)
+	_paroles.size = Vector2(1160, 64)
+	_paroles.add_theme_font_override("normal_font", Ui.police_titre())
+	_paroles.add_theme_font_size_override("normal_font_size", 40)
+	_paroles.add_theme_constant_override("outline_size", 10)
+	_paroles.add_theme_color_override("font_outline_color", Ui.CONTOUR)
+	_paroles.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_paroles.visible = not _chant_club.is_empty()
+	add_child(_paroles)
 
 	# --- jauge en haut
 	var hj := Ui.vbox(4)
@@ -196,7 +230,7 @@ func _construire() -> void:
 	n1.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
 	noms.add_child(n1)
 	noms.add_child(Ui.label("DUEL D'AMBIANCE", 40, Ui.JAUNE, true, 10))
-	var nom_eux: String = Reseau.adversaire.get("nom", eux["nom"]) if en_ligne else tr("TRIBUNE ") + eux["nom"]
+	var nom_eux: String = Reseau.adversaire.get("nom", eux["nom"]) if en_ligne else FinDuel.nom_adverse(fiche["m"], eux["nom"])
 	var n2 := Ui.label(nom_eux.to_upper(), 30, Ui.BLANC, true, 8)
 	n2.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	n2.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
@@ -255,7 +289,7 @@ func _construire() -> void:
 	_lbl_combo = Ui.label("COMBO x0", 36, Ui.BLANC, true, 8)
 	vcb.add_child(_lbl_combo)
 	var cri: String = Game.fanzzy_par_id(str(Game.equipe[0])).get("cri", {}).get("label", "Allez allez")
-	_lbl_combo_sous = Ui.label(tr("Appuie en rythme · chant « %s »") % tr(cri).capitalize(), 17, Ui.GRIS)
+	_lbl_combo_sous = Ui.label(tr("Appuie en rythme · chant « %s »") % (_chant_nom if not _chant_club.is_empty() else tr(cri).capitalize()), 17, Ui.GRIS)
 	_lbl_combo_sous.clip_text = true
 	vcb.add_child(_lbl_combo_sous)
 
@@ -365,24 +399,30 @@ func _process(delta: float) -> void:
 
 	# notes : une mesure de 4 temps à la fois, sauf pendant l'ola
 	while _prochaine_mesure < temps + TRAJET_NOTE and _prochaine_mesure < DUREE - 1.0:
-		var motif: Array = MOTIFS[randi() % MOTIFS.size()] if _prochaine_mesure > 4.0 else [1, 0, 1, 0]
-		for i in 4:
-			var t := _prochaine_mesure + i * _beat
-			if motif[i] == 1 and not _pendant_ola(t):
-				_notes.append(t)
+		if not _chant_club.is_empty():
+			_preparer_mesure_chant(_prochaine_mesure)
+		else:
+			var motif: Array = MOTIFS[randi() % MOTIFS.size()] if _prochaine_mesure > 4.0 else [1, 0, 1, 0]
+			for i in 4:
+				var t := _prochaine_mesure + i * _beat
+				if motif[i] == 1 and not _pendant_ola(t):
+					_notes.append(t)
 		_prochaine_mesure += 4 * _beat
 	# notes ratées (passées sans appui)
-	while not _notes.is_empty() and _notes[0] < temps - FENETRE_BIEN * mods["tempoWindow"]:  # sans_traduction
-		_notes.pop_front()
+	while not _notes.is_empty() and _notes[0] < temps - FENETRE_BIEN * mods["tempoWindow"]:
+		_noter_faute(_notes.pop_front())
 		_rate(false)
 
-	# tambour de la tribune sur chaque temps
-	var b := int(temps / _beat)
-	if b != _dernier_beat:
-		_dernier_beat = b
-		_jouer("tambour", -12.0)
-		for mar in _fanzzy:
-			mar.battement()
+	if _chant_club.is_empty():
+		# tambour de la tribune sur chaque temps
+		var b := int(temps / _beat)
+		if b != _dernier_beat:
+			_dernier_beat = b
+			_jouer("tambour", -12.0)
+			for mar in _fanzzy:
+				mar.battement(60.0 / _beat)
+	else:
+		_jouer_chant()
 
 	if en_ligne:
 		_tick_en_ligne(delta)
@@ -482,6 +522,7 @@ func _chant() -> void:
 		return
 	Ui.pop(_btn_chant, 1.08, 0.12)
 	if _notes.is_empty():
+		_noter_faute(temps)
 		_rate(true)
 		return
 	var ecart := absf(_notes[0] - temps)
@@ -489,12 +530,15 @@ func _chant() -> void:
 	if ecart > FENETRE_BIEN * tw:
 		# trop tôt : on ne mange pas la note, petite pénalité
 		if ecart < FENETRE_BIEN * tw * 2.2:
+			_noter_faute(_notes[0])
 			_rate(true)
 		return
-	_notes.pop_front()
+	var t_note: float = _notes.pop_front()
 	combo += 1
 	combo_max = maxi(combo_max, combo)
-	var mult := (1.0 + minf(combo, 40) / 20.0) * _bonus_score * float(mods["mashBonus"])  # sans_traduction
+	var mult := (1.0 + minf(combo, 40) / 20.0) * _bonus_score * float(mods["mashBonus"])
+	if not _chant_club.is_empty():
+		mult *= ChantClub.BONUS_POINTS
 	var gain := 1.0
 	if ecart <= FENETRE_PARFAIT * tw:
 		parfaits += 1
@@ -514,7 +558,11 @@ func _chant() -> void:
 		_decor.confettis(40)
 		_fanzzy[1].sauter(1.0)
 		_fanzzy[2].sauter(1.0)
+		_fanzzy[1].geste(&"applaudir", 1.6)
+		_fanzzy[2].geste(&"applaudir", 1.6)
 	_maj_combo()
+	if _fins_couplet.has(t_note):
+		_fin_de_couplet(int(_fins_couplet[t_note]))
 
 
 func _rate(appui: bool) -> void:
@@ -551,6 +599,7 @@ func _tifo() -> void:
 	_decor.confettis(120)
 	for mar in _fanzzy:
 		mar.sauter(1.3)
+		mar.geste(&"agiter_echarpe", 3.0)
 	_annonce(tr("TIFO DÉPLOYÉ ! +%d") % int(gain), Ui.ROSE)
 
 
@@ -609,6 +658,7 @@ func _ola_finir(reussie: bool) -> void:
 		_jouer("foule", -3.0)
 		for i in _fanzzy.size():
 			_fanzzy[i].sauter(1.2, i * 0.12)
+			_fanzzy[i].geste(&"lever_bras", 1.4, i * 0.12)
 		_annonce(tr("OLA RÉUSSIE ! +%d") % int(gain), Ui.JAUNE)
 	else:
 		_signaler("ola_ratee")
@@ -625,12 +675,13 @@ func _but(pour_nous: bool) -> void:
 		_jouer("foule", 3.0)
 		for mar in _fanzzy:
 			mar.sauter(1.6)
+			mar.geste(&"celebrer", 2.5)
 	else:
 		_pousser(-10.0)
 		_annonce("But adverse… relance la tribune !", Ui.ROUGE)
 		_decor.secousse_eux = 1.0
 		for mar in _fanzzy:
-			mar.trembler()
+			mar.geste(&"depit", 2.2)
 
 
 func _annonce(texte: String, couleur: Color) -> void:
@@ -840,11 +891,16 @@ func _finir() -> void:
 	Game.gagner_jetons(jetons)
 	Game.ajouter_xp(xp)
 	var ev := Game.recompense_evenement(fiche["m"], jetons)
+	var tour := {} if en_ligne else Game.noter_duel_tournoi(fiche["m"], gagne, mode)
 	if gagne:
 		_decor.confettis(300)
 		for mar in _fanzzy:
 			mar.sauter(1.5)
+			mar.geste(&"celebrer", 30.0)
 		_jouer("foule", 2.0)
+	else:
+		for mar in _fanzzy:
+			mar.geste(&"depit", 30.0)
 
 	var voile := ColorRect.new()
 	voile.color = Color(0.05, 0.03, 0.15, 0.0)
@@ -855,7 +911,7 @@ func _finir() -> void:
 	pan.set_anchors_preset(Control.PRESET_CENTER)
 	pan.offset_left = -460
 	pan.offset_right = 460
-	var demi_h := 330 + 24 * maxi(0, FinDuel.lignes_evenement(ev).size() + (1 if pop > 0 else 0) - 2)
+	var demi_h := 330 + 24 * maxi(0, FinDuel.lignes_evenement(ev).size() + (1 if pop > 0 else 0) + FinDuel.ligne_tournoi(tour).size() - 2)
 	pan.offset_top = -demi_h
 	pan.offset_bottom = demi_h
 	add_child(pan)
@@ -878,7 +934,7 @@ func _finir() -> void:
 		["Bonus « ton équipe gagne vraiment »", "x1,3" if equipe_gagne else "non"],
 		[Game.libelle_rejeu(part), "+%d" % jetons],
 		["XP du fan club", "+%d" % xp],
-	] + FinDuel.ligne_popularite({"popularite": pop, "equipe": (fiche["dom"] if camp == "home" else fiche["ext"])["nom"]}) + FinDuel.lignes_evenement(ev)
+	] + FinDuel.ligne_popularite({"popularite": pop, "equipe": (fiche["dom"] if camp == "home" else fiche["ext"])["nom"]}) + FinDuel.lignes_evenement(ev) + FinDuel.ligne_tournoi(tour)
 	for l in lignes:
 		var h := Ui.hbox(10)
 		var a := Ui.label(l[0], 24, Ui.BLANC)
@@ -917,6 +973,101 @@ func _finir() -> void:
 
 
 # ------------------------------------------------------------------ sons (générés, aucun fichier)
+
+# ------------------------------------------------------------------ chant du club
+
+const SonsScript := preload("res://scripts/audio/sons.gd")
+
+
+func _preparer_chant() -> void:
+	# Game.params["chant"] : un chant à essayer (tests, démo) à la place de celui du club.
+	var c: Dictionary = Game.params.get("chant", Game.chant_club())
+	if c.is_empty():
+		return
+	_chant_club = ChantClub.programme(c, Game.fan_club_nom)
+	_chant_nom = String(c.get("nom", ""))
+	_beat = 60.0 / ChantClub.bpm(c)
+	_sons_chant = SonsScript.new()
+	_sons_chant.name = "SonsChant"  # sans_traduction
+	add_child(_sons_chant)
+
+
+## Prépare la mesure suivante du chant, qui commence à `t0` : ses notes, ses
+## frappes d'accompagnement et sa ligne de paroles.
+func _preparer_mesure_chant(t0: float) -> void:
+	var n := _chant_club.size()
+	var i := _mesure_chant % n
+	var cycle := _mesure_chant / n
+	var m: Dictionary = _chant_club[i]
+	var pas := _beat * ChantClub.TEMPS / ChantClub.PAS
+	var appuis_t: Array = []
+	for p in m["appuis"]:
+		var t: float = t0 + int(p) * pas
+		appuis_t.append(t)
+		if not _pendant_ola(t):
+			_notes.append(t)
+	if i == n - 1 and not appuis_t.is_empty():
+		_fins_couplet[appuis_t[-1]] = cycle
+	for f in m["frappes"]:
+		_frappes_chant.append({"t": t0 + int(f["pas"]) * pas, "voix": f["voix"], "force": f["force"]})
+	_frappes_chant.sort_custom(func(a, b): return a["t"] < b["t"])
+	_lignes.append({"t0": t0, "t1": t0 + ChantClub.TEMPS * _beat, "i": i, "cycle": cycle, "appuis": appuis_t})
+	_mesure_chant += 1
+
+
+## Joue l'accompagnement dû, fait battre la tribune et avance le karaoké.
+func _jouer_chant() -> void:
+	while not _frappes_chant.is_empty() and _frappes_chant[0]["t"] <= temps:
+		var f: Dictionary = _frappes_chant.pop_front()
+		if temps - float(f["t"]) > 0.1:
+			continue  # trop en retard (image lente) : on se tait
+		var groupe := BanqueSons.son_de_voix(String(f["voix"]))
+		if groupe != "":
+			_sons_chant.jouer(groupe, {"volume_db": linear_to_db(maxf(float(f["force"]), 0.05)) - 4.0})
+		if f["voix"] == "T" and float(f["force"]) >= 0.9:
+			for mar in _fanzzy:
+				mar.battement(60.0 / _beat)
+	while _lignes.size() > 1 and _lignes[0]["t1"] < temps:
+		_lignes.pop_front()
+	if _lignes.is_empty() or _lignes[0]["t0"] > temps:
+		_paroles.text = ""
+		return
+	var l: Dictionary = _lignes[0]
+	var mots: Array = _chant_club[int(l["i"])]["mots"]
+	var en_cours := -1
+	for k in l["appuis"].size():
+		if float(l["appuis"][k]) <= temps + 0.05:
+			en_cours = k
+	var parts: Array = []
+	for k in mots.size():
+		if String(mots[k]) == "":
+			continue
+		var c := "#ffd23f" if k == en_cours else ("#ffffff" if k < en_cours else "#b9b5e0")
+		parts.append(tr("[color=%s]%s[/color]") % [c, mots[k]])  # sans_traduction
+	_paroles.text = tr("[center]%s[/center]") % " ".join(parts)  # sans_traduction
+
+
+## Une erreur (note manquée ou appui à côté) vers l'instant `t` : le couplet
+## en cours n'est plus « sans faute ».
+func _noter_faute(t: float) -> void:
+	if _chant_club.is_empty():
+		return
+	for l in _lignes:
+		if t >= float(l["t0"]) - 0.2 and t < float(l["t1"]):
+			_couplets_rates[int(l["cycle"])] = true
+			return
+
+
+func _fin_de_couplet(cycle: int) -> void:
+	if _couplets_rates.has(cycle):
+		return
+	couplets_parfaits += 1
+	charge_tifo = minf(100.0, charge_tifo + ChantClub.BONUS_COUPLET_TIFO * float(mods["parryBonus"]))
+	points += ChantClub.BONUS_COUPLET_POINTS
+	_pousser(2.0)
+	_decor.confettis(30)
+	_annonce(tr("COUPLET SANS FAUTE ! « %s »") % _chant_nom, Ui.JAUNE)
+
 
 func _preparer_sons() -> void:
 	_sons["tambour"] = _son(func(t): return sin(TAU * (55.0 + 90.0 * exp(-t * 30.0)) * t) * exp(-t * 9.0), 0.35)
@@ -960,56 +1111,56 @@ func _jouer(nom: String, volume := 0.0, hauteur := 1.0) -> void:
 
 # ================================================================== éléments dessinés
 
-## Un FANZZY animé façon marionnette : respiration, sauts, tremblements.
-## (Les expressions neutre / pousse / joie / dépit / colère viendront remplacer
-## l'image selon l'action quand elles seront importées.)
+## Un FANZZY de notre tribune, au premier plan : FanzzyAnime (expressions,
+## bras, squelette) plus le « jus » (élastique sur le temps, bonds, impacts).
+## Il chante en fond et réagit aux temps forts du duel.
 class Marionnette extends Node2D:
-	var texture: Texture2D
+	var texture: Texture2D           # image de secours si le FANZZY n'a pas d'expressions
+	var fanzzy_id := ""
+	var couleurs := PackedColorArray([Color("1e6bff"), Color.WHITE])
 	var hauteur := 400.0
 	var phase := 0.0
-	var _saut := 0.0
-	var _ecrase := 0.0
-	var _tremble := 0.0
-	var _t := 0.0
+	var action_fond := &"chanter"   # geste en boucle quand il ne se passe rien
+	var corps: FanzzyAnime
 
-	func _process(delta: float) -> void:
-		_t += delta
-		_tremble = maxf(0.0, _tremble - delta * 3.0)
-		queue_redraw()
+	func _ready() -> void:
+		corps = FanzzyAnime.creer(fanzzy_id) if fanzzy_id != "" else FanzzyAnime.new()
+		if corps.texture == null and texture:
+			corps.texture = texture
+		if corps.texture == null:
+			return
+		corps.couleurs_echarpe = couleurs
+		corps.couleur_trainee = couleurs[0]
+		corps.decalage = phase * 0.07
+		add_child(corps)
+		corps.scale = Vector2.ONE * hauteur / maxf(corps._rect.size.y, 1.0)
+		corps.jouer(action_fond)
+		corps.action_terminee.connect(func(_a: StringName) -> void:
+			if corps.action == &"repos":
+				corps.jouer(action_fond))
 
-	func battement() -> void:
-		_ecrase = 0.06
+	## Sur chaque temps du tambour : petit coup d'élastique, tempo partagé.
+	func battement(bpm := 0.0) -> void:
+		if corps == null:
+			return
+		if bpm > 0.0:
+			corps.bpm = bpm
+		corps.pop(0.35)
 
 	func sauter(force := 1.0, delai := 0.0) -> void:
-		var tw := create_tween()
-		if delai > 0:
-			tw.tween_interval(delai)
-		tw.tween_property(self, "_ecrase", 0.12 * force, 0.06)
-		tw.tween_property(self, "_saut", 60.0 * force, 0.16).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
-		tw.parallel().tween_property(self, "_ecrase", -0.08 * force, 0.16)
-		tw.tween_property(self, "_saut", 0.0, 0.18).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
-		tw.parallel().tween_property(self, "_ecrase", 0.08, 0.18)
-		tw.tween_property(self, "_ecrase", 0.0, 0.12)
+		if corps:
+			corps.rebondir(force, delai)
 
+	## Raté : il encaisse (éclair rouge, recul) et râle un instant.
 	func trembler() -> void:
-		_tremble = 1.0
+		if corps:
+			corps.impact(Vector2.INF, 0.6, Color("ff7b7b"))
+			corps.jouer(&"huer", 1.0)
 
-	func _draw() -> void:
-		if texture == null:
-			return
-		_ecrase = lerpf(_ecrase, 0.0, 0.08)
-		var respir := sin(_t * 2.4 + phase) * 0.015
-		var sx := 1.0 + _ecrase * 0.8
-		var sy := 1.0 - _ecrase + respir
-		var h := hauteur * sy
-		var w := hauteur * texture.get_width() / float(texture.get_height()) * sx
-		var bascule := sin(_t * 1.7 + phase) * 0.03 + sin(_t * 40.0) * 0.05 * _tremble
-		# ombre au sol
-		draw_set_transform(Vector2.ZERO, 0, Vector2(1, 0.25))
-		draw_circle(Vector2.ZERO, w * 0.32 * (1.0 - _saut / 200.0), Color(0, 0, 0, 0.3))
-		draw_set_transform(Vector2(0, -_saut), bascule, Vector2.ONE)
-		draw_texture_rect(texture, Rect2(Vector2(-w / 2.0, -h), Vector2(w, h)), false)
-		draw_set_transform(Vector2.ZERO, 0, Vector2.ONE)
+	## Un geste pour un temps (célébrer, dépit, lever les bras...), puis retour au chant.
+	func geste(action: StringName, duree := -1.0, delai := 0.0) -> void:
+		if corps:
+			corps.jouer(action, duree, delai)
 
 
 ## Le décor : ciel, tribune adverse, terrain (ou écran), notre tribune, confettis.

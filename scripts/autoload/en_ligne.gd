@@ -28,6 +28,9 @@ var joignable := false     # dernier échange réussi
 var desactive := false     # tests (--hors-ligne)
 
 var _envoi_en_cours := false
+## Tournoi des fan clubs : classement du tournoi en cours (top des clubs) et état des échanges.
+var tournoi_classement: Dictionary = {}
+var _tournoi_en_cours := false
 ## Adresse du serveur ; « -- --classement-url=http://localhost:8787/classement/ » pour un Worker de test.
 var url := ClassementFans.URL
 
@@ -45,6 +48,7 @@ func _ready() -> void:
 	te.wait_time = PERIODE_ENVOI
 	te.autostart = true
 	te.timeout.connect(envoyer)
+	te.timeout.connect(synchroniser_tournoi)
 	add_child(te)
 	var tq := Timer.new()
 	tq.wait_time = PERIODE_EQUIPES
@@ -159,7 +163,9 @@ func injecter(eq: Dictionary, f: Dictionary, m: Dictionary) -> void:
 	mis_a_jour.emit()
 
 
-func _requete(chemin: String, rappel: Callable, corps: Variant = null) -> void:
+func _requete(chemin: String, rappel: Callable, corps: Variant = null, base := "") -> void:
+	if base == "":
+		base = url
 	var r := HTTPRequest.new()
 	r.timeout = 20.0
 	add_child(r)
@@ -173,12 +179,126 @@ func _requete(chemin: String, rappel: Callable, corps: Variant = null) -> void:
 		rappel.call(code, JSON.parse_string(octets.get_string_from_utf8())))
 	var err: int
 	if corps == null:
-		err = r.request(url + chemin, ["Accept: application/json"])  # sans_traduction
+		err = r.request(base + chemin, ["Accept: application/json"])  # sans_traduction
 	else:
-		err = r.request(url + chemin, ["Content-Type: application/json"], HTTPClient.METHOD_POST, JSON.stringify(corps))  # sans_traduction
+		err = r.request(base + chemin, ["Content-Type: application/json"], HTTPClient.METHOD_POST, JSON.stringify(corps))  # sans_traduction
 	if err != OK:
 		r.queue_free()
 		rappel.call(0, null)
+
+
+# ------------------------------------------------------------------ tournoi des fan clubs
+## Routes /tournoi/… du même Worker (src/tournoi.js). Le fan doit exister côté
+## classement (premier envoi fait 8 s après le lancement) : sinon 403 « fan_inconnu »
+## et on réessaie au tour suivant. Ordre : inscription, résultats en attente,
+## tirage du prochain adversaire, puis rang du club.
+
+func _url_tournoi() -> String:
+	return url.replace("/classement/", "/tournoi/")
+
+
+func _requete_tournoi(chemin: String, rappel: Callable, corps: Variant = null) -> void:
+	_requete(chemin, rappel, corps, _url_tournoi())
+
+
+func _corps_tournoi(extra: Dictionary) -> Dictionary:
+	var c := {"v": 1, "id": identite["id"], "cle": identite["cle"], "tournoi": Game.tournoi["id"]}
+	c.merge(extra, true)
+	return c
+
+
+func synchroniser_tournoi() -> void:
+	if desactive or _tournoi_en_cours:
+		return
+	var f := Game.actualiser_tournoi()
+	var t: Dictionary = Game.tournoi
+	# Tournoi fini pas encore réclamé : on relit le rang final avant la récompense.
+	var ar: Dictionary = t["a_reclamer"]
+	if not ar.is_empty() and not bool(ar.get("verifie", false)):
+		_tournoi_en_cours = true
+		_requete_tournoi(tr("club?id=%s&tournoi=%s") % [identite["id"], ar["id"]], func(code: int, d: Variant):  # sans_traduction
+			_tournoi_en_cours = false
+			if code == 200 and d is Dictionary:
+				ar["rang"] = int(d.get("rang", 0))
+				ar["clubs"] = int(d.get("clubs", 0))
+				ar["points"] = maxi(int(ar["points"]), int(d.get("points", 0)))
+				ar["verifie"] = true
+				Game.sauver()
+				mis_a_jour.emit()
+				synchroniser_tournoi()
+			elif code == 404:
+				ar["verifie"] = true  # inconnu du serveur : récompense des paliers seulement
+				Game.sauver())
+		return
+	if f["etat"] != "actif" or not bool(t["inscrit"]):
+		return
+	_tournoi_en_cours = true
+	if not bool(t["inscrit_serveur"]):
+		_requete_tournoi("inscription", func(code: int, d: Variant):
+			_tournoi_en_cours = false
+			if code == 200 and d is Dictionary and d.get("ok", false):
+				t["inscrit_serveur"] = true
+				_lire_club(d.get("moi"))
+				Game.sauver()
+				synchroniser_tournoi()
+			elif code == 403 and d is Dictionary and d.get("erreur", "") == "fan_inconnu":
+				envoyer(true)  # le serveur ne connaît pas encore ce fan
+		, _corps_tournoi({"nom": t["nom"], "couleurs": t["couleurs"], "niveau": Game.niveau()}))
+		return
+	var file := Tournoi.a_envoyer(t)
+	if not file.is_empty():
+		var d0: Dictionary = file[0]
+		_requete_tournoi("resultat", func(code: int, d: Variant):
+			_tournoi_en_cours = false
+			if code == 200 or code == 400 or code == 409:
+				# accepté, ou refusé pour de bon (hors règles, déjà compté) : on ne le renvoie pas
+				d0["envoye"] = true
+				if code == 200 and d is Dictionary:
+					_lire_club(d.get("moi"))
+				Game.sauver()
+				synchroniser_tournoi()
+		, _corps_tournoi({"adversaire": d0["adv"], "match": d0["match"], "gagne": d0["gagne"],
+			"stade": d0["stade"], "evenement": d0["evenement"], "t": int(d0["t"])}))
+		return
+	if (t["adversaire"] as Dictionary).is_empty() and (t["duels"] as Array).size() < Tournoi.DUELS_MAX:
+		_requete_tournoi("adversaire", func(code: int, d: Variant):
+			_tournoi_en_cours = false
+			if code == 200 and d is Dictionary:
+				var a: Variant = d.get("adversaire")
+				if a is Dictionary and not Tournoi.deja_affronte(t, str(a.get("id", ""))):
+					t["adversaire"] = {"id": str(a["id"]), "nom": Tournoi.nom_valide(a.get("nom")),
+						"couleurs": a.get("couleurs", [0, 7]), "niveau": int(a.get("niveau", 1)), "bot": false}
+				else:
+					t["adversaire"] = Tournoi.prochain_bot(t)  # aucun club libre : un club du jeu
+				Game.sauver()
+				mis_a_jour.emit()
+		, _corps_tournoi({"niveau": Game.niveau()}))
+		return
+	_requete_tournoi(tr("club?id=%s&tournoi=%s") % [identite["id"], t["id"]], func(code: int, d: Variant):  # sans_traduction
+		_tournoi_en_cours = false
+		if code == 200:
+			_lire_club(d)
+			Game.sauver())
+
+
+func _lire_club(m: Variant) -> void:
+	if not m is Dictionary:
+		return
+	var t: Dictionary = Game.tournoi
+	t["defense"] = int(m.get("defense", t["defense"]))
+	t["rang"] = int(m.get("rang", 0))
+	t["clubs"] = int(m.get("clubs", 0))
+	mis_a_jour.emit()
+
+
+func rafraichir_tournoi() -> void:
+	if desactive:
+		return
+	synchroniser_tournoi()
+	_requete_tournoi(tr("classement.json?tournoi=") + str(Tournoi.fenetre(Game.maintenant())["id"]), func(code: int, d: Variant):  # sans_traduction
+		if code == 200 and d is Dictionary and d.get("clubs") is Array:
+			tournoi_classement = d
+			mis_a_jour.emit())
 
 
 # ------------------------------------------------------------------ fichier

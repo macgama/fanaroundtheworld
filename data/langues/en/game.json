@@ -14,5 +14,8 @@
 	"%d pronostics en attente au maximum": "%d pending predictions at most",
 	"Mission terminée : %s": "Mission complete: %s",
 	"%d missions terminées !": "%d missions complete!",
-	" · à récupérer dans Missions": " · to collect in Missions"
+	" · à récupérer dans Missions": " · to collect in Missions",
+	"SUCCÈS DÉBLOQUÉ": "ACHIEVEMENT UNLOCKED",
+	"%d SUCCÈS DÉBLOQUÉS": "%d ACHIEVEMENTS UNLOCKED",
+	"Sauvegarde : version Steam Cloud plus récente, reprise sur ce PC": "Save: newer Steam Cloud version, resumed on this PC"
 }

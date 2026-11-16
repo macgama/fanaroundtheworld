@@ -81,7 +81,7 @@ func _ready() -> void:
 	couleurs[1] = Duel._vive(eux["c1"], eux["c2"], Ui.ROUGE)
 	couleurs[1] = Ui.couleur_distincte(couleurs[0], couleurs[1])
 	noms[0] = Game.fan_club_nom
-	noms[1] = str(Reseau.adversaire.get("nom", "?")) if en_ligne else tr("Tribune ") + str(eux["nom"])
+	noms[1] = str(Reseau.adversaire.get("nom", "?")) if en_ligne else FinDuel.nom_adverse(fiche["m"], str(eux["nom"]))
 	var cartes := PousseeRegles.cartes_debloquees(Game.niveau())
 	piles[0] = PousseeRegles.nouvelle_pile(cartes, _rng)
 	# l'adversaire a le même jeu que toi : la partie reste équitable
@@ -846,7 +846,7 @@ func _finir(res: int, pourquoi: String) -> void:
 		["Bonus « ton équipe gagne vraiment »", "x1,3" if g["equipe_gagne"] else "non"],
 		[Game.libelle_rejeu(g["part"]), "+%d" % g["jetons"]],
 		["XP du fan club", "+%d" % g["xp"]],
-	] + FinDuel.ligne_popularite(g) + FinDuel.lignes_evenement(g["evenement"]), Game.SCENE_SALON if en_ligne and Reseau.connecte() else Game.SCENE_POUSSEE)
+	] + FinDuel.ligne_popularite(g) + FinDuel.lignes_evenement(g["evenement"]) + FinDuel.ligne_tournoi(g["tournoi"]), Game.SCENE_SALON if en_ligne and Reseau.connecte() else Game.SCENE_POUSSEE)
 
 
 # ================================================================== classes
@@ -879,7 +879,11 @@ class Unite extends Node2D:
 		var haut := HAUTEUR_UNITE * (1.8 if cle == "mascotte" else 1.0)
 		corps.scale = Vector2.ONE * (haut / h)
 		corps.cap = 1.0 if equipe == 0 else -1.0
+		corps.couleur_trainee = couleur
 		corps.jouer(&"lever_bras", 0.5)
+		# arrivée sur le terrain : petit bond, poussière
+		corps.rebondir(0.8)
+		corps.trainee = 0.15
 
 	func avancer(v: Vector2, bouge: bool) -> void:
 		position += v
@@ -910,6 +914,8 @@ class Unite extends Node2D:
 	func secouer() -> void:
 		coups += 1
 		_secousse = 0.2
+		if corps:
+			corps.impact(Vector2.INF, 0.7)
 
 	func s_asseoir() -> void:
 		if not actif:
@@ -917,7 +923,9 @@ class Unite extends Node2D:
 		actif = false
 		jeu.texte(position + Vector2(0, -110), "va s'asseoir", Ui.GRIS)
 		if corps:
+			corps.impact(Vector2.INF, 1.3)
 			corps.jouer(&"depit")
+			corps.etourdir(0.9)
 		var tw := create_tween()
 		tw.tween_interval(0.5)
 		tw.tween_property(self, "modulate:a", 0.0, 0.5)

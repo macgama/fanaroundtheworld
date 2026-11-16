@@ -28,5 +28,13 @@
 	"Le tour du monde des tribunes": "The world tour of the stands",
 	"Tous les stades du championnat": "All the stadiums in the league",
 	"1 stades": "1 stadiums",
-	"1 stade": "1 stadium"
+	"1 stade": "1 stadium",
+	"Succès": "Achievements",
+	"SUCCÈS · %d / %d": "ACHIEVEMENTS · %d / %d",
+	"TES SUCCÈS": "YOUR ACHIEVEMENTS",
+	"%d succès gagnés sur %d": "%d achievements earned out of %d",
+	"Tes succès sont aussi envoyés à Steam : ils apparaissent sur ton profil.": "Your achievements are also sent to Steam: they show on your profile.",
+	"Steam n'est pas lancé : tes succès sont gardés ici et seront envoyés à Steam la prochaine fois.": "Steam isn't running: your achievements are kept here and will be sent to Steam next time.",
+	"Les succès ne donnent ni Jetons ni skins : ce sont des souvenirs de supporter.": "Achievements give neither Tokens nor skins: they're fan memories.",
+	"Gagné le %02d/%02d/%d": "Earned on %02d/%02d/%d"
 }

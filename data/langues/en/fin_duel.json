@@ -7,5 +7,7 @@
 	"Quitter la partie ?": "Quit the game?",
 	"La partie continue pendant ce temps. Ton adversaire gagnera par forfait.": "The game goes on meanwhile. Your opponent will win by forfeit.",
 	"Abandonner ne rapporte ni Jetons ni XP.": "Giving up earns neither Tokens nor XP.",
-	"Abandonner": "Give up"
+	"Abandonner": "Give up",
+	"Tournoi · %s contre %s": "Tournament · %s against %s",
+	"+%d pt%s": "+%d pt%s"
 }
