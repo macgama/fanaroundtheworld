@@ -44,6 +44,8 @@ var _ecrans := {
 	"buvette": [Game.SCENE_BUVETTE, {}, [KEY_1, KEY_2, KEY_3, KEY_4, KEY_ENTER, KEY_SPACE, KEY_BACKSPACE, KEY_ESCAPE]],
 	"boulots": [Game.SCENE_BOULOTS, {}, []],
 	"ramasseur": [Game.SCENE_RAMASSEUR, {}, [KEY_LEFT, KEY_RIGHT, KEY_Q, KEY_D, KEY_SPACE, KEY_ENTER, KEY_ESCAPE]],
+	"tifo": [Game.SCENE_TIFO, {}, [KEY_1, KEY_2, KEY_RIGHT, KEY_DOWN, KEY_SPACE, KEY_S, KEY_SPACE, KEY_TAB, KEY_P, KEY_5, KEY_LEFT, KEY_UP, KEY_SPACE, KEY_ENTER, KEY_ESCAPE]],
+	"echarpes": ["res://scenes/echarpes/echarpes.tscn", {}, [KEY_1, KEY_2, KEY_3, KEY_4, KEY_5, KEY_6, KEY_R, KEY_ESCAPE]],
 	"pronos": [Game.SCENE_PRONOS, {}, []],
 	"missions": [Game.SCENE_MISSIONS, {}, []],
 	"favoris": [Game.SCENE_FAVORIS, {}, []],
@@ -156,9 +158,10 @@ func _tester_pause(nom: String, e: Array) -> void:
 	if ab:
 		var jetons := Game.jetons
 		ab.pressed.emit()
+		# vérifié avant l'arrivée sur la carte, qui peut verser des missions d'hier
+		_verifier_ici(Game.jetons == jetons, nom, "abandon sans gains")
 		await _attendre(0.6)
 		_verifier_ici(not get_tree().paused and get_tree().current_scene.scene_file_path == Game.SCENE_CARTE, nom, "Abandonner ramène à la carte")
-		_verifier_ici(Game.jetons == jetons, nom, "abandon sans gains")
 	get_tree().paused = false
 	_noter(nom, "pause")
 
