@@ -199,7 +199,7 @@ func _construire() -> void:
 	n1.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
 	noms.add_child(n1)
 	noms.add_child(Ui.label("DUEL D'AMBIANCE", 40, Ui.JAUNE, true, 10))
-	var nom_eux: String = Reseau.adversaire.get("nom", eux["nom"]) if en_ligne else "TRIBUNE " + eux["nom"]
+	var nom_eux: String = Reseau.adversaire.get("nom", eux["nom"]) if en_ligne else FinDuel.nom_adverse(fiche["m"], eux["nom"])
 	var n2 := Ui.label(nom_eux.to_upper(), 30, Ui.BLANC, true, 8)
 	n2.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	n2.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
@@ -847,6 +847,7 @@ func _finir() -> void:
 	Game.gagner_jetons(jetons)
 	Game.ajouter_xp(xp)
 	var ev := Game.recompense_evenement(fiche["m"], jetons)
+	var tour := {} if en_ligne else Game.noter_duel_tournoi(fiche["m"], gagne, mode)
 	if gagne:
 		_decor.confettis(300)
 		for mar in _fanzzy:
@@ -866,7 +867,7 @@ func _finir() -> void:
 	pan.set_anchors_preset(Control.PRESET_CENTER)
 	pan.offset_left = -460
 	pan.offset_right = 460
-	var demi_h := 330 + 24 * maxi(0, FinDuel.lignes_evenement(ev).size() + (1 if pop > 0 else 0) - 2)
+	var demi_h := 330 + 24 * maxi(0, FinDuel.lignes_evenement(ev).size() + (1 if pop > 0 else 0) + FinDuel.ligne_tournoi(tour).size() - 2)
 	pan.offset_top = -demi_h
 	pan.offset_bottom = demi_h
 	add_child(pan)
@@ -889,7 +890,7 @@ func _finir() -> void:
 		["Bonus « ton équipe gagne vraiment »", "x1,3" if equipe_gagne else "non"],
 		[Game.libelle_rejeu(part), "+%d" % jetons],
 		["XP du fan club", "+%d" % xp],
-	] + FinDuel.ligne_popularite({"popularite": pop, "equipe": (fiche["dom"] if camp == "home" else fiche["ext"])["nom"]}) + FinDuel.lignes_evenement(ev)
+	] + FinDuel.ligne_popularite({"popularite": pop, "equipe": (fiche["dom"] if camp == "home" else fiche["ext"])["nom"]}) + FinDuel.lignes_evenement(ev) + FinDuel.ligne_tournoi(tour)
 	for l in lignes:
 		var h := Ui.hbox(10)
 		var a := Ui.label(l[0], 24, Ui.BLANC)

@@ -91,7 +91,7 @@ func _ready() -> void:
 	couleurs[1] = Duel._vive(eux["c1"], eux["c2"], Ui.ROUGE)
 	couleurs[1] = Ui.couleur_distincte(couleurs[0], couleurs[1])
 	noms[0] = Game.fan_club_nom
-	noms[1] = str(Reseau.adversaire.get("nom", "?")) if en_ligne else "Tribune " + str(eux["nom"])
+	noms[1] = str(Reseau.adversaire.get("nom", "?")) if en_ligne else FinDuel.nom_adverse(fiche["m"], str(eux["nom"]))
 	if en_ligne:
 		_actions_adv = AreneRegles.actions_debloquees(int(Reseau.adversaire.get("niveau", 1)))
 	_construire()
@@ -906,7 +906,7 @@ func _finir() -> void:
 		["Bonus « ton équipe gagne vraiment »", "x1,3" if g["equipe_gagne"] else "non"],
 		[Game.libelle_rejeu(g["part"]), "+%d" % g["jetons"]],
 		["XP du fan club", "+%d" % g["xp"]],
-	] + FinDuel.ligne_popularite(g) + FinDuel.lignes_evenement(g["evenement"]), Game.SCENE_SALON if en_ligne and Reseau.connecte() else Game.SCENE_ARENE)
+	] + FinDuel.ligne_popularite(g) + FinDuel.lignes_evenement(g["evenement"]) + FinDuel.ligne_tournoi(g["tournoi"]), Game.SCENE_SALON if en_ligne and Reseau.connecte() else Game.SCENE_ARENE)
 
 
 # ================================================================== classes
