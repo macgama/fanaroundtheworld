@@ -122,6 +122,12 @@ func _ready() -> void:
 	b_tribune.tooltip_text = "Choisir les FANZZY de ta tribune et leurs skins"
 	b_tribune.pressed.connect(func(): Game.aller(Game.SCENE_TRIBUNE, {"retour": "club"}))
 	bas.add_child(b_tribune)
+	var b_chant := Ui.bouton("Chant", Ui.VERT, 30)
+	Ui.colorer_bouton(b_chant, Ui.VERT, true)
+	b_chant.custom_minimum_size = Vector2(210, 88)
+	b_chant.tooltip_text = "Composer le chant que ta tribune chante en duel"
+	b_chant.pressed.connect(func(): Game.aller(Game.SCENE_CHANT))
+	bas.add_child(b_chant)
 	var b_tournoi := Ui.bouton("Tournoi", Ui.ROSE, 30)
 	b_tournoi.custom_minimum_size = Vector2(210, 88)
 	b_tournoi.tooltip_text = "Tournoi des fan clubs du week-end"
@@ -174,6 +180,7 @@ func _construire_infos() -> void:
 		["Stades visités", "%d" % Game.tampons.size()],
 		["Duels gagnés", "%d / %d" % [Game.duels_gagnes, Game.duels_joues]],
 		["Gagné par le club", "%d Jetons" % int(Game.club.get("total_gagne", 0))],
+		["Chant du club", String(Game.chant_club().get("nom", "à composer"))],
 	]
 	for l in lignes:
 		var h := Ui.hbox(8)
