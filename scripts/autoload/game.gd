@@ -26,6 +26,7 @@ const SCENE_SPEAKER := "res://scenes/speaker/speaker.tscn"
 const SCENE_TIFO := "res://scenes/tifo/tifo.tscn"
 const SCENE_CLUB := "res://scenes/club/club.tscn"
 const SCENE_CREATION_CLUB := "res://scenes/club/creation_club.tscn"
+const SCENE_CHANT := "res://scenes/chant/createur_chant.tscn"
 const SCENE_PRONOS := "res://scenes/pronostics/pronostics.tscn"
 const SCENE_FAVORIS := "res://scenes/favoris/favoris.tscn"
 const SCENE_SALON := "res://scenes/salon/salon.tscn"
@@ -129,9 +130,11 @@ func _outils_de_test() -> void:
 			p = {"match_id": args["match"], "camp": "home", "mode": args.get("mode", "stade"), "cout": 0}
 			if args.has("auto"):
 				p["auto"] = true  # Arène / Poussée : ton camp joue tout seul (démo)
+			if args.has("chant"):
+				p["chant"] = ChantClub.par_defaut()  # duel : essayer le chant par défaut
 		var scenes := {"carte": SCENE_CARTE, "voyage": SCENE_VOYAGE, "tribune": SCENE_TRIBUNE, "duel": SCENE_DUEL,
 			"arene": SCENE_ARENE, "poussee": SCENE_POUSSEE,
-			"pronos": SCENE_PRONOS, "missions": SCENE_MISSIONS, "favoris": SCENE_FAVORIS, "club": SCENE_CLUB, "creation": SCENE_CREATION_CLUB, "buvette": SCENE_BUVETTE, "boulots": SCENE_BOULOTS, "speaker": SCENE_SPEAKER, "tifo": SCENE_TIFO,
+			"pronos": SCENE_PRONOS, "missions": SCENE_MISSIONS, "favoris": SCENE_FAVORIS, "club": SCENE_CLUB, "creation": SCENE_CREATION_CLUB, "chant": SCENE_CHANT, "buvette": SCENE_BUVETTE, "boulots": SCENE_BOULOTS, "speaker": SCENE_SPEAKER, "tifo": SCENE_TIFO,
 			"salon": SCENE_SALON, "collection": SCENE_COLLECTION, "classement": SCENE_CLASSEMENT}
 		for b in ListeBoulots.LISTE:
 			scenes[b["id"]] = b["scene"]  # chaque petit boulot : --scene=<id>
@@ -304,6 +307,25 @@ func creer_club(nom: String, c1: String, c2: String) -> void:
 	var fondateurs := equipe.filter(func(id): return not fanzzy_par_id(str(id)).is_empty())
 	club = FanClub.nouveau(fondateurs, c1, c2, maintenant())
 	sauver()
+
+
+## Le chant composé par le fan club ({} tant qu'il n'y en a pas).
+func chant_club() -> Dictionary:
+	return club.get("chant", {})
+
+
+## Enregistre le chant du club. Rend les erreurs (vide : enregistré).
+func enregistrer_chant(c: Dictionary) -> Array:
+	var propre := ChantClub.reparer(c.duplicate(true))
+	var err := ChantClub.erreurs(propre if not propre.is_empty() else c, niveau())
+	if not err.is_empty():
+		return err
+	var premier := chant_club().is_empty()
+	club["chant"] = propre
+	sauver()
+	if premier:
+		noter_mission("chant")
+	return []
 
 
 func couleurs_club() -> Array:
