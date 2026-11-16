@@ -107,6 +107,11 @@ Un favori peut changer une fois par semaine. Détails dans [docs/equipes-favorit
 **Tournoi des fan clubs** : chaque week-end (vendredi → lundi midi), ton fan club affronte ceux des autres joueurs
 sur les vrais matchs, 7 duels au plus, classement et récompenses le lundi. Détails dans [docs/tournoi.md](docs/tournoi.md).
 
+**Succès et sauvegarde** : 30 succès Steam (onglet **Succès** de la Collection), gardés
+dans la partie même sans Steam et envoyés à Steam dès qu'il est là. La sauvegarde va aussi
+dans Steam Cloud : la partie suit le joueur d'un PC à l'autre. Détails dans
+[docs/succes-et-cloud.md](docs/succes-et-cloud.md).
+
 **Le fan club** (bouton *Fan Club* en bas de la carte) :
 
 - **Recruter** des FANZZY : gratuit, mais le nombre de places dépend du niveau du club
@@ -128,7 +133,7 @@ Supprime ce fichier pour recommencer à zéro.
 | Dossier | Contenu |
 | --- | --- |
 | `scenes/` | Scènes Godot (`.tscn`) et leurs scripts, un sous-dossier par écran (`main/`, `carte/`, `voyage/`, `tribune/`, `duel/`, `pronostics/`, `favoris/`, `classement/`, `tournoi/`, `club/`, `buvette/`, `tifo/`, `echarpes/`, `ramasseur/`, `boulots/`) |
-| `scripts/autoload/` | Scripts globaux chargés au démarrage (`Game` : état du jeu et sauvegarde, `Donnees` : vrais matchs) |
+| `scripts/autoload/` | Scripts globaux chargés au démarrage (`Plateforme` : Steam, succès et Steam Cloud, `Game` : état du jeu et sauvegarde, `Donnees` : vrais matchs) |
 | `scripts/donnees/` | Noms fictifs (`fiction.gd`), placement sur la carte (`geo.gd`), fiche d'un match |
 | `scripts/jeu/` | Règles du jeu sans écran (pronostics, équipes favorites et popularité, missions, collection, événements des vrais matchs) |
 | `scripts/club/` | Règles du fan club (`fan_club.gd` : membres, cotisations, buvette, écharpes) |

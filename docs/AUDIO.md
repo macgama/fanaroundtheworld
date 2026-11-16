@@ -156,3 +156,30 @@ Sans `ChantLecteur`, `Rythme` seul suffit pour une piste gérée à la main :
   `python3 tools/audio/generer_sons.py` (ffmpeg nécessaire pour les ambiances).
   La graine est fixe : mêmes fichiers à chaque fois. `--seul tambour_1` pour
   n'en refaire qu'un.
+
+## 6. Le créateur de chants (chant du fan club)
+
+Chaque fan club compose **son** chant (écran Fan Club → « Chant »,
+`scenes/chant/createur_chant.tscn`, `--scene=chant`). Règles dans
+`scripts/chant/chant_club.gd` (`ChantClub`), briques dans
+`data/audio/morceaux_chant.json`.
+
+- Un chant = un nom, un **tempo** (Posé 100, Entraînant 112, Endiablé 124 au
+  niveau 3) et **4 à 8 mesures**. Chaque mesure = un **morceau** (motif d'une
+  mesure, 8 pas en croches : voix T, S, H, G et les claps J du joueur) + une
+  **parole** (ligne courte, familiale, jamais un chant connu ; `{club}` =
+  nom du club, ou son sigle au-delà de 14 lettres).
+- 12 morceaux et 18 paroles, ouverts par **niveau du joueur** (jamais contre
+  des Jetons). Difficulté affichée en étoiles (morceaux, tempo, densité).
+- Écouter (E) joue le chant avec `ChantLecteur` (`ChantClub.vers_fiche` : le
+  couplet en une grande mesure) ; ESPACE pour claquer avec la tribune.
+- Sauvegarde : `Game.club["chant"]` (`Game.enregistrer_chant`, mission
+  `noter_mission("chant")` la première fois).
+- **En duel d'ambiance** : la piste suit le chant (son tempo, ses claps),
+  l'accompagnement joue les voix du chant, les paroles s'affichent façon
+  karaoké au-dessus de la piste. Points ×1,05, et chaque **couplet sans
+  faute** charge le tifo (+20) et donne 60 points. Sans chant enregistré :
+  les motifs au hasard d'avant. `--chant` (avec `--scene=duel`) essaie le
+  chant par défaut.
+- Tests : `tests/test_chant_club.gd`, écrans `chant` et `duel_chant` dans
+  `tests/test_ecrans.gd`.

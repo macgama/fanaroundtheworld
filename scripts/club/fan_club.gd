@@ -60,6 +60,7 @@ static func nouveau(membres: Array, c1: String, c2: String, maintenant: int) -> 
 		"maj": maintenant,
 		"dernier_duel": 0,
 		"total_gagne": 0,
+		"chant": {},  # composé dans le créateur de chants (ChantClub)
 	}
 
 
@@ -82,6 +83,7 @@ static func reparer(c: Variant) -> Dictionary:
 	c["maj"] = int(c["maj"])
 	c["dernier_duel"] = int(c["dernier_duel"])
 	c["total_gagne"] = int(c["total_gagne"])
+	c["chant"] = ChantClub.reparer(c["chant"])
 	return c
 
 

@@ -5,6 +5,9 @@ extends Control
 ##   Chant (ESPACE ou clic) : appuie quand la note arrive dans le cercle.
 ##   Tifo (T) : se charge avec les bons chants, puis gros boost.
 ##   Ola (O) : prête toutes les 20 s, enchaîne 4 flèches à temps.
+## Si le fan club a composé son chant (créateur de chants, ChantClub), la
+## piste suit ce chant, à son tempo, avec ses paroles façon karaoké ; chaque
+## couplet sans erreur charge le tifo. Sinon, des motifs au hasard.
 ## La jauge d'ambiance dit qui domine. Le vrai score du match donne un bonus,
 ## et un vrai but pendant le duel fait exploser la tribune.
 ## Touches de test : B = simuler un but pour toi, N = but adverse.
@@ -52,6 +55,18 @@ var _prochain_chant_adverse := 12.0
 var _bonus_score := 1.0
 var _score_vu := Vector2i(-1, -1)
 
+# chant du club (vide : motifs au hasard)
+var _chant_club: Array = []            # ChantClub.programme
+var _chant_nom := ""
+var _mesure_chant := 0            # mesures préparées depuis le début
+var _frappes_chant: Array = []    # [{t, voix, force}] à jouer
+var _lignes: Array = []           # [{t0, t1, i, cycle, appuis}] pour le karaoké
+var _fins_couplet := {}           # instant de la dernière note d'un couplet -> n° du couplet
+var _couplets_rates := {}         # n° du couplet -> true dès une erreur
+var couplets_parfaits := 0
+var _sons_chant: Node
+var _paroles: RichTextLabel
+
 # bonus des FANZZY (multiplicatifs)
 var mods := {}
 
@@ -97,6 +112,7 @@ func _ready() -> void:
 	camp = p.get("camp", "home")
 	mode = p.get("mode", "stade")
 	mods = Duel.mods_equipe()
+	_preparer_chant()
 	_preparer_sons()
 	_construire()
 	_calculer_bonus_score(true)
@@ -185,6 +201,21 @@ func _construire() -> void:
 	_piste.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(_piste)
 
+	# paroles du chant du club, au-dessus de la piste
+	_paroles = RichTextLabel.new()
+	_paroles.bbcode_enabled = true
+	_paroles.scroll_active = false
+	_paroles.autowrap_mode = TextServer.AUTOWRAP_OFF
+	_paroles.position = Vector2(380, 488)
+	_paroles.size = Vector2(1160, 64)
+	_paroles.add_theme_font_override("normal_font", Ui.police_titre())
+	_paroles.add_theme_font_size_override("normal_font_size", 40)
+	_paroles.add_theme_constant_override("outline_size", 10)
+	_paroles.add_theme_color_override("font_outline_color", Ui.CONTOUR)
+	_paroles.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_paroles.visible = not _chant_club.is_empty()
+	add_child(_paroles)
+
 	# --- jauge en haut
 	var hj := Ui.vbox(4)
 	hj.set_anchors_preset(Control.PRESET_CENTER_TOP)
@@ -258,7 +289,7 @@ func _construire() -> void:
 	_lbl_combo = Ui.label("COMBO x0", 36, Ui.BLANC, true, 8)
 	vcb.add_child(_lbl_combo)
 	var cri: String = Game.fanzzy_par_id(str(Game.equipe[0])).get("cri", {}).get("label", "Allez allez")
-	_lbl_combo_sous = Ui.label("Appuie en rythme · chant « %s »" % cri.capitalize(), 17, Ui.GRIS)
+	_lbl_combo_sous = Ui.label("Appuie en rythme · chant « %s »" % (_chant_nom if not _chant_club.is_empty() else cri.capitalize()), 17, Ui.GRIS)
 	_lbl_combo_sous.clip_text = true
 	vcb.add_child(_lbl_combo_sous)
 
@@ -367,24 +398,30 @@ func _process(delta: float) -> void:
 
 	# notes : une mesure de 4 temps à la fois, sauf pendant l'ola
 	while _prochaine_mesure < temps + TRAJET_NOTE and _prochaine_mesure < DUREE - 1.0:
-		var motif: Array = MOTIFS[randi() % MOTIFS.size()] if _prochaine_mesure > 4.0 else [1, 0, 1, 0]
-		for i in 4:
-			var t := _prochaine_mesure + i * _beat
-			if motif[i] == 1 and not _pendant_ola(t):
-				_notes.append(t)
+		if not _chant_club.is_empty():
+			_preparer_mesure_chant(_prochaine_mesure)
+		else:
+			var motif: Array = MOTIFS[randi() % MOTIFS.size()] if _prochaine_mesure > 4.0 else [1, 0, 1, 0]
+			for i in 4:
+				var t := _prochaine_mesure + i * _beat
+				if motif[i] == 1 and not _pendant_ola(t):
+					_notes.append(t)
 		_prochaine_mesure += 4 * _beat
 	# notes ratées (passées sans appui)
 	while not _notes.is_empty() and _notes[0] < temps - FENETRE_BIEN * mods["tempoWindow"]:
-		_notes.pop_front()
+		_noter_faute(_notes.pop_front())
 		_rate(false)
 
-	# tambour de la tribune sur chaque temps
-	var b := int(temps / _beat)
-	if b != _dernier_beat:
-		_dernier_beat = b
-		_jouer("tambour", -12.0)
-		for mar in _fanzzy:
-			mar.battement(60.0 / _beat)
+	if _chant_club.is_empty():
+		# tambour de la tribune sur chaque temps
+		var b := int(temps / _beat)
+		if b != _dernier_beat:
+			_dernier_beat = b
+			_jouer("tambour", -12.0)
+			for mar in _fanzzy:
+				mar.battement(60.0 / _beat)
+	else:
+		_jouer_chant()
 
 	if en_ligne:
 		_tick_en_ligne(delta)
@@ -484,6 +521,7 @@ func _chant() -> void:
 		return
 	Ui.pop(_btn_chant, 1.08, 0.12)
 	if _notes.is_empty():
+		_noter_faute(temps)
 		_rate(true)
 		return
 	var ecart := absf(_notes[0] - temps)
@@ -491,12 +529,15 @@ func _chant() -> void:
 	if ecart > FENETRE_BIEN * tw:
 		# trop tôt : on ne mange pas la note, petite pénalité
 		if ecart < FENETRE_BIEN * tw * 2.2:
+			_noter_faute(_notes[0])
 			_rate(true)
 		return
-	_notes.pop_front()
+	var t_note: float = _notes.pop_front()
 	combo += 1
 	combo_max = maxi(combo_max, combo)
 	var mult := (1.0 + minf(combo, 40) / 20.0) * _bonus_score * float(mods["mashBonus"])
+	if not _chant_club.is_empty():
+		mult *= ChantClub.BONUS_POINTS
 	var gain := 1.0
 	if ecart <= FENETRE_PARFAIT * tw:
 		parfaits += 1
@@ -519,6 +560,8 @@ func _chant() -> void:
 		_fanzzy[1].geste(&"applaudir", 1.6)
 		_fanzzy[2].geste(&"applaudir", 1.6)
 	_maj_combo()
+	if _fins_couplet.has(t_note):
+		_fin_de_couplet(int(_fins_couplet[t_note]))
 
 
 func _rate(appui: bool) -> void:
@@ -931,6 +974,101 @@ func _finir() -> void:
 
 
 # ------------------------------------------------------------------ sons (générés, aucun fichier)
+
+# ------------------------------------------------------------------ chant du club
+
+const SonsScript := preload("res://scripts/audio/sons.gd")
+
+
+func _preparer_chant() -> void:
+	# Game.params["chant"] : un chant à essayer (tests, démo) à la place de celui du club.
+	var c: Dictionary = Game.params.get("chant", Game.chant_club())
+	if c.is_empty():
+		return
+	_chant_club = ChantClub.programme(c, Game.fan_club_nom)
+	_chant_nom = String(c.get("nom", ""))
+	_beat = 60.0 / ChantClub.bpm(c)
+	_sons_chant = SonsScript.new()
+	_sons_chant.name = "SonsChant"
+	add_child(_sons_chant)
+
+
+## Prépare la mesure suivante du chant, qui commence à `t0` : ses notes, ses
+## frappes d'accompagnement et sa ligne de paroles.
+func _preparer_mesure_chant(t0: float) -> void:
+	var n := _chant_club.size()
+	var i := _mesure_chant % n
+	var cycle := _mesure_chant / n
+	var m: Dictionary = _chant_club[i]
+	var pas := _beat * ChantClub.TEMPS / ChantClub.PAS
+	var appuis_t: Array = []
+	for p in m["appuis"]:
+		var t: float = t0 + int(p) * pas
+		appuis_t.append(t)
+		if not _pendant_ola(t):
+			_notes.append(t)
+	if i == n - 1 and not appuis_t.is_empty():
+		_fins_couplet[appuis_t[-1]] = cycle
+	for f in m["frappes"]:
+		_frappes_chant.append({"t": t0 + int(f["pas"]) * pas, "voix": f["voix"], "force": f["force"]})
+	_frappes_chant.sort_custom(func(a, b): return a["t"] < b["t"])
+	_lignes.append({"t0": t0, "t1": t0 + ChantClub.TEMPS * _beat, "i": i, "cycle": cycle, "appuis": appuis_t})
+	_mesure_chant += 1
+
+
+## Joue l'accompagnement dû, fait battre la tribune et avance le karaoké.
+func _jouer_chant() -> void:
+	while not _frappes_chant.is_empty() and _frappes_chant[0]["t"] <= temps:
+		var f: Dictionary = _frappes_chant.pop_front()
+		if temps - float(f["t"]) > 0.1:
+			continue  # trop en retard (image lente) : on se tait
+		var groupe := BanqueSons.son_de_voix(String(f["voix"]))
+		if groupe != "":
+			_sons_chant.jouer(groupe, {"volume_db": linear_to_db(maxf(float(f["force"]), 0.05)) - 4.0})
+		if f["voix"] == "T" and float(f["force"]) >= 0.9:
+			for mar in _fanzzy:
+				mar.battement(60.0 / _beat)
+	while _lignes.size() > 1 and _lignes[0]["t1"] < temps:
+		_lignes.pop_front()
+	if _lignes.is_empty() or _lignes[0]["t0"] > temps:
+		_paroles.text = ""
+		return
+	var l: Dictionary = _lignes[0]
+	var mots: Array = _chant_club[int(l["i"])]["mots"]
+	var en_cours := -1
+	for k in l["appuis"].size():
+		if float(l["appuis"][k]) <= temps + 0.05:
+			en_cours = k
+	var parts: Array = []
+	for k in mots.size():
+		if String(mots[k]) == "":
+			continue
+		var c := "#ffd23f" if k == en_cours else ("#ffffff" if k < en_cours else "#b9b5e0")
+		parts.append("[color=%s]%s[/color]" % [c, mots[k]])
+	_paroles.text = "[center]%s[/center]" % " ".join(parts)
+
+
+## Une erreur (note manquée ou appui à côté) vers l'instant `t` : le couplet
+## en cours n'est plus « sans faute ».
+func _noter_faute(t: float) -> void:
+	if _chant_club.is_empty():
+		return
+	for l in _lignes:
+		if t >= float(l["t0"]) - 0.2 and t < float(l["t1"]):
+			_couplets_rates[int(l["cycle"])] = true
+			return
+
+
+func _fin_de_couplet(cycle: int) -> void:
+	if _couplets_rates.has(cycle):
+		return
+	couplets_parfaits += 1
+	charge_tifo = minf(100.0, charge_tifo + ChantClub.BONUS_COUPLET_TIFO * float(mods["parryBonus"]))
+	points += ChantClub.BONUS_COUPLET_POINTS
+	_pousser(2.0)
+	_decor.confettis(30)
+	_annonce("COUPLET SANS FAUTE ! « %s »" % _chant_nom, Ui.JAUNE)
+
 
 func _preparer_sons() -> void:
 	_sons["tambour"] = _son(func(t): return sin(TAU * (55.0 + 90.0 * exp(-t * 30.0)) * t) * exp(-t * 9.0), 0.35)

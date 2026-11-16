@@ -1,0 +1,130 @@
+{
+ "version": 1,
+ "_doc": "Les briques du créateur de chants (ChantClub). Un morceau = une mesure de 4 temps, 8 pas (deux par temps, des croches). Voix d'accompagnement : T tambour, S caisse claire, H « hey », G cri de groupe ; J = les appuis du joueur (le clap de la tribune). X fort, x normal, o léger, . rien. « niveau » : niveau du joueur qui débloque le morceau (progression, jamais contre des Jetons). Paroles : du texte original et familial, jamais un chant connu ; {club} est remplacé par le nom du fan club.",
+ "pas_par_mesure": 8,
+ "mesures_min": 4,
+ "mesures_max": 8,
+ "morceaux": [
+  {
+   "id": "quatre_temps",
+   "nom": "Les quatre temps",
+   "description": "Un clap sur chaque temps : la base de tout chant.",
+   "niveau": 1,
+   "difficulte": 1,
+   "pistes": {"T": "X.x.x.x.", "J": "x.x.x.x."}
+  },
+  {
+   "id": "marche",
+   "nom": "La marche",
+   "description": "Le tambour sur les temps forts, la tribune sur les temps faibles.",
+   "niveau": 1,
+   "difficulte": 1,
+   "pistes": {"T": "X...X...", "J": "..x...x."}
+  },
+  {
+   "id": "appel",
+   "nom": "L'appel",
+   "description": "Trois coups de tambour, la tribune répond d'un « hey ! ».",
+   "niveau": 1,
+   "difficulte": 1,
+   "pistes": {"T": "X.x.x...", "H": "......X.", "J": "......x."}
+  },
+  {
+   "id": "respiration",
+   "nom": "La respiration",
+   "description": "Un seul coup, puis on reprend son souffle.",
+   "niveau": 1,
+   "difficulte": 1,
+   "pistes": {"T": "X.......", "G": "X.......", "J": "x......."}
+  },
+  {
+   "id": "echo",
+   "nom": "L'écho",
+   "description": "Le groupe crie, la tribune répond deux fois.",
+   "niveau": 2,
+   "difficulte": 2,
+   "pistes": {"T": "X...x...", "G": "X.......", "J": "....x.x."}
+  },
+  {
+   "id": "contretemps",
+   "nom": "Le contretemps",
+   "description": "Le tambour marque le temps, la tribune frappe entre deux.",
+   "niveau": 2,
+   "difficulte": 2,
+   "pistes": {"T": "x.x.x.x.", "J": ".x.x.x.x"}
+  },
+  {
+   "id": "double",
+   "nom": "Le double clap",
+   "description": "Deux claps serrés, deux fois.",
+   "niveau": 2,
+   "difficulte": 2,
+   "pistes": {"T": "X...X...", "J": "xx..xx.."}
+  },
+  {
+   "id": "roulement",
+   "nom": "Le roulement",
+   "description": "La caisse claire enfle, tout le monde frappe à la fin.",
+   "niveau": 3,
+   "difficulte": 1,
+   "pistes": {"S": "o.o.oxxx", "T": "......X.", "G": "......X.", "J": "......x."}
+  },
+  {
+   "id": "galop",
+   "nom": "Le galop",
+   "description": "Un tambour qui galope sous des claps en trois.",
+   "niveau": 3,
+   "difficulte": 2,
+   "pistes": {"T": "X.xxX.xx", "J": "x..xx..."}
+  },
+  {
+   "id": "syncope",
+   "nom": "La syncope",
+   "description": "Des claps décalés : le morceau le plus piégeux.",
+   "niveau": 4,
+   "difficulte": 3,
+   "pistes": {"T": "X...X...", "J": "x..x..x."}
+  },
+  {
+   "id": "cascade",
+   "nom": "La cascade",
+   "description": "Trois claps qui dégringolent, puis deux.",
+   "niveau": 5,
+   "difficulte": 3,
+   "pistes": {"T": "X...x.x.", "J": "xxx.x.x."}
+  },
+  {
+   "id": "grand_final",
+   "nom": "Le grand final",
+   "description": "Tout le monde frappe, et le groupe crie sur le dernier temps.",
+   "niveau": 6,
+   "difficulte": 3,
+   "pistes": {"T": "X.X.X.XX", "S": "....oxxx", "G": "......X.", "J": "x.x.xxx."}
+  }
+ ],
+ "paroles": [
+  {"id": "allez_club", "texte": "Allez {club} !", "niveau": 1},
+  {"id": "club_club", "texte": "{club}, {club} !", "niveau": 1},
+  {"id": "on_est_la", "texte": "On est là, on chante !", "niveau": 1},
+  {"id": "tous_ensemble", "texte": "Tous ensemble, debout !", "niveau": 1},
+  {"id": "tape_mains", "texte": "Tape des mains !", "niveau": 1},
+  {"id": "plus_fort", "texte": "Plus fort, plus fort !", "niveau": 1},
+  {"id": "hey", "texte": "Hey !", "niveau": 1},
+  {"id": "on_lache_rien", "texte": "On ne lâche rien !", "niveau": 1},
+  {"id": "un_deux_trois", "texte": "Un, deux, trois, on y croit !", "niveau": 2},
+  {"id": "echarpes", "texte": "Écharpes en l'air !", "niveau": 2},
+  {"id": "debout_tribune", "texte": "Debout la tribune !", "niveau": 2},
+  {"id": "ca_vibre", "texte": "Ça vibre, ça chante !", "niveau": 2},
+  {"id": "couleurs", "texte": "Nos couleurs au vent !", "niveau": 3},
+  {"id": "jusquau_bout", "texte": "Ensemble jusqu'au bout !", "niveau": 3},
+  {"id": "et_ca_repart", "texte": "Et ça repart !", "niveau": 3},
+  {"id": "voix_du_stade", "texte": "On est la voix du stade !", "niveau": 4},
+  {"id": "coeur", "texte": "Le cœur de {club} !", "niveau": 4},
+  {"id": "nuit_entiere", "texte": "On chantera toute la nuit !", "niveau": 5}
+ ],
+ "tempos": [
+  {"id": "pose", "nom": "Posé", "bpm": 100, "niveau": 1},
+  {"id": "entrainant", "nom": "Entraînant", "bpm": 112, "niveau": 1},
+  {"id": "endiable", "nom": "Endiablé", "bpm": 124, "niveau": 3}
+ ]
+}
