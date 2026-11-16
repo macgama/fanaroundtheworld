@@ -20,6 +20,7 @@ const SCENE_DUEL := "res://scenes/duel/duel.tscn"
 const SCENE_ARENE := "res://scenes/arene/arene.tscn"
 const SCENE_POUSSEE := "res://scenes/poussee/poussee.tscn"
 const SCENE_BUVETTE := "res://scenes/buvette/buvette.tscn"
+const SCENE_BOULOTS := "res://scenes/boulots/boulots.tscn"
 const SCENE_CLUB := "res://scenes/club/club.tscn"
 const SCENE_CREATION_CLUB := "res://scenes/club/creation_club.tscn"
 const SCENE_PRONOS := "res://scenes/pronostics/pronostics.tscn"
@@ -47,6 +48,8 @@ var jetons := 150
 var buvette_record := 0
 var buvette_jour := ""
 var buvette_services := 0
+## Autres petits boulots (voir ListeBoulots) : id → {record, jour, services}.
+var boulots: Dictionary = {}
 ## Membres, local et caisse du fan club (règles dans FanClub).
 var club: Dictionary = FanClub.vide()
 ## Pronostics sans mise (voir scripts/jeu/pronostics.gd).
@@ -105,7 +108,7 @@ func _ready() -> void:
 
 
 ## Options de ligne de commande pour les tests automatiques (après « -- ») :
-##   --scene=carte|voyage|tribune|duel|arene|poussee|buvette   ouvre directement un écran
+##   --scene=carte|voyage|tribune|duel|arene|poussee|buvette|boulots   ouvre directement un écran
 ##   --capture=chemin.png --apres=3      enregistre une capture puis quitte
 func _outils_de_test() -> void:
 	var args := {}
@@ -124,7 +127,7 @@ func _outils_de_test() -> void:
 				p["auto"] = true  # Arène / Poussée : ton camp joue tout seul (démo)
 		var scenes := {"carte": SCENE_CARTE, "voyage": SCENE_VOYAGE, "tribune": SCENE_TRIBUNE, "duel": SCENE_DUEL,
 			"arene": SCENE_ARENE, "poussee": SCENE_POUSSEE,
-			"pronos": SCENE_PRONOS, "missions": SCENE_MISSIONS, "favoris": SCENE_FAVORIS, "club": SCENE_CLUB, "creation": SCENE_CREATION_CLUB, "buvette": SCENE_BUVETTE,
+			"pronos": SCENE_PRONOS, "missions": SCENE_MISSIONS, "favoris": SCENE_FAVORIS, "club": SCENE_CLUB, "creation": SCENE_CREATION_CLUB, "buvette": SCENE_BUVETTE, "boulots": SCENE_BOULOTS,
 			"salon": SCENE_SALON, "collection": SCENE_COLLECTION, "classement": SCENE_CLASSEMENT}
 		if args.has("onglet"):
 			p["onglet"] = args["onglet"]  # collection : « carnet » ou « album »
@@ -220,6 +223,35 @@ func finir_service_buvette(paye: int) -> void:
 	buvette_jour = jour
 	buvette_record = maxi(buvette_record, paye)
 	noter_mission("buvette")
+	noter_mission("boulot", "buvette")
+	gagner_jetons(paye)
+
+
+## Parties d'un petit boulot déjà faites aujourd'hui (date du système).
+func services_boulot_du_jour(id: String) -> int:
+	if id == "buvette":
+		return services_buvette_du_jour()
+	var b: Dictionary = boulots.get(id, {})
+	return int(b.get("services", 0)) if str(b.get("jour", "")) == Time.get_date_string_from_system() else 0
+
+
+## Meilleure paye obtenue à un petit boulot.
+func record_boulot(id: String) -> int:
+	if id == "buvette":
+		return buvette_record
+	return int(boulots.get(id, {}).get("record", 0))
+
+
+## Note la fin d'une partie d'un petit boulot, verse la paye et compte la
+## mission « <id> » et la mission générique « boulot » (clé = id).
+func finir_boulot(id: String, paye: int) -> void:
+	if id == "buvette":
+		finir_service_buvette(paye)
+		return
+	var n := services_boulot_du_jour(id) + 1
+	boulots[id] = {"record": maxi(record_boulot(id), paye), "jour": Time.get_date_string_from_system(), "services": n}
+	noter_mission(id)
+	noter_mission("boulot", id)
 	gagner_jetons(paye)
 
 
@@ -700,6 +732,7 @@ func sauver() -> void:
 		"duels_joues": duels_joues,
 		"jetons": jetons,
 		"buvette": {"record": buvette_record, "jour": buvette_jour, "services": buvette_services},
+		"boulots": boulots,
 		"club": club,
 		"pronos": pronos,
 		"pronos_finis": pronos_finis,
@@ -738,6 +771,8 @@ func charger() -> void:
 		buvette_record = int(bv.get("record", 0))
 		buvette_jour = str(bv.get("jour", ""))
 		buvette_services = int(bv.get("services", 0))
+	var bo: Variant = d.get("boulots", {})
+	boulots = bo if bo is Dictionary else {}
 	club = FanClub.reparer(d.get("club", null))
 	club["membres"] = club["membres"].filter(func(id): return not fanzzy_par_id(str(id)).is_empty())
 	pronos = d.get("pronos", {})
@@ -772,6 +807,7 @@ func reinitialiser() -> void:
 	buvette_record = 0
 	buvette_jour = ""
 	buvette_services = 0
+	boulots = {}
 	club = FanClub.vide()
 	pronos = {}
 	pronos_finis = []
