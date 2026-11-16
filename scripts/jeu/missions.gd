@@ -22,6 +22,7 @@ extends RefCounted
 ##   prono_bon      pronostic résolu avec le bon résultat
 ##   buvette        service à la buvette terminé
 ##   boulot         partie d'un petit boulot terminée (clé = id du boulot)
+##   tifo           service de peintre de tifo terminé
 ##   recolte        caisse du fan club récoltée
 ##   favori         une équipe favorite a gagné des points (duel ou match suivi)
 ##   evenement      duel joué pendant un événement   clé = finale|derby|demi|choc|nations|quart
@@ -53,6 +54,7 @@ const JOUR := [
 	{"id": "j_poussee", "evt": "duel_joue", "cle": "poussee", "n": 1, "titre": "Tente une Poussée", "texte": "Pousse le ballon jusqu'à la tribune d'en face.", "jetons": 15, "xp_pass": 50},
 	{"id": "j_prono2", "evt": "prono", "n": 2, "titre": "Fais 2 pronostics", "texte": "Gratuits et sans mise, sur les vrais matchs.", "jetons": 15, "xp_pass": 50},
 	{"id": "j_buvette", "evt": "buvette", "n": 1, "titre": "Coup de main à la buvette", "texte": "Fais un service de vendeur.", "jetons": 15, "xp_pass": 50},
+	{"id": "j_tifo", "evt": "tifo", "n": 1, "titre": "Coup de pinceau", "texte": "Peins des tifos pour le capo.", "jetons": 15, "xp_pass": 50},
 	{"id": "j_recolte", "evt": "recolte", "n": 1, "titre": "Passe à la caisse", "texte": "Récolte les recettes de ton fan club.", "jetons": 10, "xp_pass": 100, "si": "club"},
 	{"id": "j_favori", "evt": "favori", "n": 1, "titre": "Soutiens tes couleurs", "texte": "Suis ou joue un duel pour une de tes équipes favorites.", "jetons": 20, "xp_pass": 120, "si": "favoris"},
 ]

@@ -6,8 +6,9 @@ et personne ne se bagarre. Un supporter « battu » va s'asseoir ou se secouer a
 Les gains (Jetons + XP du fan club) suivent les mêmes règles dans les trois modes :
 `scripts/duel/fin_duel.gd`.
 
-- **Rejouer le même match** : les 3 premiers duels d'un match paient plein tarif, ensuite
-  les Jetons sont divisés par deux (l'XP ne change pas). Compteur : `Game.duels_par_match`.
+- **Rejouer le même match** (choix de Gaël, 16 nov.) : le même jour, un match rapporte 100 % des
+  Jetons au 1er duel, 50 % au 2e, 25 % au 3e, puis plus rien (l'XP ne change pas). On peut
+  rejouer pour le plaisir sans pouvoir farmer. Compteur : `Game.duels_par_match`.
 - **Échap** pendant une partie : pause contre l'IA (Reprendre / Abandonner). En ligne, le jeu
   continue et « Abandonner » donne la victoire par forfait à l'adversaire. Abandonner ne
   rapporte rien.

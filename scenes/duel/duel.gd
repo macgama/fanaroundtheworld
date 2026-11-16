@@ -828,9 +828,8 @@ func _finir() -> void:
 	var equipe_gagne := b.x >= 0 and b.x > b.y and str(fiche["m"].get("status", "")) in ["LIVE", "HALFTIME", "FINISHED"]
 	var gain_mode: float = Game.MODES_SUIVI.get(mode, {}).get("gain", 1.0)
 	var jetons := int(round((10.0 + points / 60.0 + (15.0 if gagne else 0.0)) * gain_mode * (1.3 if equipe_gagne else 1.0)))
-	var rejoue := Game.noter_duel_match(str(fiche.get("id", fiche["m"].get("id", "")))) < 1.0
-	if rejoue:
-		jetons = int(round(jetons * 0.5))  # même match rejoué en boucle
+	var part := Game.noter_duel_match(str(fiche.get("id", fiche["m"].get("id", ""))))
+	jetons = int(round(jetons * part))  # même match rejoué : 100 %, 50 %, 25 %, puis rien
 	var xp := 40 + points / 40 + (40 if gagne else 0)
 	Game.duels_joues += 1
 	if gagne:
@@ -876,7 +875,7 @@ func _finir() -> void:
 		["Meilleur combo", "x%d" % combo_max],
 		["Tifos / Olas", "%d / %d" % [tifos, olas]],
 		["Bonus « ton équipe gagne vraiment »", "x1,3" if equipe_gagne else "non"],
-		["Jetons gagnés" + (" (match rejoué : ÷2)" if rejoue else ""), "+%d" % jetons],
+		[Game.libelle_rejeu(part), "+%d" % jetons],
 		["XP du fan club", "+%d" % xp],
 	] + FinDuel.ligne_popularite({"popularite": pop, "equipe": (fiche["dom"] if camp == "home" else fiche["ext"])["nom"]}) + FinDuel.lignes_evenement(ev)
 	for l in lignes:
