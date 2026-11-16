@@ -24,7 +24,7 @@ signal appui_juge(resultat: Dictionary)
 signal note_manquee(index: int, t: float)
 signal fini
 
-@export var bus := "Chants"
+@export var bus := "Chants"  # sans_traduction
 @export var polyphonie := 12
 ## Correction manuelle de latence (s), pour un réglage « calibrer » du joueur.
 @export var calibrage := 0.0
@@ -72,7 +72,7 @@ func _creer_lecteurs() -> void:
 func lancer(chant: Variant, bpm := 0.0, nb_mesures := 8, delai := 1.0) -> bool:
 	var fiche: Dictionary = chant if chant is Dictionary else Rythme.chant(String(chant))
 	if fiche.is_empty():
-		push_warning("ChantLecteur : chant inconnu %s" % str(chant))
+		push_warning("ChantLecteur : chant inconnu %s" % str(chant))  # sans_traduction
 		return false
 	chant_id = String(fiche.get("id", ""))
 	rythme = Rythme.depuis_chant(fiche, bpm, delai)

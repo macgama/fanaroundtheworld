@@ -94,7 +94,7 @@ static func sigle(nom: String) -> String:
 	var s := ""
 	for m in mots.slice(0, 3):
 		s += m.substr(0, 1).to_upper()
-	return s if s != "" else "FC"
+	return s if s != "" else "FC"  # sans_traduction
 
 
 # ---------------------------------------------------------------- membres

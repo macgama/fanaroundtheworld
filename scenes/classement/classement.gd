@@ -17,10 +17,10 @@ var _droite: VBoxContainer
 
 func _ready() -> void:
 	for arg in OS.get_cmdline_user_args():
-		if arg.begins_with("--onglet="):
-			_onglet = arg.trim_prefix("--onglet=")
-		elif arg.begins_with("--periode="):
-			_periode = arg.trim_prefix("--periode=")
+		if arg.begins_with("--onglet="):  # sans_traduction
+			_onglet = arg.trim_prefix("--onglet=")  # sans_traduction
+		elif arg.begins_with("--periode="):  # sans_traduction
+			_periode = arg.trim_prefix("--periode=")  # sans_traduction
 	var fond := ColorRect.new()
 	fond.color = Color("#1e4fa8")
 	fond.set_anchors_preset(Control.PRESET_FULL_RECT)
@@ -104,7 +104,7 @@ func _remplir_gauche() -> void:
 	vn.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	h.add_child(vn)
 	vn.add_child(Ui.label(EnLigne.pseudo(), 34, Ui.JAUNE, true, 6))
-	vn.add_child(Ui.label("Fan club : %s" % Game.fan_club_nom, 18, Ui.GRIS))
+	vn.add_child(Ui.label(tr("Fan club : %s") % Game.fan_club_nom, 18, Ui.GRIS))
 
 	var m := EnLigne.moi
 	var stats := Ui.hbox(12)
@@ -118,9 +118,9 @@ func _remplir_gauche() -> void:
 	elif not EnLigne.joignable and m.is_empty():
 		etat = "Hors ligne : tes points t'attendent, ils partiront à la prochaine connexion."
 	elif attente > 0:
-		etat = "En ligne · %d gain%s en route vers le classement." % [attente, "" if attente == 1 else "s"]
+		etat = tr("En ligne · %d gain%s en route vers le classement.") % [attente, "" if attente == 1 else "s"]
 	else:
-		etat = "En ligne · %s fans au classement." % _milliers(int(m.get("fans", 0)))
+		etat = tr("En ligne · %s fans au classement.") % _milliers(int(m.get("fans", 0)))
 	var le := Ui.label(etat, 17, Ui.GRIS)
 	le.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	v.add_child(le)
@@ -154,10 +154,10 @@ func _remplir_gauche() -> void:
 	_gauche.add_child(Ui.espace())
 	for ligne in [
 		"Tes points de fan, ce sont les points de popularité que tu donnes à tes équipes favorites : duels, pronos, matchs suivis, fan club.",
-		"%d points au plus par équipe et par jour. Le classement de la semaine repart à zéro chaque lundi." % Supporters.MAX_PAR_JOUR,
+		tr("%d points au plus par équipe et par jour. Le classement de la semaine repart à zéro chaque lundi.") % Supporters.MAX_PAR_JOUR,
 		"Aucune donnée personnelle : seulement ton nom de fan et tes points.",
 	]:
-		var l := Ui.label("• " + ligne, 17, Ui.GRIS)
+		var l := Ui.label("• " + tr(ligne), 17, Ui.GRIS)
 		l.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 		_gauche.add_child(l)
 
@@ -174,7 +174,7 @@ func _case_stat(titre: String, points: Variant, rang: Variant) -> Control:
 	c.add_child(v)
 	v.add_child(Ui.label(titre, 16, Ui.GRIS))
 	v.add_child(Ui.label(_ordinal(int(rang)) if rang != null and int(rang) > 0 else "—", 36, Ui.BLANC, true, 5))
-	v.add_child(Ui.label("%s points" % _milliers(int(points)), 18, Ui.JAUNE, true))
+	v.add_child(Ui.label(tr("%s points") % _milliers(int(points)), 18, Ui.JAUNE, true))
 	return c
 
 
@@ -294,7 +294,7 @@ func _liste_equipes(liste: VBoxContainer) -> void:
 	var lignes := ClassementFans.lignes_equipes(EnLigne.equipes, "s" if _periode == "semaine" else "p",
 		func(cle: String): return Supporters.est_nation(cle) == nations)
 	if lignes.is_empty():
-		_vide(liste, "Aucun point encore %s : à toi de lancer ton équipe !" % ("cette semaine" if _periode == "semaine" else "pour l'instant"))
+		_vide(liste, tr("Aucun point encore %s : à toi de lancer ton équipe !") % (tr("cette semaine") if _periode == "semaine" else tr("pour l'instant")))
 		return
 	var n := 0
 	for l in lignes:
@@ -318,7 +318,7 @@ func _ligne_equipe(l: Dictionary, fav: bool) -> Control:
 	h.add_child(nom)
 	if not Supporters.est_nation(l["cle"]) and str(i.get("pays", "")) != "":
 		h.add_child(Ui.label(Geo.nom_pays(i["pays"]), 16, Ui.GRIS))
-	h.add_child(Ui.pastille("%s fan%s" % [_milliers(int(l["fans"])), "" if int(l["fans"]) == 1 else "s"], Ui.BLEU, 14))
+	h.add_child(Ui.pastille(tr("%s fan%s") % [_milliers(int(l["fans"])), "" if int(l["fans"]) == 1 else "s"], Ui.BLEU, 14))
 	var p := Ui.label(_milliers(int(l["points"])), 22, Ui.JAUNE, true)
 	p.custom_minimum_size = Vector2(110, 0)
 	p.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT

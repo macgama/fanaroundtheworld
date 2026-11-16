@@ -34,19 +34,19 @@ func _init() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	for i in PISTES:
 		var p := AudioStreamPlayer.new()
-		p.name = "Piste%d" % i
+		p.name = "Piste%d" % i  # sans_traduction
 		add_child(p)
 		_pistes.append(p)
 	for i in 2:
 		var a := AudioStreamPlayer.new()
-		a.name = "Ambiance%d" % i
-		a.bus = BanqueSons.bus("Ambiance")
+		a.name = "Ambiance%d" % i  # sans_traduction
+		a.bus = BanqueSons.bus("Ambiance")  # sans_traduction
 		a.volume_db = -80.0
 		add_child(a)
 		_amb.append(a)
 	_musique = AudioStreamPlayer.new()
-	_musique.name = "Musique"
-	_musique.bus = BanqueSons.bus("Musique")
+	_musique.name = "Musique"  # sans_traduction
+	_musique.bus = BanqueSons.bus("Musique")  # sans_traduction
 	add_child(_musique)
 
 
@@ -55,7 +55,7 @@ func _init() -> void:
 func jouer(id: String, options := {}) -> AudioStreamPlayer:
 	var f := BanqueSons.fiche(id)
 	if f.is_empty():
-		push_warning("Sons : son inconnu « %s »" % id)
+		push_warning("Sons : son inconnu « %s »" % id)  # sans_traduction
 		return null
 	var s := BanqueSons.flux(String(f["fichier"]))
 	if s == null:
@@ -64,7 +64,7 @@ func jouer(id: String, options := {}) -> AudioStreamPlayer:
 	_suivante = (_suivante + 1) % _pistes.size()
 	p.stop()
 	p.stream = s
-	p.bus = BanqueSons.bus(String(options.get("bus", f.get("bus", "Effets"))))
+	p.bus = BanqueSons.bus(String(options.get("bus", f.get("bus", "Effets"))))  # sans_traduction
 	p.volume_db = float(f.get("volume_db", 0.0)) + float(options.get("volume_db", 0.0))
 	var v := float(f.get("variation_hauteur", 0.0))
 	p.pitch_scale = float(options.get("hauteur", 1.0)) * (1.0 + randf_range(-v, v))
@@ -78,7 +78,7 @@ func jouer(id: String, options := {}) -> AudioStreamPlayer:
 func ambiance(lieu: String, intensite := 1, fondu := FONDU_AMBIANCE) -> void:
 	var a := BanqueSons.ambiance_du_lieu(lieu, intensite)
 	if a.is_empty():
-		push_warning("Sons : lieu inconnu « %s »" % lieu)
+		push_warning("Sons : lieu inconnu « %s »" % lieu)  # sans_traduction
 		return
 	var fiche := BanqueSons.fiche_ambiance(String(a["id"]))
 	var cible := float(fiche.get("volume_db", 0.0)) + float(a["volume_db"])
@@ -92,7 +92,7 @@ func ambiance(lieu: String, intensite := 1, fondu := FONDU_AMBIANCE) -> void:
 	_amb_active = 1 - _amb_active
 	var nouvelle := _amb[_amb_active]
 	nouvelle.stream = s
-	nouvelle.bus = BanqueSons.bus("Ambiance")
+	nouvelle.bus = BanqueSons.bus("Ambiance")  # sans_traduction
 	nouvelle.volume_db = -60.0
 	# Repartir d'un point au hasard : deux visites n'entendent pas la même seconde.
 	nouvelle.play(randf() * maxf(0.0, s.get_length() - 1.0))
@@ -112,13 +112,13 @@ func musique(id: String, fondu := FONDU_MUSIQUE) -> void:
 		return
 	var f := BanqueSons.fiche_musique(id)
 	if f.is_empty():
-		push_warning("Sons : musique inconnue « %s »" % id)
+		push_warning("Sons : musique inconnue « %s »" % id)  # sans_traduction
 		return
 	var s := BanqueSons.flux(String(f["fichier"]), bool(f.get("boucle", false)))
 	if s == null:
 		return
 	_musique.stream = s
-	_musique.bus = BanqueSons.bus("Musique")
+	_musique.bus = BanqueSons.bus("Musique")  # sans_traduction
 	_musique.volume_db = -60.0
 	_musique.play()
 	_fondre(_musique, float(f.get("volume_db", 0.0)), fondu)

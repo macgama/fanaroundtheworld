@@ -138,19 +138,19 @@ func _maj() -> void:
 	_statut.text = Reseau.statut
 	if "--journal" in OS.get_cmdline_user_args():
 		print("SALON [%s%s] %s" % [Reseau.transport, " hôte" if Reseau.hote else "", Reseau.statut])
-	_remplir_carte(_carte_moi, Game.fan_club_nom, Game.couleurs_club(), Game.equipe.map(func(id): return Game.skin_de(str(id))), "Toi · niveau %d" % Game.niveau())
+	_remplir_carte(_carte_moi, Game.fan_club_nom, Game.couleurs_club(), Game.equipe.map(func(id): return Game.skin_de(str(id))), tr("Toi · niveau %d") % Game.niveau())
 	var adv := Reseau.adversaire
 	if adv.is_empty():
 		_remplir_carte(_carte_eux, "En attente…", [Ui.NUIT_CLAIR, Ui.GRIS], [], "")
 	else:
-		_remplir_carte(_carte_eux, adv["nom"], adv["couleurs"], adv["equipe"], "Adversaire · niveau %d" % adv["niveau"])
+		_remplir_carte(_carte_eux, adv["nom"], adv["couleurs"], adv["equipe"], tr("Adversaire · niveau %d") % adv["niveau"])
 	var m := Reseau.match_salon
 	if m.is_empty():
 		_lbl_match.text = "Le match sera choisi par l'hôte"
 	else:
 		var f := FicheMatch.de(m)
 		var nous: Dictionary = f["dom"] if Reseau.mon_camp() == "home" else f["ext"]
-		_lbl_match.text = "%s – %s\nTu soutiens %s" % [f["dom"]["nom"], f["ext"]["nom"], nous["nom"]]
+		_lbl_match.text = tr("%s – %s\nTu soutiens %s") % [f["dom"]["nom"], f["ext"]["nom"], nous["nom"]]
 
 	for c in _actions.get_children():
 		c.queue_free()
@@ -182,7 +182,7 @@ func _maj() -> void:
 			for s in Reseau.salons_lan():
 				var ip: String = s["ip"]
 				var port: int = s["port"]
-				_bouton("Rejoindre %s\n%s" % [s["nom"], s["match"]], Ui.ROSE, func(): Reseau.rejoindre_lan(ip, port))
+				_bouton(tr("Rejoindre %s\n%s") % [s["nom"], s["match"]], Ui.ROSE, func(): Reseau.rejoindre_lan(ip, port))
 		return
 	if Reseau.hote:
 		if Reseau.connecte():
@@ -233,7 +233,7 @@ func _remplir_carte(pan: PanelContainer, nom: String, couleurs: Array, skins: Ar
 func _afficher_salons_steam(liste: Array) -> void:
 	for s in liste:
 		var id: int = s["id"]
-		_bouton("Rejoindre %s\n%s" % [s["nom"], s["match"]], Ui.ROSE, func(): Reseau.rejoindre_steam(id))
+		_bouton(tr("Rejoindre %s\n%s") % [s["nom"], s["match"]], Ui.ROSE, func(): Reseau.rejoindre_steam(id))
 
 
 func _sur_adversaire() -> void:

@@ -75,7 +75,7 @@ static func premier_but_coherent(dom: int, ext: int, pb: String) -> String:
 
 static func ouvert(m: Dictionary, maintenant: int) -> bool:
 	## On pronostique jusqu'au coup d'envoi, jamais pendant le match.
-	if str(m.get("status", "")) != "SCHEDULED":
+	if str(m.get("status", "")) != "SCHEDULED":  # sans_traduction
 		return false
 	var t := heure(m)
 	return t > 0 and maintenant < t
@@ -146,12 +146,12 @@ static func resoudre(p: Dictionary, m: Dictionary, serie: int, maintenant: int) 
 			r["etat"] = "annule"
 		return r
 	var statut := str(m.get("status", ""))
-	if statut in ["CANCELLED", "POSTPONED"]:
+	if statut in ["CANCELLED", "POSTPONED"]:  # sans_traduction
 		r["fini"] = true
 		r["etat"] = "annule"
 		return r
-	if statut != "FINISHED":
-		if statut == "UNKNOWN" and maintenant - int(p.get("kickoff", maintenant)) > DELAI_ABANDON:
+	if statut != "FINISHED":  # sans_traduction
+		if statut == "UNKNOWN" and maintenant - int(p.get("kickoff", maintenant)) > DELAI_ABANDON:  # sans_traduction
 			r["fini"] = true
 			r["etat"] = "annule"
 		return r

@@ -163,12 +163,12 @@ func _construire_infos() -> void:
 	var places := FanClub.places(Game.niveau())
 	var lignes := [
 		["Niveau du club", "%d" % Game.niveau()],
-		["Membres", "%d / %d places" % [n, places]],
+		["Membres", tr("%d / %d places") % [n, places]],
 		["Renommée", FanClub.renommee(n)],
 		["Bonus de taille", "+%d %%" % int(round((FanClub.multiplicateur_taille(n) - 1.0) * 100.0))],
 		["Stades visités", "%d" % Game.tampons.size()],
 		["Duels gagnés", "%d / %d" % [Game.duels_gagnes, Game.duels_joues]],
-		["Gagné par le club", "%d Jetons" % int(Game.club.get("total_gagne", 0))],
+		["Gagné par le club", tr("%d Jetons") % int(Game.club.get("total_gagne", 0))],
 	]
 	for l in lignes:
 		var h := Ui.hbox(8)
@@ -182,7 +182,7 @@ func _construire_infos() -> void:
 		sep.custom_minimum_size = Vector2(0, 2)
 		_infos.add_child(sep)
 	_infos.add_child(Ui.espace())
-	var prochain := Ui.label("Niveau %d : +%d places pour recruter." % [Game.niveau() + 1, FanClub.PLACES_PAR_NIVEAU], 18, Ui.GRIS)
+	var prochain := Ui.label(tr("Niveau %d : +%d places pour recruter.") % [Game.niveau() + 1, FanClub.PLACES_PAR_NIVEAU], 18, Ui.GRIS)
 	prochain.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_infos.add_child(prochain)
 	var barre := ProgressBar.new()
@@ -257,7 +257,7 @@ func _carte_membre(z: Dictionary) -> Control:
 		tri.tooltip_text = "Dans ta tribune de duel"
 		hp.add_child(tri)
 	v.add_child(hp)
-	p.tooltip_text = "%s\nCotise %s Jeton/h" % [z.get("histoire", ""), _nombre(FanClub.COTISATION_HEURE)]
+	p.tooltip_text = tr("%s\nCotise %s Jeton/h") % [tr(z.get("histoire", "")), _nombre(FanClub.COTISATION_HEURE)]
 	if FanClub.nb_membres(Game.club) > 1 and not z["id"] in Game.equipe:
 		var x := Ui.bouton("x", Ui.ROUGE, 16)
 		x.tooltip_text = "Renvoyer du club"
@@ -271,12 +271,12 @@ func _carte_membre(z: Dictionary) -> Control:
 func _confirmer_renvoi(id: String, nom: String) -> void:
 	var d := ConfirmationDialog.new()
 	d.title = "Renvoyer"
-	d.dialog_text = "Renvoyer %s du club ?\nIl ne paiera plus sa cotisation." % nom
+	d.dialog_text = tr("Renvoyer %s du club ?\nIl ne paiera plus sa cotisation.") % nom
 	d.ok_button_text = "Renvoyer"
 	d.cancel_button_text = "Garder"
 	d.confirmed.connect(func():
 		if Game.renvoyer(id):
-			_annoncer("%s a quitté le club." % nom, Ui.BLANC)
+			_annoncer(tr("%s a quitté le club.") % nom, Ui.BLANC)
 			_construire())
 	add_child(d)
 	d.popup_centered()
@@ -307,7 +307,7 @@ func _ouvrir_recrutement() -> void:
 	v.add_child(h)
 	h.add_child(Ui.label("RECRUTER", 46, Ui.JAUNE, true, 10))
 	var libres := FanClub.places(Game.niveau()) - FanClub.nb_membres(Game.club)
-	var st := Ui.label("%d place%s libre%s. Recruter est gratuit : c'est la taille du club qui compte." % [libres, "s" if libres > 1 else "", "s" if libres > 1 else ""], 20, Ui.BLANC)
+	var st := Ui.label((tr("%d places libres. Recruter est gratuit : c'est la taille du club qui compte.") if libres > 1 else tr("%d place libre. Recruter est gratuit : c'est la taille du club qui compte.")) % libres, 20, Ui.BLANC)
 	st.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	st.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	h.add_child(st)
@@ -355,7 +355,7 @@ func _carte_candidat(z: Dictionary) -> Control:
 	var id: String = z["id"]
 	b.pressed.connect(func():
 		if Game.recruter(id):
-			_annoncer("%s rejoint le club !" % z["nom"], Ui.VERT)
+			_annoncer(tr("%s rejoint le club !") % z["nom"], Ui.VERT)
 			_construire()
 			if FanClub.peut_recruter(Game.club, Game.niveau()):
 				_ouvrir_recrutement()
@@ -371,7 +371,7 @@ func _carte_candidat(z: Dictionary) -> Control:
 
 func _construire_caisse() -> void:
 	_caisse.add_child(Ui.label("LA CAISSE DU CLUB", 34, Ui.JAUNE, true, 8))
-	var note := Ui.label("La caisse garde %d h de recettes : passe récolter !" % int(FanClub.HEURES_CAISSE), 17, Ui.GRIS)
+	var note := Ui.label(tr("La caisse garde %d h de recettes : passe récolter !") % int(FanClub.HEURES_CAISSE), 17, Ui.GRIS)
 	note.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_caisse.add_child(note)
 
@@ -401,7 +401,7 @@ func _construire_caisse() -> void:
 	_vendre.pressed.connect(func():
 		var g := Game.vendre_echarpes()
 		if g > 0:
-			_annoncer("Écharpes vendues : +%d Jetons" % g, Ui.JAUNE)
+			_annoncer(tr("Écharpes vendues : +%d Jetons") % g, Ui.JAUNE)
 		_construire())
 	he.add_child(_vendre)
 	var am := _bouton_amelioration("atelier")
@@ -415,7 +415,7 @@ func _construire_caisse() -> void:
 	_recolter.pressed.connect(func():
 		var g := Game.recolter_caisse()
 		if g > 0:
-			_annoncer("Caisse récoltée : +%d Jetons" % g, Ui.JAUNE)
+			_annoncer(tr("Caisse récoltée : +%d Jetons") % g, Ui.JAUNE)
 			Ui.pop(_jetons, 1.3)
 		_construire())
 	_caisse.add_child(_recolter)
@@ -442,7 +442,7 @@ func _bouton_amelioration(type: String) -> Button:
 	b.set_meta("type", type)
 	b.pressed.connect(func():
 		if Game.ameliorer_local(type):
-			_annoncer("%s : niveau %d !" % [FanClub.LOCAL[type]["titre"], Game.club[type]], Ui.VERT)
+			_annoncer(tr("%s : niveau %d !") % [tr(FanClub.LOCAL[type]["titre"]), Game.club[type]], Ui.VERT)
 		_construire())
 	return b
 
@@ -453,24 +453,24 @@ func _maj_caisse() -> void:
 	FanClub.avancer(c, now)
 	var n := FanClub.nb_membres(c)
 	_jetons.text = "%d" % Game.jetons
-	_lbl_cot.text = "%d membres · %s Jetons/h (bonus de taille compris)\nEn caisse : %d" % [
+	_lbl_cot.text = tr("%d membres · %s Jetons/h (bonus de taille compris)\nEn caisse : %d") % [
 		n, _nombre(FanClub.cotisations_heure(c)), int(c["caisse_cotisations"])]
 	if c["buvette"] == 0:
 		_lbl_buv.text = "Fermée. Ouvre-la pour vendre à boire aux supporters."
 	else:
 		var boost := FanClub.apres_match(c, now)
-		_lbl_buv.text = "Niveau %d · %s Jetons/h%s\nEn caisse : %d" % [
+		_lbl_buv.text = tr("Niveau %d · %s Jetons/h%s\nEn caisse : %d") % [
 			c["buvette"], _nombre(FanClub.buvette_heure(c) * (2.0 if boost else 1.0)),
 			" · après-match x2 !" if boost else "", int(c["caisse_buvette"])]
 		_lbl_buv.tooltip_text = "La buvette rapporte double pendant 3 h après chaque duel."
 	if c["atelier"] == 0:
 		_lbl_ech.text = "Fermé. Ouvre-le pour tricoter des écharpes aux couleurs du club."
 	else:
-		_lbl_ech.text = "Niveau %d · %d écharpe%s/h · %d Jetons pièce\nStock : %d / %d" % [
+		_lbl_ech.text = tr("Niveau %d · %d écharpe%s/h · %d Jetons pièce\nStock : %d / %d") % [
 			c["atelier"], int(FanClub.echarpes_heure(c)), "s" if FanClub.echarpes_heure(c) > 1 else "",
 			FanClub.prix_echarpe(c), int(c["echarpes"]), FanClub.stock_max(c)]
 	var stock := int(c["echarpes"])
-	_vendre.text = "Vendre (+%d)" % (stock * FanClub.prix_echarpe(c)) if stock > 0 else "Rien à vendre"
+	_vendre.text = tr("Vendre (+%d)") % (stock * FanClub.prix_echarpe(c)) if stock > 0 else tr("Rien à vendre")
 	_vendre.disabled = stock <= 0
 	for b in _boutons_amelioration():
 		var type: String = b.get_meta("type")
@@ -480,11 +480,11 @@ func _maj_caisse() -> void:
 			b.text = "Niveau max"
 			b.disabled = true
 		else:
-			b.text = "%s · %d J" % ["Ouvrir" if ouvrir else "Améliorer", cout]
+			b.text = "%s · %d J" % [tr("Ouvrir") if ouvrir else tr("Améliorer"), cout]
 			b.disabled = cout > Game.jetons
-			b.tooltip_text = "Il te faut %d Jetons" % cout if cout > Game.jetons else ""
+			b.tooltip_text = tr("Il te faut %d Jetons") % cout if cout > Game.jetons else ""
 	var total := FanClub.en_caisse(c)
-	_recolter.text = "RÉCOLTER +%d" % total if total > 0 else "CAISSE VIDE"
+	_recolter.text = tr("RÉCOLTER +%d") % total if total > 0 else tr("CAISSE VIDE")
 	_recolter.disabled = total <= 0
 
 
@@ -496,7 +496,7 @@ func _nombre(x: float) -> String:
 
 func _boutons_amelioration() -> Array:
 	var r: Array = []
-	for b in _caisse.find_children("*", "Button", true, false):
+	for b in _caisse.find_children("*", "Button", true, false):  # sans_traduction
 		if b.has_meta("type"):
 			r.append(b)
 	return r

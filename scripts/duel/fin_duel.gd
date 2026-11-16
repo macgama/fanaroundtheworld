@@ -17,7 +17,7 @@ static func gains(gagne: bool, perf: float, mode_suivi: String, equipe_gagne := 
 static func equipe_gagne(fiche: Dictionary, camp: String) -> bool:
 	var m: Dictionary = fiche.get("m", {})
 	var sc: Variant = m.get("score", {}).get("current")
-	if not sc is Dictionary or not str(m.get("status", "")) in ["LIVE", "HALFTIME", "FINISHED"]:
+	if not sc is Dictionary or not str(m.get("status", "")) in ["LIVE", "HALFTIME", "FINISHED"]:  # sans_traduction
 		return false
 	var h := int(sc.get("home", 0))
 	var a := int(sc.get("away", 0))
@@ -47,9 +47,9 @@ static func enregistrer(gagne: bool, perf: float, fiche: Dictionary, camp: Strin
 static func lignes_evenement(ev: Dictionary) -> Array:
 	if ev.is_empty():
 		return []
-	var lignes := [["Bonus %s (%s)" % [ev["titre"], ev["texte_mult"]], "+%d Jetons" % int(ev["bonus"])]]
+	var lignes := [[Trad.t("Bonus %s (%s)") % [Trad.t(ev["titre"]), ev["texte_mult"]], Trad.t("+%d Jetons") % int(ev["bonus"])]]
 	if int(ev.get("prime_xp", 0)) > 0:
-		lignes.append(["Prime de la soirée", "+%d XP PASS · +%d Jetons" % [int(ev["prime_xp"]), int(ev["prime_jetons"])]])
+		lignes.append(["Prime de la soirée", Trad.t("+%d XP PASS · +%d Jetons") % [int(ev["prime_xp"]), int(ev["prime_jetons"])]])
 	return lignes
 
 
@@ -57,7 +57,7 @@ static func lignes_evenement(ev: Dictionary) -> Array:
 static func ligne_popularite(g: Dictionary) -> Array:
 	if int(g.get("popularite", 0)) <= 0:
 		return []
-	return [["Popularité · %s (favori)" % g.get("equipe", ""), "+%d" % int(g["popularite"])]]
+	return [[Trad.t("Popularité · %s (favori)") % g.get("equipe", ""), "+%d" % int(g["popularite"])]]
 
 
 ## Panneau de fin : titre, lignes [libellé, valeur], boutons Retour / Rejouer.
@@ -112,12 +112,12 @@ static func panneau(parent: Control, titre: String, gagne: bool, lignes: Array, 
 ## où le jeu continue). Abandonner ramène à la carte, sans gains ; en ligne,
 ## l'adversaire gagne par forfait. Renvoie le panneau (ou null s'il était déjà ouvert : il se ferme).
 static func pause(parent: Control, en_ligne: bool) -> Control:
-	var deja := parent.get_node_or_null("PausePartie")
+	var deja := parent.get_node_or_null("PausePartie")  # sans_traduction
 	if deja:
 		_reprendre(deja)
 		return null
 	var voile := VoilePause.new()
-	voile.name = "PausePartie"
+	voile.name = "PausePartie"  # sans_traduction
 	voile.color = Color(0.05, 0.03, 0.15, 0.65)
 	voile.set_anchors_preset(Control.PRESET_FULL_RECT)
 	voile.process_mode = Node.PROCESS_MODE_ALWAYS

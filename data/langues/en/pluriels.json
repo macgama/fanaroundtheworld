@@ -1,0 +1,10 @@
+{
+	"_doc": "Phrases au pluriel séparées dans le code (l'anglais n'accorde pas comme le français).",
+	"%d places libres. Recruter est gratuit : c'est la taille du club qui compte.": "%d free spots. Recruiting is free: it's the size of the club that counts.",
+	"%d place libre. Recruter est gratuit : c'est la taille du club qui compte.": "%d free spot. Recruiting is free: it's the size of the club that counts.",
+	"%d pronostics terminés": "%d predictions finished",
+	"%d pronostic terminé": "%d prediction finished",
+	"%d bons résultats d'affilée · gains ×%s\nMeilleure série : %d": "%d right results in a row · rewards ×%s\nBest streak: %d",
+	"%d bon résultat d'affilée · gains ×%s\nMeilleure série : %d": "%d right result in a row · rewards ×%s\nBest streak: %d",
+	"janv.": "Jan", "mars": "Mar", "avr.": "Apr", "mai": "May", "juin": "Jun", "juil.": "Jul", "sept.": "Sep", "oct.": "Oct", "nov.": "Nov"
+}

@@ -9,18 +9,18 @@ extends RefCounted
 ## Les sélections nationales gardent le nom de leur pays (en français).
 
 const ANIMAUX := [
-	"Lions", "Aigles", "Loups", "Requins", "Taureaux", "Corsaires", "Dragons", "Faucons",
-	"Ours", "Tigres", "Pirates", "Titans", "Sangliers", "Béliers", "Renards", "Hiboux",
-	"Cobras", "Condors", "Jaguars", "Bisons", "Phénix", "Vikings", "Mammouths", "Rhinos",
-	"Gladiateurs", "Mousquetaires", "Volcans", "Ouragans", "Météores", "Pélicans",
-	"Crocodiles", "Albatros", "Lynx", "Frelons", "Castors", "Cerfs",
+	"Lions", "Aigles", "Loups", "Requins", "Taureaux", "Corsaires", "Dragons", "Faucons",  # sans_traduction
+	"Ours", "Tigres", "Pirates", "Titans", "Sangliers", "Béliers", "Renards", "Hiboux",  # sans_traduction
+	"Cobras", "Condors", "Jaguars", "Bisons", "Phénix", "Vikings", "Mammouths", "Rhinos",  # sans_traduction
+	"Gladiateurs", "Mousquetaires", "Volcans", "Ouragans", "Météores", "Pélicans",  # sans_traduction
+	"Crocodiles", "Albatros", "Lynx", "Frelons", "Castors", "Cerfs",  # sans_traduction
 ]
 const QUALITES := [
-	"Dorés", "Bleus", "Rouges", "Verts", "Noirs", "Blancs", "Violets", "Jaunes",
-	"Rugissants", "Volants", "Sauvages", "Fous", "Célestes", "Électriques", "Écarlates",
-	"Indomptables", "Royaux", "Glacés", "Brûlants", "du Port", "des Collines", "du Nord",
-	"du Sud", "de la Vallée", "des Sables", "du Fleuve", "de l'Est", "de l'Ouest",
-	"des Montagnes", "de la Côte",
+	"Dorés", "Bleus", "Rouges", "Verts", "Noirs", "Blancs", "Violets", "Jaunes",  # sans_traduction
+	"Rugissants", "Volants", "Sauvages", "Fous", "Célestes", "Électriques", "Écarlates",  # sans_traduction
+	"Indomptables", "Royaux", "Glacés", "Brûlants", "du Port", "des Collines", "du Nord",  # sans_traduction
+	"du Sud", "de la Vallée", "des Sables", "du Fleuve", "de l'Est", "de l'Ouest",  # sans_traduction
+	"des Montagnes", "de la Côte",  # sans_traduction
 ]
 const PALETTE := [
 	Color("#1e6bff"), Color("#ff3d7f"), Color("#ffd23f"), Color("#3ddc84"), Color("#8b5cff"),
@@ -30,11 +30,11 @@ const PALETTE := [
 
 ## Compétitions dont le nom fictif est connu (maquettes validées).
 const LIGUES := {
-	"fr.1": "Ligue Hexagone", "es.1": "Liga Ibérica", "de.1": "Liga Germania", "it.1": "Serie Azzurra",
-	"en.1": "Premier Albion", "pt.1": "Liga Lusitana", "nl.1": "Eredivisie Orange", "be.1": "Pro Ligue Belge",
-	"br.1": "Série Samba", "ar.1": "Liga Pampa", "us.1": "Ligue des Étoiles", "mx.1": "Liga Azteca",
-	"jp.1": "J-Ligue du Soleil", "tr.1": "Süper Bosphore", "sco.1": "Ligue des Highlands",
-	"sa.1": "Ligue du Désert",
+	"fr.1": "Ligue Hexagone", "es.1": "Liga Ibérica", "de.1": "Liga Germania", "it.1": "Serie Azzurra",  # sans_traduction
+	"en.1": "Premier Albion", "pt.1": "Liga Lusitana", "nl.1": "Eredivisie Orange", "be.1": "Pro Ligue Belge",  # sans_traduction
+	"br.1": "Série Samba", "ar.1": "Liga Pampa", "us.1": "Ligue des Étoiles", "mx.1": "Liga Azteca",  # sans_traduction
+	"jp.1": "J-Ligue du Soleil", "tr.1": "Süper Bosphore", "sco.1": "Ligue des Highlands",  # sans_traduction
+	"sa.1": "Ligue du Désert",  # sans_traduction
 	"ucl": "Coupe des Étoiles", "uel": "Coupe Continentale", "uecl": "Coupe Horizon",
 	"libertadores": "Copa Libertad", "sudamericana": "Copa del Sur", "caf-cl": "Coupe des Champions d'Afrique",
 	"afc-cl": "Coupe des Champions d'Asie", "concacaf-cc": "Coupe des Champions Nord-Américains",
@@ -120,7 +120,7 @@ static func stade(e_domicile: Dictionary, nom_club: String) -> Dictionary:
 		nom = _surcharges[id].get("stade", "")
 	if nom == "":
 		var g := graine(id + "stade")
-		var formes := ["Stade des %s", "Arène des %s", "Le Chaudron des %s", "Parc des %s", "Enceinte des %s"]
+		var formes := ["Stade des %s", "Arène des %s", "Le Chaudron des %s", "Parc des %s", "Enceinte des %s"]  # sans_traduction
 		nom = formes[g % formes.size()] % nom_club
 	return {"cle": "stade:" + id, "nom": nom, "places": 12000 + (graine(id) % 70) * 1000}
 
@@ -128,14 +128,14 @@ static func stade(e_domicile: Dictionary, nom_club: String) -> Dictionary:
 static func competition(c: Dictionary) -> String:
 	var id := str(c.get("id", ""))
 	if LIGUES.has(id):
-		return LIGUES[id]
+		return Trad.t(LIGUES[id])
 	var info := Geo.info_competition(id)
 	if info.has("pays"):
 		return "D1 · " + Geo.nom_pays(info["pays"])
 	var region: String = REGIONS_FR.get(info.get("region", "World"), "Monde")
 	if info.get("type", "") == "international":
-		return "Sélections · " + region
-	return "Coupe continentale · " + region
+		return Trad.t("Sélections · ") + Trad.t(region)
+	return Trad.t("Coupe continentale · ") + Trad.t(region)
 
 
 static func est_selection(match: Dictionary) -> bool:

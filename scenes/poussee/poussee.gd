@@ -81,7 +81,7 @@ func _ready() -> void:
 	couleurs[1] = Duel._vive(eux["c1"], eux["c2"], Ui.ROUGE)
 	couleurs[1] = Ui.couleur_distincte(couleurs[0], couleurs[1])
 	noms[0] = Game.fan_club_nom
-	noms[1] = str(Reseau.adversaire.get("nom", "?")) if en_ligne else "Tribune " + str(eux["nom"])
+	noms[1] = str(Reseau.adversaire.get("nom", "?")) if en_ligne else tr("Tribune ") + str(eux["nom"])
 	var cartes := PousseeRegles.cartes_debloquees(Game.niveau())
 	piles[0] = PousseeRegles.nouvelle_pile(cartes, _rng)
 	# l'adversaire a le même jeu que toi : la partie reste équitable
@@ -665,7 +665,7 @@ const RAISONS_CODE := {"BUUUUT !": "but", "TRIBUNE CONQUISE !": "tribune", "ILS 
 func _preparer_en_ligne() -> void:
 	Reseau.message.connect(_sur_message)
 	Reseau.adversaire_parti.connect(_sur_adversaire_parti)
-	annoncer("En attente de %s…" % Reseau.adversaire.get("nom", "l'adversaire"), Ui.BLANC)
+	annoncer(tr("En attente de %s…") % Reseau.adversaire.get("nom", tr("l'adversaire")), Ui.BLANC)
 	Reseau.envoyer(Protocole.msg("pret"))
 
 

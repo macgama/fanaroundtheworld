@@ -110,8 +110,8 @@ func _ready() -> void:
 # ------------------------------------------------------------------ FANZZY
 
 static func mods_equipe() -> Dictionary:
-	var res := {"tempoWindow": 1.0, "perfectBonus": 1.0, "mashBonus": 1.0, "parryBonus": 1.0,
-		"holdBonus": 1.0, "breathBonus": 1.0, "refundBonus": 1.0, "backfire": false}
+	var res := {"tempoWindow": 1.0, "perfectBonus": 1.0, "mashBonus": 1.0, "parryBonus": 1.0,  # sans_traduction
+		"holdBonus": 1.0, "breathBonus": 1.0, "refundBonus": 1.0, "backfire": false}  # sans_traduction
 	for id in Game.equipe:
 		var z := Game.fanzzy_par_id(str(id))
 		for k in z.get("mods", {}):
@@ -135,11 +135,11 @@ static func effets_texte(z: Dictionary) -> Array:
 		var v: Variant = z["mods"][k]
 		if k == "backfire":
 			if v:
-				res.append("risqué : un raté coûte plus cher")
+				res.append(Trad.t("risqué : un raté coûte plus cher"))
 		elif noms.has(k):
 			var pct := int(round((float(v) - 1.0) * 100.0))
 			if pct != 0:
-				res.append("%s %s%d %%" % [noms[k], "+" if pct > 0 else "", pct])
+				res.append("%s %s%d %%" % [Trad.t(noms[k]), "+" if pct > 0 else "", pct])
 	return res
 
 
@@ -196,7 +196,7 @@ func _construire() -> void:
 	n1.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
 	noms.add_child(n1)
 	noms.add_child(Ui.label("DUEL D'AMBIANCE", 40, Ui.JAUNE, true, 10))
-	var nom_eux: String = Reseau.adversaire.get("nom", eux["nom"]) if en_ligne else "TRIBUNE " + eux["nom"]
+	var nom_eux: String = Reseau.adversaire.get("nom", eux["nom"]) if en_ligne else tr("TRIBUNE ") + eux["nom"]
 	var n2 := Ui.label(nom_eux.to_upper(), 30, Ui.BLANC, true, 8)
 	n2.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	n2.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
@@ -255,7 +255,7 @@ func _construire() -> void:
 	_lbl_combo = Ui.label("COMBO x0", 36, Ui.BLANC, true, 8)
 	vcb.add_child(_lbl_combo)
 	var cri: String = Game.fanzzy_par_id(str(Game.equipe[0])).get("cri", {}).get("label", "Allez allez")
-	_lbl_combo_sous = Ui.label("Appuie en rythme · chant « %s »" % cri.capitalize(), 17, Ui.GRIS)
+	_lbl_combo_sous = Ui.label(tr("Appuie en rythme · chant « %s »") % tr(cri).capitalize(), 17, Ui.GRIS)
 	_lbl_combo_sous.clip_text = true
 	vcb.add_child(_lbl_combo_sous)
 
@@ -315,6 +315,7 @@ func _construire() -> void:
 	_banniere = Banniere.new()
 	_banniere.texte = Game.fan_club_nom.to_upper()
 	_banniere.sous = Game.fanzzy_par_id(str(Game.equipe[1])).get("cri", {}).get("label", "")
+	_banniere.sous = tr(_banniere.sous)
 	_banniere.couleur = _decor.c_nous
 	_banniere.couleur2 = _decor.c_nous2
 	_banniere.set_anchors_preset(Control.PRESET_FULL_RECT)
@@ -371,7 +372,7 @@ func _process(delta: float) -> void:
 				_notes.append(t)
 		_prochaine_mesure += 4 * _beat
 	# notes ratées (passées sans appui)
-	while not _notes.is_empty() and _notes[0] < temps - FENETRE_BIEN * mods["tempoWindow"]:
+	while not _notes.is_empty() and _notes[0] < temps - FENETRE_BIEN * mods["tempoWindow"]:  # sans_traduction
 		_notes.pop_front()
 		_rate(false)
 
@@ -421,7 +422,7 @@ func _pression_ia(delta: float) -> void:
 		_decor.secousse_eux = 1.0
 	if temps < _chant_adverse_fin:
 		pression *= 3.0
-	jauge -= pression * delta * 1.6 / float(mods["holdBonus"])
+	jauge -= pression * delta * 1.6 / float(mods["holdBonus"])  # sans_traduction
 	jauge = clampf(jauge, -100.0, 100.0)
 
 
@@ -484,7 +485,7 @@ func _chant() -> void:
 		_rate(true)
 		return
 	var ecart := absf(_notes[0] - temps)
-	var tw: float = mods["tempoWindow"]
+	var tw: float = mods["tempoWindow"]  # sans_traduction
 	if ecart > FENETRE_BIEN * tw:
 		# trop tôt : on ne mange pas la note, petite pénalité
 		if ecart < FENETRE_BIEN * tw * 2.2:
@@ -493,11 +494,11 @@ func _chant() -> void:
 	_notes.pop_front()
 	combo += 1
 	combo_max = maxi(combo_max, combo)
-	var mult := (1.0 + minf(combo, 40) / 20.0) * _bonus_score * float(mods["mashBonus"])
+	var mult := (1.0 + minf(combo, 40) / 20.0) * _bonus_score * float(mods["mashBonus"])  # sans_traduction
 	var gain := 1.0
 	if ecart <= FENETRE_PARFAIT * tw:
 		parfaits += 1
-		gain = 2.0 * float(mods["perfectBonus"])
+		gain = 2.0 * float(mods["perfectBonus"])  # sans_traduction
 		_piste.eclat("PARFAIT !", Ui.JAUNE)
 		_jouer("clap", 0.0, 1.15)
 	else:
@@ -506,7 +507,7 @@ func _chant() -> void:
 		_jouer("clap", -4.0)
 	_pousser(gain * mult * 0.9)
 	points += int(gain * mult * 10.0)
-	charge_tifo = minf(100.0, charge_tifo + 3.2 * float(mods["parryBonus"]))
+	charge_tifo = minf(100.0, charge_tifo + 3.2 * float(mods["parryBonus"]))  # sans_traduction
 	_fanzzy[0].sauter(0.9)
 	if combo % 10 == 0:
 		_signaler("combo")
@@ -518,7 +519,7 @@ func _chant() -> void:
 
 func _rate(appui: bool) -> void:
 	rates += 1
-	var garde := clampf(float(mods["refundBonus"]) - 1.0, 0.0, 0.6)
+	var garde := clampf(float(mods["refundBonus"]) - 1.0, 0.0, 0.6)  # sans_traduction
 	combo = int(combo * garde)
 	var cout := 1.0 if appui else 1.4
 	if mods["backfire"]:
@@ -530,7 +531,7 @@ func _rate(appui: bool) -> void:
 
 
 func _maj_combo() -> void:
-	_lbl_combo.text = "COMBO x%d%s" % [combo, " !" if combo >= 10 else ""]
+	_lbl_combo.text = tr("COMBO x%d%s") % [combo, " !" if combo >= 10 else ""]
 	if combo > 0 and combo % 5 == 0:
 		_lbl_combo.pivot_offset = _lbl_combo.size / 2.0
 		Ui.pop(_lbl_combo, 1.2)
@@ -550,7 +551,7 @@ func _tifo() -> void:
 	_decor.confettis(120)
 	for mar in _fanzzy:
 		mar.sauter(1.3)
-	_annonce("TIFO DÉPLOYÉ ! +%d" % int(gain), Ui.ROSE)
+	_annonce(tr("TIFO DÉPLOYÉ ! +%d") % int(gain), Ui.ROSE)
 
 
 func _ola_lancer() -> void:
@@ -560,7 +561,7 @@ func _ola_lancer() -> void:
 	for i in 4:
 		_ola_sequence.append(randi() % 4)
 	_ola_index = 0
-	_ola_fin = temps + 3.2 * float(mods["breathBonus"])
+	_ola_fin = temps + 3.2 * float(mods["breathBonus"])  # sans_traduction
 	_notes = _notes.filter(func(t): return t < temps + 0.2 or t > _ola_fin + 0.3)
 	for c in _fleches_ola.get_children():
 		c.queue_free()
@@ -608,7 +609,7 @@ func _ola_finir(reussie: bool) -> void:
 		_jouer("foule", -3.0)
 		for i in _fanzzy.size():
 			_fanzzy[i].sauter(1.2, i * 0.12)
-		_annonce("OLA RÉUSSIE ! +%d" % int(gain), Ui.JAUNE)
+		_annonce(tr("OLA RÉUSSIE ! +%d") % int(gain), Ui.JAUNE)
 	else:
 		_signaler("ola_ratee")
 		_annonce("Ola ratée… la tribune s'est emmêlée", Ui.GRIS)
@@ -676,11 +677,11 @@ func _calculer_bonus_score(debut: bool) -> void:
 		_bonus_score = clampf(1.0 + 0.08 * (b.x - b.y), 0.76, 1.24)
 		var pct := int(round((_bonus_score - 1.0) * 100))
 		if pct > 0:
-			_lbl_info.text = "Ton équipe mène %d–%d : +%d %% d'ambiance" % [b.x, b.y, pct]
+			_lbl_info.text = tr("Ton équipe mène %d–%d : +%d %% d'ambiance") % [b.x, b.y, pct]
 		elif pct < 0:
-			_lbl_info.text = "Ton équipe est menée %d–%d : %d %% d'ambiance" % [b.x, b.y, pct]
+			_lbl_info.text = tr("Ton équipe est menée %d–%d : %d %% d'ambiance") % [b.x, b.y, pct]
 		else:
-			_lbl_info.text = "Égalité %d–%d : pas de bonus" % [b.x, b.y]
+			_lbl_info.text = tr("Égalité %d–%d : pas de bonus") % [b.x, b.y]
 	else:
 		_bonus_score = 1.0
 		_lbl_info.text = "Match pas encore commencé : pas de bonus de score"
@@ -689,7 +690,7 @@ func _calculer_bonus_score(debut: bool) -> void:
 
 func _maj_score_reel() -> void:
 	var m: Dictionary = fiche["m"]
-	_lbl_minute_reelle.text = "MATCH RÉEL · " + FicheMatch.statut_court(fiche)
+	_lbl_minute_reelle.text = tr("MATCH RÉEL · ") + FicheMatch.statut_court(fiche)
 	var sc := Donnees.score_texte(m) if m.get("score", {}).get("current") is Dictionary else "–"
 	_lbl_score_reel.text = "%s %s %s" % [fiche["dom"]["sigle"], sc, fiche["ext"]["sigle"]]
 
@@ -718,7 +719,7 @@ func _preparer_en_ligne() -> void:
 	_jp = Protocole.JaugePartagee.new(Reseau.hote)
 	Reseau.message.connect(_sur_message)
 	Reseau.adversaire_parti.connect(_sur_adversaire_parti)
-	_lbl_info.text = "En attente de %s…" % Reseau.adversaire.get("nom", "l'adversaire")
+	_lbl_info.text = tr("En attente de %s…") % Reseau.adversaire.get("nom", tr("l'adversaire"))
 	_moi_pret = true
 	Reseau.envoyer(Protocole.msg("pret"))
 	_verifier_depart()
@@ -729,7 +730,7 @@ func _verifier_depart() -> void:
 	if Reseau.hote and _moi_pret and _adv_pret and not _depart_envoye:
 		_depart_envoye = true
 		Reseau.envoyer(Protocole.msg("depart"))
-		_lbl_info.text = "Duel contre %s : chante plus fort qu'eux !" % Reseau.adversaire.get("nom", "un vrai joueur")
+		_lbl_info.text = tr("Duel contre %s : chante plus fort qu'eux !") % Reseau.adversaire.get("nom", tr("un vrai joueur"))
 		_calculer_bonus_score(true)
 		_compte_a_rebours()
 
@@ -744,7 +745,7 @@ func _sur_message(m: Dictionary) -> void:
 		"depart":
 			if not Reseau.hote and not _depart_envoye:
 				_depart_envoye = true
-				_lbl_info.text = "Duel contre %s : chante plus fort qu'eux !" % Reseau.adversaire.get("nom", "un vrai joueur")
+				_lbl_info.text = tr("Duel contre %s : chante plus fort qu'eux !") % Reseau.adversaire.get("nom", tr("un vrai joueur"))
 				_calculer_bonus_score(true)
 				_compte_a_rebours()
 		"pousse":
@@ -770,10 +771,10 @@ func _effet_adverse(e: String) -> void:
 	var nom: String = Reseau.adversaire.get("nom", "En face")
 	match e:
 		"tifo":
-			_annonce("%s déploie son tifo !" % nom, Ui.ROUGE)
+			_annonce(tr("%s déploie son tifo !") % nom, Ui.ROUGE)
 			_decor.secousse_eux = 1.0
 		"ola":
-			_annonce("%s réussit une ola !" % nom, Ui.ROUGE)
+			_annonce(tr("%s réussit une ola !") % nom, Ui.ROUGE)
 			_decor.secousse_eux = 1.0
 		"combo":
 			_decor.secousse_eux = 0.6
@@ -825,7 +826,7 @@ func _finir() -> void:
 		Reseau.envoyer(Protocole.msg("fin", {"j": _jp.jauge}))
 	var gagne := jauge > 0.0 or _forfait
 	var b := _buts(fiche["m"])
-	var equipe_gagne := b.x >= 0 and b.x > b.y and str(fiche["m"].get("status", "")) in ["LIVE", "HALFTIME", "FINISHED"]
+	var equipe_gagne := b.x >= 0 and b.x > b.y and str(fiche["m"].get("status", "")) in ["LIVE", "HALFTIME", "FINISHED"]  # sans_traduction
 	var gain_mode: float = Game.MODES_SUIVI.get(mode, {}).get("gain", 1.0)
 	var jetons := int(round((10.0 + points / 60.0 + (15.0 if gagne else 0.0)) * gain_mode * (1.3 if equipe_gagne else 1.0)))
 	var part := Game.noter_duel_match(str(fiche.get("id", fiche["m"].get("id", ""))))
@@ -865,7 +866,7 @@ func _finir() -> void:
 	if _forfait:
 		titre_fin = "VICTOIRE : L'ADVERSAIRE EST PARTI"
 	elif en_ligne and not gagne:
-		titre_fin = "%s A GAGNÉ…" % str(Reseau.adversaire.get("nom", "L'ADVERSAIRE")).to_upper()
+		titre_fin = tr("%s A GAGNÉ…") % str(Reseau.adversaire.get("nom", tr("L'ADVERSAIRE"))).to_upper()
 	var t := Ui.label(titre_fin, 50 if gagne else 38, Ui.JAUNE if gagne else Ui.ROSE, true, 10)
 	t.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	v.add_child(t)
@@ -908,7 +909,7 @@ func _finir() -> void:
 	v.add_child(hb)
 	if "--quitter" in OS.get_cmdline_user_args():
 		# test automatique : on écrit le résultat puis on ferme
-		print("RESULTAT duel en_ligne=%s hote=%s jauge=%.2f gagne=%s forfait=%s" % [en_ligne, Reseau.hote if en_ligne else false, jauge, gagne, _forfait])
+		print("RESULTAT duel en_ligne=%s hote=%s jauge=%.2f gagne=%s forfait=%s" % [en_ligne, Reseau.hote if en_ligne else false, jauge, gagne, _forfait])  # sans_traduction
 		get_tree().create_timer(1.5).timeout.connect(func(): get_tree().quit())
 	pan.pivot_offset = Vector2(460, demi_h)
 	pan.scale = Vector2.ONE * 0.6
@@ -923,7 +924,7 @@ func _preparer_sons() -> void:
 	_sons["foule"] = _son(func(t): return randf_range(-1, 1) * 0.35 * sin(PI * t / 1.6) * (0.6 + 0.4 * sin(TAU * 3.0 * t)), 1.6)
 	for i in 6:
 		var lecteur := AudioStreamPlayer.new()
-		lecteur.name = "Son%d" % i
+		lecteur.name = "Son%d" % i  # sans_traduction
 		add_child(lecteur)
 
 
@@ -948,7 +949,7 @@ func _jouer(nom: String, volume := 0.0, hauteur := 1.0) -> void:
 	if not _sons.has(nom):
 		return
 	for i in 6:
-		var l := get_node_or_null("Son%d" % i) as AudioStreamPlayer
+		var l := get_node_or_null("Son%d" % i) as AudioStreamPlayer  # sans_traduction
 		if l and not l.playing:
 			l.stream = _sons[nom]
 			l.volume_db = volume
@@ -1173,7 +1174,7 @@ class Piste extends Control:
 		var r := Rect2(Vector2.ZERO, size)
 		draw_style_box(Ui.boite(Color(0.08, 0.06, 0.2, 0.75), 50, 5), r)
 		var cible := Vector2(90, size.y / 2.0)
-		var tw: float = duel.mods.get("tempoWindow", 1.0)
+		var tw: float = duel.mods.get("tempoWindow", 1.0)  # sans_traduction
 		draw_circle(cible, 46, Ui.CONTOUR)
 		draw_circle(cible, 40, Ui.BLANC.darkened(0.1) if _eclat_t <= 0 else _eclat_col)
 		draw_circle(cible, 40 * clampf(tw * 0.55, 0.3, 0.95), Color(0, 0, 0, 0.15))

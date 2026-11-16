@@ -23,7 +23,7 @@ static func de(m: Dictionary) -> Dictionary:
 		var lieu := Geo.lieu_match(m)
 		var stade := Fiction.stade(m.get("home", {}), dom["nom"])
 		if sel:
-			stade["nom"] = "Stade national · " + dom["nom"]
+			stade["nom"] = Trad.t("Stade national · ") + dom["nom"]
 		c = {
 			"id": id, "dom": dom, "ext": ext, "lieu": lieu, "stade": stade,
 			"competition": Fiction.competition(m.get("competition", {})),
@@ -54,7 +54,7 @@ static func heure_texte(t: int) -> String:
 
 static func date_texte(t: int) -> String:
 	var d := Time.get_datetime_dict_from_unix_time(t + decalage_local())
-	return "%s %d %s" % [JOURS[d["weekday"]], d["day"], MOIS[d["month"] - 1]]
+	return "%s %d %s" % [Trad.t(JOURS[d["weekday"]]), d["day"], Trad.t(MOIS[d["month"] - 1])]
 
 
 static func statut_court(f: Dictionary) -> String:
@@ -62,14 +62,14 @@ static func statut_court(f: Dictionary) -> String:
 	var m: Dictionary = f["m"]
 	var s := str(m.get("status", ""))
 	match s:
-		"LIVE":
+		"LIVE":  # sans_traduction
 			var mi: Variant = m.get("minute")
-			return "EN DIRECT %s'" % str(int(mi)) if mi != null else "EN DIRECT"
-		"HALFTIME":
-			return "MI-TEMPS"
-		"SCHEDULED":
-			return "%s %s" % [JOURS[Time.get_datetime_dict_from_unix_time(int(f["t"]) + decalage_local())["weekday"]], heure_texte(f["t"])]
-	return STATUTS.get(s, s)
+			return Trad.t("EN DIRECT %s'") % str(int(mi)) if mi != null else Trad.t("EN DIRECT")
+		"HALFTIME":  # sans_traduction
+			return Trad.t("MI-TEMPS")
+		"SCHEDULED":  # sans_traduction
+			return "%s %s" % [Trad.t(JOURS[Time.get_datetime_dict_from_unix_time(int(f["t"]) + decalage_local())["weekday"]]), heure_texte(f["t"])]
+	return Trad.t(STATUTS.get(s, s))
 
 
 static func ambiance_prevue(f: Dictionary) -> int:
@@ -86,4 +86,4 @@ static func ambiance_prevue(f: Dictionary) -> int:
 
 
 static func jouable(f: Dictionary) -> bool:
-	return not str(f["m"].get("status", "")) in ["POSTPONED", "CANCELLED", "SUSPENDED"]
+	return not str(f["m"].get("status", "")) in ["POSTPONED", "CANCELLED", "SUSPENDED"]  # sans_traduction

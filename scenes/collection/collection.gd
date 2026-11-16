@@ -143,7 +143,7 @@ func _remplir() -> void:
 
 func _remplir_carnet() -> void:
 	var lieux := Game.lieux_visites()
-	_titre.text = "CARNET DE VOYAGE · %d stade%s · %d pays" % [Game.tampons.size(), "" if Game.tampons.size() == 1 else "s", lieux["pays"].size()]
+	_titre.text = tr("CARNET DE VOYAGE · %d stade%s · %d pays") % [Game.tampons.size(), "" if Game.tampons.size() == 1 else "s", lieux["pays"].size()]
 	if Game.tampons.is_empty():
 		var vide := Ui.label("Aucun stade tamponné pour l'instant.\nChoisis un match sur la carte et va le voir « Au stade » : le stade du club qui reçoit rejoint ton carnet.", 24, Ui.GRIS)
 		vide.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
@@ -215,7 +215,7 @@ func _date_courte(d: String) -> String:
 func _remplir_album() -> void:
 	var c: Dictionary = Game.collection
 	var nb := Game.fanzzy.filter(func(z): return Collection.a_fanzzy(c, z["id"])).size()
-	_titre.text = "ALBUM FANZZY · %d / %d" % [nb, Game.fanzzy.size()]
+	_titre.text = tr("ALBUM FANZZY · %d / %d") % [nb, Game.fanzzy.size()]
 	var aide := Ui.label("Un FANZZY rejoint l'album quand il joue un duel dans ta tribune (bouton FANZZY de la carte).", 20, Ui.GRIS)
 	aide.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_gauche.add_child(aide)
@@ -270,7 +270,7 @@ func _carte_fanzzy(z: Dictionary, c: Dictionary) -> Control:
 		hs.add_child(rond)
 	v.add_child(hs)
 	if vu:
-		pan.tooltip_text = "%s\nSérie : %s\nDans l'album depuis le %s\nGarde-robe : %d / %d skins portés" % [
+		pan.tooltip_text = tr("%s\nSérie : %s\nDans l'album depuis le %s\nGarde-robe : %d / %d skins portés") % [
 			z["nom"], Game.series_fanzzy.get(z.get("serie", ""), {}).get("nom", z.get("serie", "")),
 			c["fanzzy"][z["id"]], portes, skins.size()]
 	else:

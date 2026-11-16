@@ -16,14 +16,14 @@ extends RefCounted
 const NOMS := [
 	"Tambour", "Fanion", "Mégaphone", "Supporter", "Tifo", "Capo", "Sifflet", "Klaxon",
 	"Drapeau", "Maillot", "Ballon", "Crampon", "Gradin", "Virage", "Chant", "Tonnerre",
-	"Lion", "Aigle", "Renard", "Dragon", "Requin", "Ours", "Loup", "Tigre",
-	"Phénix", "Bison", "Faucon", "Lynx", "Cyclone", "Volcan", "Météore", "Comète",
+	"Lion", "Aigle", "Renard", "Dragon", "Requin", "Ours", "Loup", "Tigre",  # sans_traduction
+	"Phénix", "Bison", "Faucon", "Lynx", "Cyclone", "Volcan", "Météore", "Comète",  # sans_traduction
 ]
 const QUALITES := [
-	"Joyeux", "Fidèle", "Survolté", "Infatigable", "Magique", "Géant", "Rapide", "Vaillant",
-	"Endiablé", "Flamboyant", "Malin", "Rugissant", "Électrique", "Cosmique", "Légendaire", "Intrépide",
-	"Bondissant", "Tonitruant", "Étincelant", "Rusé", "Courageux", "Souriant", "Puissant", "Agile",
-	"Brillant", "Sonore", "Enflammé", "Têtu", "Généreux", "Supersonique", "Inarrêtable", "Radieux",
+	"Joyeux", "Fidèle", "Survolté", "Infatigable", "Magique", "Géant", "Rapide", "Vaillant",  # sans_traduction
+	"Endiablé", "Flamboyant", "Malin", "Rugissant", "Électrique", "Cosmique", "Légendaire", "Intrépide",  # sans_traduction
+	"Bondissant", "Tonitruant", "Étincelant", "Rusé", "Courageux", "Souriant", "Puissant", "Agile",  # sans_traduction
+	"Brillant", "Sonore", "Enflammé", "Têtu", "Généreux", "Supersonique", "Inarrêtable", "Radieux",  # sans_traduction
 ]
 
 const URL := "https://fanaroundtheworld-live.gael-manigley.workers.dev/classement/"
@@ -79,8 +79,8 @@ static func pseudo_texte(p: Variant) -> String:
 		return "Supporter mystère"
 	var a := int(p[0])
 	var b := int(p[1])
-	var nom: String = NOMS[a] if a >= 0 and a < NOMS.size() else "Supporter"
-	var qual: String = QUALITES[b] if b >= 0 and b < QUALITES.size() else "Mystère"
+	var nom: String = NOMS[a] if a >= 0 and a < NOMS.size() else "Supporter"  # sans_traduction
+	var qual: String = QUALITES[b] if b >= 0 and b < QUALITES.size() else "Mystère"  # sans_traduction
 	return "%s %s %d" % [nom, qual, int(p[2])]
 
 

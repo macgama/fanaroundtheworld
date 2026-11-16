@@ -1,0 +1,17 @@
+{
+	"aucun but": "no goal",
+	"%d – %d · 1er but : %s": "%d – %d · 1st goal: %s",
+	"Match annulé ou reporté : pronostic retiré, ta série ne bouge pas.": "Match cancelled or postponed: prediction removed, your streak doesn't change.",
+	"résultat ": "result ",
+	"raté": "missed",
+	"score exact ": "exact score ",
+	"premier but inconnu": "first goal unknown",
+	"premier but ": "first goal ",
+	"Score final %d – %d : %s.": "Final score %d – %d: %s.",
+	" +%d Jetons": " +%d Tokens",
+	" (série ×%s)": " (streak ×%s)",
+	"Match en cours : %s": "Match in progress: %s",
+	"Match terminé, résultat bientôt validé.": "Match finished, result confirmed soon.",
+	"Modifiable jusqu'au coup d'envoi (%s %s).": "Can be changed until kick-off (%s %s).",
+	"En attente du résultat.": "Waiting for the result."
+}

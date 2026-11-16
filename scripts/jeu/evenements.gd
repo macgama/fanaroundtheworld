@@ -58,27 +58,27 @@ const AVANT := 24 * 3600
 const APRES := 6 * 3600
 ## Compétitions de sélections qui font une fête des nations (pas les amicaux).
 const NATIONS := ["world-cup", "euro", "copa-america", "afcon", "nations-league"]
-const STATUTS_SANS_FETE := ["POSTPONED", "CANCELLED", "SUSPENDED"]
+const STATUTS_SANS_FETE := ["POSTPONED", "CANCELLED", "SUSPENDED"]  # sans_traduction
 
 ## Noms français des villes les plus courantes dans le flux (sinon le nom reçu).
 const VILLES_FR := {
-	"london": "Londres", "milano": "Milan", "roma": "Rome", "torino": "Turin", "genova": "Gênes",
-	"napoli": "Naples", "firenze": "Florence", "lisboa": "Lisbonne", "sevilla": "Séville",
-	"münchen": "Munich", "köln": "Cologne", "wien": "Vienne", "praha": "Prague",
-	"warszawa": "Varsovie", "athina": "Athènes", "athens": "Athènes", "moskva": "Moscou",
-	"moscow": "Moscou", "københavn": "Copenhague", "copenhagen": "Copenhague",
-	"bucureşti": "Bucarest", "bucuresti": "Bucarest", "beograd": "Belgrade", "belgrade": "Belgrade",
-	"istanbul": "Istanbul", "rio de janeiro": "Rio", "capital federal": "Buenos Aires",
-	"ciudad de buenos aires": "Buenos Aires", "ciudad de méxico": "Mexico", "cairo": "Caire",
-	"al qahirah": "Caire", "riyadh": "Riyad", "edinburgh": "Édimbourg", "seville": "Séville",
-	"lisbon": "Lisbonne", "brussels": "Bruxelles", "brussel": "Bruxelles", "antwerpen": "Anvers",
-	"sofia": "Sofia", "kyiv": "Kiev", "tbilisi": "Tbilissi", "tehran": "Téhéran",
-	"montevideo": "Montevideo", "asunción": "Asuncion", "lima": "Lima", "bogotá": "Bogota",
-	"santiago de chile": "Santiago", "johannesburg": "Johannesburg", "seoul": "Séoul",
-	"tokyo": "Tokyo", "osaka": "Osaka", "sydney": "Sydney", "melbourne": "Melbourne",
+	"london": "Londres", "milano": "Milan", "roma": "Rome", "torino": "Turin", "genova": "Gênes",  # sans_traduction
+	"napoli": "Naples", "firenze": "Florence", "lisboa": "Lisbonne", "sevilla": "Séville",  # sans_traduction
+	"münchen": "Munich", "köln": "Cologne", "wien": "Vienne", "praha": "Prague",  # sans_traduction
+	"warszawa": "Varsovie", "athina": "Athènes", "athens": "Athènes", "moskva": "Moscou",  # sans_traduction
+	"moscow": "Moscou", "københavn": "Copenhague", "copenhagen": "Copenhague",  # sans_traduction
+	"bucureşti": "Bucarest", "bucuresti": "Bucarest", "beograd": "Belgrade", "belgrade": "Belgrade",  # sans_traduction
+	"istanbul": "Istanbul", "rio de janeiro": "Rio", "capital federal": "Buenos Aires",  # sans_traduction
+	"ciudad de buenos aires": "Buenos Aires", "ciudad de méxico": "Mexico", "cairo": "Caire",  # sans_traduction
+	"al qahirah": "Caire", "riyadh": "Riyad", "edinburgh": "Édimbourg", "seville": "Séville",  # sans_traduction
+	"lisbon": "Lisbonne", "brussels": "Bruxelles", "brussel": "Bruxelles", "antwerpen": "Anvers",  # sans_traduction
+	"sofia": "Sofia", "kyiv": "Kiev", "tbilisi": "Tbilissi", "tehran": "Téhéran",  # sans_traduction
+	"montevideo": "Montevideo", "asunción": "Asuncion", "lima": "Lima", "bogotá": "Bogota",  # sans_traduction
+	"santiago de chile": "Santiago", "johannesburg": "Johannesburg", "seoul": "Séoul",  # sans_traduction
+	"tokyo": "Tokyo", "osaka": "Osaka", "sydney": "Sydney", "melbourne": "Melbourne",  # sans_traduction
 }
 ## Villes qui prennent « du » (« Derby du Caire »).
-const VILLES_DU := ["Caire", "Cap", "Havre", "Mans", "Pirée"]
+const VILLES_DU := ["Caire", "Cap", "Havre", "Mans", "Pirée"]  # sans_traduction
 
 static var _rivalites: Dictionary = {}  # « id1|id2 » (triés) -> {type, nom}
 static var _charge := false
@@ -132,7 +132,7 @@ static func type_tour(tour: Variant) -> String:
 		return "demi"
 	if "quarter" in r or "viertelfinal" in r or "quart" in r:
 		return "quart"
-	if "final" in r and not "1/" in r and not "round of" in r:
+	if "final" in r and not "1/" in r and not "round of" in r:  # sans_traduction
 		return "finale"
 	return ""
 
@@ -146,12 +146,15 @@ static func cle_ville(ville: Variant) -> String:
 
 ## « Derby de Londres », « Derby d'Istanbul », « Derby du Caire ».
 static func nom_derby(ville: String) -> String:
+	if not Trad.est_source():
+		# « London Derby » : le nom de ville reçu du flux, sans traduction
+		return Trad.t("Derby de %s") % ville.split(",")[0].strip_edges()
 	var v: String = VILLES_FR.get(cle_ville(ville), ville.split(",")[0].strip_edges())
 	if v in VILLES_DU:
-		return "Derby du " + v
+		return Trad.t("Derby du ") + v  # sans_traduction
 	if v != "" and v.left(1).to_lower() in ["a", "e", "i", "o", "u", "é", "è", "h", "î", "ô"]:
-		return "Derby d'" + v
-	return "Derby de " + v
+		return Trad.t("Derby d'") + v  # sans_traduction
+	return Trad.t("Derby de ") + v  # sans_traduction
 
 
 ## Événement d'un match, ou {} s'il n'a rien de spécial.

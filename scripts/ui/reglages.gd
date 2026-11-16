@@ -10,7 +10,7 @@ static var _base_db := {}  # volume de chaque bus dans le mixage d'origine
 ## curseur affiché -> bus audio réglés ensemble
 const VOLUMES := [
 	["general", "Volume général", ["Master"]],
-	["musique", "Musique", ["Musique"]],
+	["musique", "Musique", ["Musique"]],  # sans_traduction
 	["ambiance", "Ambiance et chants", ["Ambiance", "Chants"]],
 	["effets", "Effets", ["Effets", "Interface"]],
 ]

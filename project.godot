@@ -23,6 +23,7 @@ config/icon="res://icon.svg"
 
 [autoload]
 
+Langue="*res://scripts/autoload/langue.gd"
 Game="*res://scripts/autoload/game.gd"
 Donnees="*res://scripts/autoload/donnees.gd"
 Reseau="*res://scripts/autoload/reseau.gd"

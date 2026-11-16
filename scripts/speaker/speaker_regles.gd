@@ -36,15 +36,15 @@ const SERVICES_PLEIN_TARIF := 3
 
 ## Prénoms et noms des joueurs (inventés, courts pour être criés).
 const PRENOMS := [
-	"Léo", "Hugo", "Nina", "Sami", "Yanis", "Inès", "Malo", "Lina", "Théo", "Zoé",
-	"Ilan", "Maé", "Enzo", "Jade", "Noah", "Lou", "Adam", "Rayan", "Tom", "Lisa",
-	"Nael", "Kenzo", "Iris", "Milo", "Amir", "Sofia", "Elio", "Tess", "Liam", "Yara",
+	"Léo", "Hugo", "Nina", "Sami", "Yanis", "Inès", "Malo", "Lina", "Théo", "Zoé",  # sans_traduction
+	"Ilan", "Maé", "Enzo", "Jade", "Noah", "Lou", "Adam", "Rayan", "Tom", "Lisa",  # sans_traduction
+	"Nael", "Kenzo", "Iris", "Milo", "Amir", "Sofia", "Elio", "Tess", "Liam", "Yara",  # sans_traduction
 ]
 const NOMS := [
-	"Martin", "Dubois", "Moreau", "Lefort", "Garnier", "Petitjean", "Rocher", "Ferrand",
-	"Belmonte", "Kanté", "Diallo", "Navarro", "Okafor", "Silva", "Rossi", "Lambert",
-	"Mercier", "Bonnet", "Traoré", "Costa", "Varenne", "Duval", "Ndiaye", "Marchetti",
-	"Leroux", "Benali", "Fontaine", "Morel", "Santos", "Keita",
+	"Martin", "Dubois", "Moreau", "Lefort", "Garnier", "Petitjean", "Rocher", "Ferrand",  # sans_traduction
+	"Belmonte", "Kanté", "Diallo", "Navarro", "Okafor", "Silva", "Rossi", "Lambert",  # sans_traduction
+	"Mercier", "Bonnet", "Traoré", "Costa", "Varenne", "Duval", "Ndiaye", "Marchetti",  # sans_traduction
+	"Leroux", "Benali", "Fontaine", "Morel", "Santos", "Keita",  # sans_traduction
 ]
 const NUMEROS := [7, 9, 10, 11, 14, 17, 19, 20, 21, 22, 23, 27]
 

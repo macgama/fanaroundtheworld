@@ -37,9 +37,9 @@ const SCENE_CLASSEMENT := "res://scenes/classement/classement.tscn"
 var params: Dictionary = {}
 
 # --- Fan club du joueur (sauvegardé) ---
-var fan_club_nom := "Ultras du Canal"
+var fan_club_nom := "Ultras du Canal"  # sans_traduction
 var xp := 0
-var position_club := {"nom": "Paris", "lat": 48.86, "lon": 2.35}
+var position_club := {"nom": "Paris", "lat": 48.86, "lon": 2.35}  # sans_traduction
 var tampons: Dictionary = {}       # clé stade -> {nom, ville, date, match}
 var equipe: Array = []             # 3 identifiants de FANZZY (chant, tifo, ola)
 var skins: Dictionary = {}         # id FANZZY -> id du skin choisi (cosmétique)
@@ -222,7 +222,7 @@ static func libelle_rejeu(part: float) -> String:
 		return "Jetons gagnés"
 	if part <= 0.0:
 		return "Jetons gagnés (match déjà joué 3 fois aujourd'hui)"
-	return "Jetons gagnés (match rejoué : %d %%)" % int(round(part * 100.0))
+	return Trad.t("Jetons gagnés (match rejoué : %d %%)") % int(round(part * 100.0))
 
 
 func gagner_jetons(n: int) -> void:
@@ -373,7 +373,7 @@ func peut_pronostiquer(m: Dictionary) -> String:
 	if not Pronostics.ouvert(m, maintenant):
 		return "Pronostics fermés : le match a commencé"
 	if not pronos.has(str(m.get("id", ""))) and pronos.size() >= Pronostics.MAX_EN_ATTENTE:
-		return "%d pronostics en attente au maximum" % Pronostics.MAX_EN_ATTENTE
+		return tr("%d pronostics en attente au maximum") % Pronostics.MAX_EN_ATTENTE
 	return ""
 
 
@@ -578,8 +578,8 @@ func _annonce_missions(finies: Array) -> void:
 	var toast := Ui.panneau(Ui.VERT, 20, 5)
 	var h := Ui.hbox(10)
 	h.add_child(Ui.icone("cible", 34))
-	var txt := "Mission terminée : %s" % finies[0]["titre"] if finies.size() == 1 else "%d missions terminées !" % finies.size()
-	var l := Ui.label(txt + " · à récupérer dans Missions", 22, Ui.CONTOUR, true)
+	var txt := tr("Mission terminée : %s") % tr(finies[0]["titre"]) if finies.size() == 1 else tr("%d missions terminées !") % finies.size()
+	var l := Ui.label(txt + tr(" · à récupérer dans Missions"), 22, Ui.CONTOUR, true)
 	h.add_child(l)
 	toast.add_child(h)
 	toast.set_anchors_preset(Control.PRESET_CENTER_BOTTOM)
@@ -689,7 +689,7 @@ func reclamer_prime(id: String) -> int:
 func _charger_fanzzy() -> void:
 	var f := FileAccess.open("res://assets/fanzzy/fanzzy.json", FileAccess.READ)
 	if f == null:
-		push_error("Catalogue FANZZY introuvable")
+		push_error("Catalogue FANZZY introuvable")  # sans_traduction
 		return
 	var d: Variant = JSON.parse_string(f.get_as_text())
 	if d is Dictionary:
@@ -733,7 +733,7 @@ func couleur_famille(fam: String) -> Color:
 
 
 func nom_famille(fam: String) -> String:
-	return familles.get(fam, {}).get("nom", fam)
+	return tr(familles.get(fam, {}).get("nom", fam))
 
 
 # ---------------------------------------------------------------- sauvegarde
@@ -815,9 +815,9 @@ func charger() -> void:
 
 func reinitialiser() -> void:
 	DirAccess.remove_absolute(ProjectSettings.globalize_path(CHEMIN_SAUVEGARDE))
-	fan_club_nom = "Ultras du Canal"
+	fan_club_nom = "Ultras du Canal"  # sans_traduction
 	xp = 0
-	position_club = {"nom": "Paris", "lat": 48.86, "lon": 2.35}
+	position_club = {"nom": "Paris", "lat": 48.86, "lon": 2.35}  # sans_traduction
 	tampons = {}
 	skins = {}
 	duels_gagnes = 0

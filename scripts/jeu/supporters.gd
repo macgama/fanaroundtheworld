@@ -39,9 +39,9 @@ const DEBUT_SAISON := 1_793_491_200  # 2026-11-01 00:00 UTC
 ## Sélections qui partent avec plus de supporters dans le classement simulé.
 const GRANDES_NATIONS := [
 	"france", "brazil", "argentina", "germany", "spain", "italy", "england", "portugal",
-	"netherlands", "belgium", "uruguay", "mexico", "united states", "japan", "morocco",
-	"croatia", "colombia", "senegal", "south korea", "nigeria", "cameroon", "switzerland",
-	"denmark", "algeria", "egypt", "ivory coast", "scotland", "turkey", "poland", "chile",
+	"netherlands", "belgium", "uruguay", "mexico", "united states", "japan", "morocco",  # sans_traduction
+	"croatia", "colombia", "senegal", "south korea", "nigeria", "cameroon", "switzerland",  # sans_traduction
+	"denmark", "algeria", "egypt", "ivory coast", "scotland", "turkey", "poland", "chile",  # sans_traduction
 ]
 
 const RAISONS := {
@@ -262,7 +262,7 @@ static func noter_club(s: Dictionary, jetons_recoltes: int, maintenant: int) -> 
 ## toujours les mêmes pour une équipe, et ils grandissent chaque jour.
 ## Les clubs connus (noms choisis à la main) ont plus de supporters.
 static func base_communaute(cle: String, connu: bool, maintenant: int) -> int:
-	var g := Fiction.graine(cle + "|pop")
+	var g := Fiction.graine(cle + "|pop")  # sans_traduction
 	connu = connu or (est_nation(cle) and cle.trim_prefix("nation:") in GRANDES_NATIONS)
 	var base := 300 + g % 2500
 	if connu:

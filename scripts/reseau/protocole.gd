@@ -44,7 +44,7 @@ const NOM_MAX := 28
 
 
 static func msg(t: String, donnees: Dictionary = {}) -> Dictionary:
-	assert(not donnees.has("t"), "« t » est réservé au type du message")
+	assert(not donnees.has("t"), "« t » est réservé au type du message")  # sans_traduction
 	var m := donnees.duplicate()
 	m["t"] = t
 	return m
@@ -182,7 +182,7 @@ static func profil_propre(m: Dictionary) -> Dictionary:
 		couleurs.append(Color.from_string(str(c), Color("#ff4b4b")))
 	while couleurs.size() < 2:
 		couleurs.append(Color("#ff4b4b") if couleurs.is_empty() else Color.WHITE)
-	var re := RegEx.create_from_string("^[A-Za-z0-9_]{1,16}$")
+	var re := RegEx.create_from_string("^[A-Za-z0-9_]{1,16}$")  # sans_traduction
 	var equipe: Array = []
 	for id in m.get("equipe", []).slice(0, 3):
 		var s := str(id)

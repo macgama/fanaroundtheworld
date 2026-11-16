@@ -3,9 +3,9 @@ extends Control
 ## Les trois FANZZY de la tribune deviennent les membres fondateurs.
 
 const IDEES := [
-	"Ultras du Canal", "Les Gosiers d'Acier", "Brigade du Kop", "Les Écharpes Folles",
-	"Tribune du Phare", "Les Tambours du Port", "Virage Soleil", "Les Insomniaques",
-	"Club des Cent Voix", "Les Rugissants", "Kop des Ruelles", "Les Mouettes Hurlantes",
+	"Ultras du Canal", "Les Gosiers d'Acier", "Brigade du Kop", "Les Écharpes Folles",  # sans_traduction
+	"Tribune du Phare", "Les Tambours du Port", "Virage Soleil", "Les Insomniaques",  # sans_traduction
+	"Club des Cent Voix", "Les Rugissants", "Kop des Ruelles", "Les Mouettes Hurlantes",  # sans_traduction
 ]
 
 var _nom: LineEdit
@@ -123,7 +123,7 @@ func _ready() -> void:
 	apercu.custom_minimum_size = Vector2(620, 0)
 	apercu.alignment = BoxContainer.ALIGNMENT_CENTER
 	milieu.add_child(apercu)
-	_ecusson = Ui.ecusson("UC", Color(_c1), Color(_c2), 260) as Ui.Ecusson
+	_ecusson = Ui.ecusson("UC", Color(_c1), Color(_c2), 260) as Ui.Ecusson  # sans_traduction
 	_ecusson.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 	apercu.add_child(_ecusson)
 	_banniere = PanelContainer.new()

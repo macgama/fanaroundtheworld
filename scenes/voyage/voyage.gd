@@ -42,10 +42,10 @@ func _ready() -> void:
 	add_child(bandeau)
 	var v := Ui.vbox(4)
 	bandeau.add_child(v)
-	var t := Ui.label("En route vers %s" % _fiche["stade"]["nom"], 40, Ui.JAUNE, true, 8)
+	var t := Ui.label(tr("En route vers %s") % _fiche["stade"]["nom"], 40, Ui.JAUNE, true, 8)
 	t.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	v.add_child(t)
-	_info = Ui.label("%s – %s · %d km" % [_fiche["dom"]["nom"], _fiche["ext"]["nom"], int(dist)], 22, Ui.BLANC)
+	_info = Ui.label(tr("%s – %s · %d km") % [_fiche["dom"]["nom"], _fiche["ext"]["nom"], int(dist)], 22, Ui.BLANC)
 	_info.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	v.add_child(_info)
 

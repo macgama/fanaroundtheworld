@@ -79,6 +79,8 @@ func _ready() -> void:
 			_max_boutons = int(a.trim_prefix("--boutons="))
 	var sauvegarde := FileAccess.get_file_as_string(Game.CHEMIN_SAUVEGARDE)
 	var tuto := FileAccess.get_file_as_string(Tutoriel.CHEMIN)
+	var options := FileAccess.get_file_as_string(Reglages.CHEMIN)  # langue, volumes
+	var langue := TranslationServer.get_locale()
 	Tutoriel.passer()
 	Game.jetons = 5000
 	for nom in _ecrans:
@@ -87,6 +89,10 @@ func _ready() -> void:
 		await _tester(nom)
 	_restaurer(Game.CHEMIN_SAUVEGARDE, sauvegarde)
 	_restaurer(Tutoriel.CHEMIN, tuto)
+	_restaurer(Reglages.CHEMIN, options)
+	TranslationServer.set_locale(langue)
+	for t in _francais:
+		print("FRANÇAIS RESTANT [%s] %s" % [_francais[t], JSON.stringify(t)])
 	print("Tests écrans : %s" % ("OK" if _echecs == 0 else "%d ÉCHEC(S)" % _echecs))
 	get_tree().quit(1 if _echecs else 0)
 
@@ -247,6 +253,30 @@ func _noter(ecran: String, quoi: String) -> void:
 			continue
 		_echecs += 1
 		printerr("ÉCHEC [%s] %s : %s" % [ecran, quoi, t])
+	if not TranslationServer.get_locale().begins_with("fr"):
+		_chercher_francais(get_tree().root, ecran)
+
+
+## Dans une autre langue (« -- --langue=en ») : liste les textes affichés qui
+## ont encore l'air français (rapport à la fin, pas un échec : les noms de
+## clubs et de stades fictifs restent en français).
+var _francais := {}
+var _re_fr := RegEx.create_from_string("(?i)[éèêàçùûôîœ]|\\b(le|la|les|des|du|et|ton|ta|tes|une|pour|avec|est|sur|dans|pas|aux|jetons|tribune|joue|gagne)\\b")
+
+func _chercher_francais(n: Node, ecran: String) -> void:
+	if n is CanvasItem and not (n as CanvasItem).visible:
+		return
+	var t := ""
+	if n is Label or n is Button or n is RichTextLabel:
+		t = str(n.get("text"))
+	elif n is LineEdit:
+		t = (n as LineEdit).placeholder_text
+	if t != "":
+		var vu := (n as Node).atr(t) if n.can_auto_translate() else t
+		if _re_fr.search(vu) != null and not _francais.has(vu):
+			_francais[vu] = "%s · %s" % [ecran, n.get_path()]
+	for c in n.get_children():
+		_chercher_francais(c, ecran)
 
 
 func _attendre(s: float) -> void:

@@ -76,7 +76,7 @@ static func chants() -> Dictionary:
 	if _chants_cache.is_empty():
 		var f := FileAccess.open(CHEMIN_CHANTS, FileAccess.READ)
 		if f == null:
-			push_warning("Rythme : %s introuvable" % CHEMIN_CHANTS)
+			push_warning("Rythme : %s introuvable" % CHEMIN_CHANTS)  # sans_traduction
 			return {}
 		var d = JSON.parse_string(f.get_as_text())
 		if d is Dictionary:

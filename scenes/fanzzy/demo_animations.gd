@@ -103,7 +103,7 @@ func _manuel(action: StringName) -> void:
 		_etape = -1
 		_suivante()
 		return
-	_legende.text = "Action : %s" % action
+	_legende.text = tr("Action : %s") % action
 	if action == &"ola":
 		_lancer(&"ola", &"ola", 4.0)
 	else:
