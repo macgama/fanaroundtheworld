@@ -92,9 +92,9 @@ func _ready() -> void:
 	bas.add_child(retour)
 	for c in _data["chapitres"].size():
 		var ch: Dictionary = _data["chapitres"][c]
-		var b := Ui.bouton("Ch. %d · %s" % [c + 1, ch["nom"]], Ui.NUIT_CLAIR, 20)
+		var b := Ui.bouton(tr("Ch. %d · %s") % [c + 1, ch["nom"]], Ui.NUIT_CLAIR, 20)
 		b.custom_minimum_size = Vector2(0, 64)
-		b.tooltip_text = "Paliers %d à %d · thème %s" % [int(ch["premier"]), int(ch["premier"]) + 24, ch["theme_nom"]]
+		b.tooltip_text = tr("Paliers %d à %d · thème %s") % [int(ch["premier"]), int(ch["premier"]) + 24, ch["theme_nom"]]
 		b.pressed.connect(_aller_palier.bind(int(ch["premier"])))
 		bas.add_child(b)
 	_b_tout = Ui.bouton("", Ui.JAUNE, 28)
@@ -142,13 +142,13 @@ func _remplir() -> void:
 		c.queue_free()
 	var titre := Ui.vbox(2)
 	titre.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	titre.add_child(Ui.label("SAISON %d" % int(_data["numero"]), 72, Ui.BLANC, true, 12))
+	titre.add_child(Ui.label(tr("SAISON %d") % int(_data["numero"]), 72, Ui.BLANC, true, 12))
 	var ch: Dictionary = _data["chapitres"][PassSaison.chapitre_du_jour(_data, t)]
-	var sous := "Suit la vraie saison de foot · fin dans %d j" % PassSaison.jours_restants(_data, t)
+	var sous := tr("Suit la vraie saison de foot · fin dans %d j") % PassSaison.jours_restants(_data, t)
 	if PassSaison.en_intersaison(_data, t):
-		sous = "Intersaison : ton XP est mise de côté pour la prochaine saison (%d / %d)" % [int(Game.etat_pass["report"]), PassSaison.REPORT_MAX]
+		sous = tr("Intersaison : ton XP est mise de côté pour la prochaine saison (%d / %d)") % [int(Game.etat_pass["report"]), PassSaison.REPORT_MAX]
 	titre.add_child(Ui.label(sous, 24, Ui.BLANC, true, 6))
-	titre.add_child(Ui.label("Chapitre %d · %s (thème %s)" % [_data["chapitres"].find(ch) + 1, ch["nom"], ch["theme_nom"]], 20, Ui.JAUNE, true, 5))
+	titre.add_child(Ui.label(tr("Chapitre %d · %s (thème %s)") % [_data["chapitres"].find(ch) + 1, ch["nom"], ch["theme_nom"]], 20, Ui.JAUNE, true, 5))
 	_haut.add_child(titre)
 
 	var bp := Ui.panneau(Ui.NUIT, 24, 6)
@@ -166,7 +166,7 @@ func _remplir() -> void:
 	hn.add_child(sur)
 	vp.add_child(hn)
 	if PassSaison.paliers_bonus(xp) > 0:
-		var lb := Ui.label("+ %d bonus" % PassSaison.paliers_bonus(xp), 18, Ui.VERT, true)
+		var lb := Ui.label(tr("+ %d bonus") % PassSaison.paliers_bonus(xp), 18, Ui.VERT, true)
 		lb.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		vp.add_child(lb)
 	_haut.add_child(bp)
@@ -176,7 +176,7 @@ func _remplir() -> void:
 	bx.custom_minimum_size.x = 420
 	var vx := Ui.vbox(6)
 	bx.add_child(vx)
-	var vers := "XP vers le palier %d" % (pal + 1) if pal < PassSaison.PALIERS else "XP vers le palier bonus %d" % (PassSaison.paliers_bonus(xp) + 1)
+	var vers := tr("XP vers le palier %d") % (pal + 1) if pal < PassSaison.PALIERS else tr("XP vers le palier bonus %d") % (PassSaison.paliers_bonus(xp) + 1)
 	vx.add_child(Ui.label(vers, 22, Ui.BLANC, true))
 	var barre := ProgressBar.new()
 	barre.custom_minimum_size = Vector2(380, 22)
@@ -186,9 +186,9 @@ func _remplir() -> void:
 	barre.add_theme_stylebox_override("background", Ui.boite(Color("#1a1640"), 10, 3))
 	barre.add_theme_stylebox_override("fill", Ui.boite(COULEUR_PREMIUM, 10, 0))
 	vx.add_child(barre)
-	vx.add_child(Ui.label("%d / %d · Missions, duels, stades, pronostics" % [int(barre.value), PassSaison.XP_PAR_PALIER], 18, Ui.BLANC, true))
+	vx.add_child(Ui.label(tr("%d / %d · Missions, duels, stades, pronostics") % [int(barre.value), PassSaison.XP_PAR_PALIER], 18, Ui.BLANC, true))
 	if Game.rattrapage_pass():
-		var r := Ui.label("Rattrapage : missions à double XP (rythme : palier %d)" % PassSaison.palier_attendu(_data, t), 17, Ui.VERT, true, 4)
+		var r := Ui.label(tr("Rattrapage : missions à double XP (rythme : palier %d)") % PassSaison.palier_attendu(_data, t), 17, Ui.VERT, true, 4)
 		r.tooltip_text = "Tu es en retard sur le rythme de la saison : tes missions rapportent double XP jusqu'à ce que tu rattrapes."
 		r.mouse_filter = Control.MOUSE_FILTER_PASS
 		vx.add_child(r)
@@ -205,7 +205,7 @@ func _remplir() -> void:
 	_remplir_premium()
 	_remplir_piste()
 	var n := Game.pass_a_recuperer()
-	_b_tout.text = "Tout récupérer · %d" % n if n > 0 else "Rien à récupérer"
+	_b_tout.text = tr("Tout récupérer · %d") % n if n > 0 else tr("Rien à récupérer")
 	_b_tout.disabled = n == 0
 	Ui.colorer_bouton(_b_tout, Ui.JAUNE if n > 0 else Ui.NUIT_CLAIR, n > 0)
 
@@ -237,7 +237,7 @@ func _remplir_premium() -> void:
 	img.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	img.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	img.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-	img.tooltip_text = "Palier 100 Premium : %s" % dernier.get("nom", "")
+	img.tooltip_text = tr("Palier 100 Premium : %s") % dernier.get("nom", "")
 	v.add_child(img)
 	for ligne in [
 		[true, "100 paliers de récompenses"],
@@ -258,7 +258,7 @@ func _remplir_premium() -> void:
 		ok.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 		v.add_child(ok)
 	else:
-		var b := Ui.bouton("ACHETER · %s" % PassSaison.PRIX, Ui.JAUNE, 32)
+		var b := Ui.bouton(tr("ACHETER · %s") % PassSaison.PRIX, Ui.JAUNE, 32)
 		Ui.colorer_bouton(b, Ui.JAUNE, true)
 		b.custom_minimum_size = Vector2(0, 78)
 		b.tooltip_text = "Vendu sur Steam comme un DLC, payé en euros. Pas de monnaie virtuelle, pas de paliers à acheter."
@@ -274,7 +274,7 @@ func _acheter() -> void:
 	if Game.acheter_premium():
 		_annoncer("Achat dans Steam : le Premium s'active dès que Steam confirme.")
 	else:
-		_annoncer("Le PASS Premium sera vendu sur Steam (DLC à %s) à la sortie du jeu." % PassSaison.PRIX)
+		_annoncer(tr("Le PASS Premium sera vendu sur Steam (DLC à %s) à la sortie du jeu.") % PassSaison.PRIX)
 
 
 # ---------------------------------------------------------------- piste des paliers
@@ -315,7 +315,7 @@ func _colonne(p: int, pal: int) -> Control:
 	ent.custom_minimum_size = Vector2(LARGEUR_COL, 44)
 	if p % 25 == 1:
 		var ch: Dictionary = _data["chapitres"][PassSaison.chapitre_du_palier(p)]
-		ent.tooltip_text = "Chapitre %d · %s" % [PassSaison.chapitre_du_palier(p) + 1, ch["nom"]]
+		ent.tooltip_text = tr("Chapitre %d · %s") % [PassSaison.chapitre_du_palier(p) + 1, ch["nom"]]
 	v.add_child(ent)
 	for piste in ["gratuit", "premium"]:
 		v.add_child(_carte(p, piste, atteint))
@@ -423,7 +423,7 @@ func _colonne_bonus() -> Control:
 	var ic := Ui.icone("jeton", 70)
 	ic.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 	vv.add_child(ic)
-	var l := Ui.label("Paliers bonus\n+%d Jetons\ntous les %d XP" % [PassSaison.JETONS_PALIER_BONUS, PassSaison.XP_PAR_PALIER], 18, Ui.BLANC, true, 4)
+	var l := Ui.label(tr("Paliers bonus\n+%d Jetons\ntous les %d XP") % [PassSaison.JETONS_PALIER_BONUS, PassSaison.XP_PAR_PALIER], 18, Ui.BLANC, true, 4)
 	l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	vv.add_child(l)
 	v.add_child(p)
@@ -473,27 +473,27 @@ func _visuel(r: Dictionary, theme: String) -> Control:
 func _titre_carte(r: Dictionary) -> String:
 	match str(r["type"]):
 		"jetons":
-			return "%d Jetons" % int(r["n"])
+			return tr("%d Jetons") % int(r["n"])
 		"recrue":
 			var z := Game.fanzzy_par_id(str(r["fanzzy"]))
-			return "Recrue%s\n%s" % [" légendaire" if z.get("rarete", "") == "legendaire" else "", r["nom"]]
+			return tr("Recrue%s\n%s") % [tr(" légendaire") if z.get("rarete", "") == "legendaire" else "", r["nom"]]
 	return str(r["nom"])
 
 
 func _info(r: Dictionary, p: int, piste: String, dispo: bool, recue: bool, bloque: bool) -> String:
-	var t := "Palier %d · %s\n" % [p, "piste Premium" if piste == "premium" else "piste gratuite"]
+	var t := tr("Palier %d · %s\n") % [p, tr("piste Premium") if piste == "premium" else tr("piste gratuite")]
 	match str(r["type"]):
 		"jetons":
-			t += "%d Jetons pour tes billets et trajets." % int(r["n"])
+			t += tr("%d Jetons pour tes billets et trajets.") % int(r["n"])
 		"recrue":
 			var z := Game.fanzzy_par_id(str(r["fanzzy"]))
-			t += "Nouveau FANZZY jouable : %s (%s).\n%s" % [r["nom"], Game.nom_famille(z.get("famille", "")), z.get("histoire", "")]
+			t += tr("Nouveau FANZZY jouable : %s (%s).\n%s") % [r["nom"], Game.nom_famille(z.get("famille", "")), z.get("histoire", "")]
 		"skin":
-			t += "Skin (cosmétique) : %s." % r["nom"]
+			t += tr("Skin (cosmétique) : %s.") % r["nom"]
 		"tribune":
 			t += "%s : %s." % [r["nom"], ", ".join(r["skins"].map(func(s): return s["nom"]))]
 		var type:
-			t += "%s : %s.\nObjet d'apparence, à retrouver bientôt dans ton local et ta tribune." % [PassSaison.TYPES_OBJETS.get(type, "Objet"), r["nom"]]
+			t += tr("%s : %s.\nObjet d'apparence, à retrouver bientôt dans ton local et ta tribune.") % [PassSaison.TYPES_OBJETS.get(type, tr("Objet")), r["nom"]]
 	if recue:
 		t += "\nDéjà récupéré."
 	elif bloque:
@@ -501,7 +501,7 @@ func _info(r: Dictionary, p: int, piste: String, dispo: bool, recue: bool, bloqu
 	elif dispo:
 		t += "\nClique pour récupérer."
 	else:
-		t += "\nEncore %d XP." % maxi(0, (p - 1) * PassSaison.XP_PAR_PALIER - Game.xp_pass)
+		t += tr("\nEncore %d XP.") % maxi(0, (p - 1) * PassSaison.XP_PAR_PALIER - Game.xp_pass)
 	return t
 
 
@@ -512,11 +512,11 @@ func _cliquer(p: int, piste: String) -> void:
 		_annoncer_gain(g)
 		_remplir()
 	elif PassSaison.recue(Game.etat_pass, p, piste):
-		_annoncer("%s : déjà récupéré." % _titre_carte(r).replace("\n", " "))
+		_annoncer(tr("%s : déjà récupéré.") % _titre_carte(r).replace("\n", " "))
 	elif piste == "premium" and not bool(Game.etat_pass["premium"]):
-		_annoncer("Palier %d Premium : %s. Avec le PASS Premium (%s)." % [p, _titre_carte(r).replace("\n", " "), PassSaison.PRIX])
+		_annoncer(tr("Palier %d Premium : %s. Avec le PASS Premium (%s).") % [p, _titre_carte(r).replace("\n", " "), PassSaison.PRIX])
 	else:
-		_annoncer("Palier %d : encore %d XP." % [p, maxi(0, (p - 1) * PassSaison.XP_PAR_PALIER - Game.xp_pass)])
+		_annoncer(tr("Palier %d : encore %d XP.") % [p, maxi(0, (p - 1) * PassSaison.XP_PAR_PALIER - Game.xp_pass)])
 
 
 func _tout_recuperer() -> void:
@@ -531,7 +531,7 @@ func _tout_recuperer() -> void:
 func _annoncer_gain(g: Dictionary) -> void:
 	if g.is_empty():
 		return
-	var txt := "Récupéré : " + PassSaison.resume(g)
+	var txt := tr("Récupéré : ") + PassSaison.resume(g)
 	if g["skins"].size() > 0:
 		txt += " · à choisir dans « FANZZY »"
 	elif g["fanzzy"].size() > 0:

@@ -23,5 +23,6 @@
 	"SUPER : %s": "SUPER: %s",
 	"super %d %%": "super %d %%",
 	"roulade prête": "roll ready",
-	"roulade %.1f s": "roll %.1f s"
+	"roulade %.1f s": "roll %.1f s",
+	"XP du PASS": "PASS XP"
 }

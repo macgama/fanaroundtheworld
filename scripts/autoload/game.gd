@@ -728,7 +728,7 @@ func actualiser_pass() -> void:
 func _dlc_premium_installe() -> bool:
 	if DLC_PASS_PREMIUM <= 0 or not Engine.has_singleton("Steam"):
 		return false
-	return bool(Engine.get_singleton("Steam").call("isDLCInstalled", DLC_PASS_PREMIUM))
+	return bool(Engine.get_singleton("Steam").call("isDLCInstalled", DLC_PASS_PREMIUM))  # sans_traduction
 
 
 ## Ajoute de l'XP de PASS et renvoie celle vraiment gagnée. Missions : double
@@ -842,7 +842,7 @@ func reclamer_tournoi() -> Dictionary:
 func preparer_bouton_pass(b: Button, p: Dictionary) -> void:
 	var n := pass_a_recuperer()
 	if n > 0:
-		b.text = "PASS · %d" % n
+		b.text = tr("PASS · %d") % n
 		Ui.colorer_bouton(b, Ui.JAUNE, true)
 	b.tooltip_text = "PASS saisonnier : 100 paliers de récompenses"
 	b.pressed.connect(func(): aller(SCENE_PASS, p))
@@ -852,7 +852,7 @@ func preparer_bouton_pass(b: Button, p: Dictionary) -> void:
 func acheter_premium() -> bool:
 	if DLC_PASS_PREMIUM <= 0 or not Engine.has_singleton("Steam"):
 		return false
-	Engine.get_singleton("Steam").call("activateGameOverlayToStore", DLC_PASS_PREMIUM, 0)
+	Engine.get_singleton("Steam").call("activateGameOverlayToStore", DLC_PASS_PREMIUM, 0)  # sans_traduction
 	return true
 
 
