@@ -846,6 +846,7 @@ func _finir(res: int, pourquoi: String) -> void:
 		["Bonus « ton équipe gagne vraiment »", "x1,3" if g["equipe_gagne"] else "non"],
 		[Game.libelle_rejeu(g["part"]), "+%d" % g["jetons"]],
 		["XP du fan club", "+%d" % g["xp"]],
+		["XP du PASS", "+%d" % g["xp_pass"]],
 	] + FinDuel.ligne_popularite(g) + FinDuel.lignes_evenement(g["evenement"]), Game.SCENE_SALON if en_ligne and Reseau.connecte() else Game.SCENE_POUSSEE)
 
 

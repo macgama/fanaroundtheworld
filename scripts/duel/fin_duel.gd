@@ -39,6 +39,7 @@ static func enregistrer(gagne: bool, perf: float, fiche: Dictionary, camp: Strin
 	g["equipe"] = fiche.get("dom" if camp == "home" else "ext", {}).get("nom", "")
 	Game.gagner_jetons(g["jetons"])
 	Game.ajouter_xp(g["xp"])
+	g["xp_pass"] = Game.xp_pass_duel(gagne, perf, g["part"])
 	g["evenement"] = Game.recompense_evenement(fiche.get("m", {}), int(g["jetons"]))
 	return g
 

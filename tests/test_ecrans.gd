@@ -56,6 +56,7 @@ var _ecrans := {
 	"album": [Game.SCENE_COLLECTION, {"onglet": "album"}, []],
 	"salon": [Game.SCENE_SALON, {}, []],
 	"classement": [Game.SCENE_CLASSEMENT, {}, []],
+	"pass": [Game.SCENE_PASS, {}, [KEY_RIGHT, KEY_LEFT, KEY_ESCAPE]],
 }
 
 var _compteur := Compteur.new()

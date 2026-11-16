@@ -32,6 +32,7 @@ const SCENE_SALON := "res://scenes/salon/salon.tscn"
 const SCENE_MISSIONS := "res://scenes/missions/missions.tscn"
 const SCENE_COLLECTION := "res://scenes/collection/collection.tscn"
 const SCENE_CLASSEMENT := "res://scenes/classement/classement.tscn"
+const SCENE_PASS := "res://scenes/pass/pass.tscn"
 
 ## Paramètres passés d'un écran à l'autre (match choisi, camp supporté…).
 var params: Dictionary = {}
@@ -66,6 +67,12 @@ var supporters: Dictionary = Supporters.vide()
 ## Missions du jour et de la semaine (voir Missions) et XP du PASS saisonnier.
 var missions: Dictionary = Missions.vide()
 var xp_pass := 0
+## PASS saisonnier (voir PassSaison) : saison, Premium, récompenses récupérées, skins et recrues gagnés.
+var etat_pass: Dictionary = PassSaison.vide()
+## Paliers de la saison en cours (data/pass/), ou {} si elle n'est pas prête.
+var pass_data: Dictionary = {}
+## Identifiant Steam du DLC « PASS Premium » (0 tant qu'il n'est pas créé dans Steamworks).
+const DLC_PASS_PREMIUM := 0
 ## Carnet de voyage et album des FANZZY : primes réclamées, FANZZY et skins vus en duel (voir Collection).
 var collection: Dictionary = Collection.vide()
 ## Duels joués par match aujourd'hui (id -> {jour, n}) : rejouer le même match rapporte de moins en moins.
@@ -89,7 +96,8 @@ const ORDRE_MODES := ["stade", "ecran", "pub", "maison"]
 # --- Catalogue FANZZY (échantillon du prototype) ---
 var familles: Dictionary = {}
 var series_fanzzy: Dictionary = {}  # id de série -> {nom, ligne, couleur}
-var fanzzy: Array = []
+var fanzzy: Array = []             # FANZZY jouables (les recrues du PASS une fois débloquées)
+var _fanzzy_tous: Array = []
 var _fanzzy_par_id: Dictionary = {}
 
 ## Les trois postes de la tribune et les familles qui peuvent les tenir.
@@ -105,6 +113,7 @@ func _ready() -> void:
 	get_tree().root.theme = Ui.creer_theme()
 	_charger_fanzzy()
 	charger()
+	actualiser_pass()
 	if equipe.size() != 3:
 		equipe = equipe_par_defaut()
 	_brancher_pronostics.call_deferred()
@@ -132,7 +141,7 @@ func _outils_de_test() -> void:
 		var scenes := {"carte": SCENE_CARTE, "voyage": SCENE_VOYAGE, "tribune": SCENE_TRIBUNE, "duel": SCENE_DUEL,
 			"arene": SCENE_ARENE, "poussee": SCENE_POUSSEE,
 			"pronos": SCENE_PRONOS, "missions": SCENE_MISSIONS, "favoris": SCENE_FAVORIS, "club": SCENE_CLUB, "creation": SCENE_CREATION_CLUB, "buvette": SCENE_BUVETTE, "boulots": SCENE_BOULOTS, "speaker": SCENE_SPEAKER, "tifo": SCENE_TIFO,
-			"salon": SCENE_SALON, "collection": SCENE_COLLECTION, "classement": SCENE_CLASSEMENT}
+			"salon": SCENE_SALON, "collection": SCENE_COLLECTION, "classement": SCENE_CLASSEMENT, "pass": SCENE_PASS}
 		for b in ListeBoulots.LISTE:
 			scenes[b["id"]] = b["scene"]  # chaque petit boulot : --scene=<id>
 		if args.has("onglet"):
@@ -143,6 +152,10 @@ func _outils_de_test() -> void:
 				p["auto"] = true
 			p["jeu"] = args.get("jeu", "duel")  # jeu lancé tout seul par l'hôte en test
 		aller.call_deferred(scenes.get(args["scene"], SCENE_TITRE), p)
+	if args.has("xp-pass"):
+		xp_pass = int(args["xp-pass"])  # captures et tests du PASS
+	if args.has("premium"):
+		etat_pass["premium"] = true
 	if args.has("vitesse"):
 		Engine.time_scale = float(args["vitesse"])  # accélère une partie de démo
 	if args.has("capture"):
@@ -283,6 +296,7 @@ func tamponner(cle: String, info: Dictionary) -> bool:
 	if tampons.has(cle):
 		return false
 	tampons[cle] = info
+	gagner_xp_pass(PassSaison.XP_NOUVEAU_STADE)
 	noter_mission("nouveau_stade", cle)
 	sauver()
 	return true
@@ -433,6 +447,7 @@ func resoudre_pronostics() -> void:
 		p["popularite"] = pop
 		_annoncer(pop, "prono")
 		if bool(r.get("resultat_ok", false)):
+			p["xp_pass"] = gagner_xp_pass(PassSaison.XP_PRONO_EXACT if bool(r.get("score_ok", false)) else PassSaison.XP_PRONO_BON)
 			noter_mission("prono_bon")
 		pronos.erase(id)
 		pronos_finis.push_front(p)
@@ -536,7 +551,7 @@ func actualiser_missions() -> Dictionary:
 	var verse := Missions.actualiser(missions, heure_locale(), _ctx_missions())
 	if int(verse["jetons"]) > 0 or int(verse["xp_pass"]) > 0:
 		jetons += int(verse["jetons"])
-		xp_pass += int(verse["xp_pass"])
+		verse["xp_pass"] = gagner_xp_pass(int(verse["xp_pass"]), true)
 		sauver()
 	return verse
 
@@ -556,7 +571,7 @@ func recuperer_mission(periode: String, index: int) -> Dictionary:
 	var g := Missions.recuperer(missions, periode, index)
 	if not g.is_empty():
 		jetons += int(g["jetons"])
-		xp_pass += int(g["xp_pass"])
+		g["xp_pass"] = gagner_xp_pass(int(g["xp_pass"]), true)
 		sauver()
 	return g
 
@@ -640,10 +655,94 @@ func recompense_evenement(m: Dictionary, jetons_duel: int) -> Dictionary:
 	Evenements.nettoyer_primes(primes, maintenant())
 	evenements["primes"] = primes
 	jetons += int(r["bonus"]) + int(r["prime_jetons"])
-	xp_pass += int(r["prime_xp"])
+	r["prime_xp"] = gagner_xp_pass(int(r["prime_xp"]))
 	noter_mission("evenement", str(ev["type"]))
 	sauver()
 	return r
+
+
+# ---------------------------------------------------------------- PASS saisonnier
+
+## Change de saison si besoin (l'XP mise de côté pendant l'intersaison passe à
+## la nouvelle saison) et lit les paliers de la saison en cours.
+func actualiser_pass() -> void:
+	var saison := PassSaison.saison_de(heure_locale())
+	var report := PassSaison.changer_saison(etat_pass, saison)
+	if report >= 0:
+		xp_pass = report
+	if pass_data.get("saison", "") != saison:
+		pass_data = PassSaison.charger(saison)
+	if not bool(etat_pass["premium"]) and _dlc_premium_installe():
+		etat_pass["premium"] = true
+	if report >= 0 or bool(etat_pass["premium"]):
+		sauver()
+
+
+func _dlc_premium_installe() -> bool:
+	if DLC_PASS_PREMIUM <= 0 or not Engine.has_singleton("Steam"):
+		return false
+	return bool(Engine.get_singleton("Steam").call("isDLCInstalled", DLC_PASS_PREMIUM))
+
+
+## Ajoute de l'XP de PASS et renvoie celle vraiment gagnée. Missions : double
+## pendant le rattrapage. Intersaison : mise de côté pour la saison suivante.
+func gagner_xp_pass(n: int, mission := false) -> int:
+	if n <= 0:
+		return 0
+	var t := heure_locale()
+	if PassSaison.en_intersaison(pass_data, t):
+		etat_pass["report"] = mini(int(etat_pass["report"]) + n, PassSaison.REPORT_MAX)
+		return n
+	if mission and PassSaison.rattrapage(pass_data, xp_pass, t):
+		n *= 2
+	xp_pass += n
+	return n
+
+
+## XP de PASS d'une partie (duel d'ambiance, Arène, Poussée), déjà versée.
+func xp_pass_duel(gagne: bool, perf: float, part: float) -> int:
+	var n := gagner_xp_pass(PassSaison.xp_duel(gagne, perf, part))
+	sauver()
+	return n
+
+
+func rattrapage_pass() -> bool:
+	return PassSaison.rattrapage(pass_data, xp_pass, heure_locale())
+
+
+func pass_a_recuperer() -> int:
+	return PassSaison.nb_a_recuperer(pass_data, etat_pass, xp_pass)
+
+
+## Récupère une récompense du PASS (ou toutes si `p` vaut 0).
+func recuperer_pass(p := 0, piste := "") -> Dictionary:
+	var g := PassSaison.recuperer_tout(pass_data, etat_pass, xp_pass) if p <= 0 else PassSaison.recuperer(pass_data, etat_pass, xp_pass, p, piste)
+	if g.is_empty():
+		return g
+	jetons += int(g["jetons"])
+	if g["fanzzy"].size() > 0:
+		_filtrer_fanzzy()
+	sauver()
+	return g
+
+
+## Bouton « PASS » de la barre du bas (carte, fan club) : passe au jaune avec
+## le nombre de récompenses à récupérer. `p` : paramètres du retour.
+func preparer_bouton_pass(b: Button, p: Dictionary) -> void:
+	var n := pass_a_recuperer()
+	if n > 0:
+		b.text = "PASS · %d" % n
+		Ui.colorer_bouton(b, Ui.JAUNE, true)
+	b.tooltip_text = "PASS saisonnier : 100 paliers de récompenses"
+	b.pressed.connect(func(): aller(SCENE_PASS, p))
+
+
+## Ouvre la page du DLC dans Steam. Renvoie false si l'achat n'est pas encore possible.
+func acheter_premium() -> bool:
+	if DLC_PASS_PREMIUM <= 0 or not Engine.has_singleton("Steam"):
+		return false
+	Engine.get_singleton("Steam").call("activateGameOverlayToStore", DLC_PASS_PREMIUM, 0)
+	return true
 
 
 # ---------------------------------------------------------------- collection
@@ -695,9 +794,20 @@ func _charger_fanzzy() -> void:
 	if d is Dictionary:
 		familles = d.get("familles", {})
 		series_fanzzy = d.get("series", {})
-		fanzzy = d.get("fanzzy", [])
-		for z in fanzzy:
+		_fanzzy_tous = d.get("fanzzy", [])
+		for z in _fanzzy_tous:
 			_fanzzy_par_id[z["id"]] = z
+		_filtrer_fanzzy()
+
+
+## Les recrues du PASS ne sont jouables qu'une fois récupérées sur la piste gratuite.
+func _filtrer_fanzzy() -> void:
+	fanzzy = _fanzzy_tous.filter(func(z): return not z.has("pass") or z["id"] in etat_pass["fanzzy"])
+
+
+## Tous les FANZZY du catalogue, recrues du PASS encore bloquées comprises.
+func fanzzy_catalogue() -> Array:
+	return _fanzzy_tous
 
 
 func fanzzy_par_id(id: String) -> Dictionary:
@@ -721,9 +831,22 @@ func skin_de(id: String) -> String:
 	return skins.get(id, id)
 
 
+## Skins qu'on peut choisir pour ce FANZZY : ses évolutions, puis les skins gagnés dans le PASS.
+func skins_possibles(z: Dictionary) -> Array:
+	var res: Array = z["skins"].duplicate()
+	for s in PassSaison.skins_de(etat_pass, z["id"]):
+		res.append({"id": s["skin"], "nom": s["nom"]})
+	return res
+
+
 func texture_fanzzy(id: String, buste := false) -> Texture2D:
-	var chemin := "res://assets/fanzzy/sprites/%s%s.webp" % [skin_de(id), "-buste" if buste else ""]
-	if ResourceLoader.exists(chemin):
+	return texture_skin(skin_de(id), buste)
+
+
+## Image d'un skin précis (skin de base, évolution ou skin du PASS).
+func texture_skin(skin: String, buste := false) -> Texture2D:
+	var chemin := "res://assets/fanzzy/sprites/%s%s.webp" % [skin, "-buste" if buste else ""]
+	if not skin.is_empty() and ResourceLoader.exists(chemin):
 		return load(chemin)
 	return null
 
@@ -760,6 +883,7 @@ func sauver() -> void:
 		"supporters": supporters,
 		"missions": missions,
 		"xp_pass": xp_pass,
+		"pass": etat_pass,
 		"collection": collection,
 		"duels_par_match": duels_par_match,
 		"evenements": evenements,
@@ -801,6 +925,12 @@ func charger() -> void:
 	supporters = Supporters.reparer(d.get("supporters", null))
 	missions = Missions.reparer(d.get("missions", null))
 	xp_pass = int(d.get("xp_pass", 0))
+	etat_pass = PassSaison.reparer(d.get("pass", null))
+	_filtrer_fanzzy()
+	# Un skin du PASS retiré ou un FANZZY bloqué ne doit pas casser la tribune.
+	for id in skins.keys():
+		if texture_skin(str(skins[id])) == null:
+			skins.erase(id)
 	collection = Collection.reparer(d.get("collection", null))
 	var dm: Variant = d.get("duels_par_match", {})
 	duels_par_match = dm if dm is Dictionary else {}
@@ -835,6 +965,9 @@ func reinitialiser() -> void:
 	supporters = Supporters.vide()
 	missions = Missions.vide()
 	xp_pass = 0
+	etat_pass = PassSaison.vide()
+	_filtrer_fanzzy()
+	actualiser_pass()
 	collection = Collection.vide()
 	duels_par_match = {}
 	evenements = {"primes": {}}

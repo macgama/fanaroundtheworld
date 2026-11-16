@@ -31,8 +31,10 @@ récompenses prêtes). Logique : `scripts/jeu/missions.gd`, écran :
 Le PASS compte 100 paliers de 1 000 XP (`Game.xp_pass`, sauvegardé), d'août
 à fin mai. Avec les seules missions, un joueur qui vient tous les jours gagne
 environ 2 300 XP par semaine, un joueur du week-end environ 1 300 : les
-missions font à peu près la moitié du chemin sur la saison, le reste viendra
-des duels, pronos et matchs suivis quand l'écran du PASS sera codé.
+missions font à peu près la moitié du chemin sur la saison, le reste vient
+des duels, des nouveaux stades et des pronostics justes (voir `docs/pass.md`).
+Pendant le **rattrapage** du PASS (joueur en retard sur le rythme de la saison),
+l'XP des missions est doublée.
 
 ## Ce qui fait avancer les missions
 
