@@ -20,6 +20,7 @@ const SCENE_DUEL := "res://scenes/duel/duel.tscn"
 const SCENE_ARENE := "res://scenes/arene/arene.tscn"
 const SCENE_POUSSEE := "res://scenes/poussee/poussee.tscn"
 const SCENE_BUVETTE := "res://scenes/buvette/buvette.tscn"
+const SCENE_ECHARPES := "res://scenes/echarpes/echarpes.tscn"
 const SCENE_CLUB := "res://scenes/club/club.tscn"
 const SCENE_CREATION_CLUB := "res://scenes/club/creation_club.tscn"
 const SCENE_PRONOS := "res://scenes/pronostics/pronostics.tscn"
@@ -47,6 +48,10 @@ var jetons := 150
 var buvette_record := 0
 var buvette_jour := ""
 var buvette_services := 0
+## Petit boulot au stand d'écharpes : meilleure paye et services faits aujourd'hui.
+var echarpes_record := 0
+var echarpes_jour := ""
+var echarpes_services := 0
 ## Membres, local et caisse du fan club (règles dans FanClub).
 var club: Dictionary = FanClub.vide()
 ## Pronostics sans mise (voir scripts/jeu/pronostics.gd).
@@ -105,7 +110,7 @@ func _ready() -> void:
 
 
 ## Options de ligne de commande pour les tests automatiques (après « -- ») :
-##   --scene=carte|voyage|tribune|duel|arene|poussee|buvette   ouvre directement un écran
+##   --scene=carte|voyage|tribune|duel|arene|poussee|buvette|echarpes   ouvre directement un écran
 ##   --capture=chemin.png --apres=3      enregistre une capture puis quitte
 func _outils_de_test() -> void:
 	var args := {}
@@ -124,7 +129,7 @@ func _outils_de_test() -> void:
 				p["auto"] = true  # Arène / Poussée : ton camp joue tout seul (démo)
 		var scenes := {"carte": SCENE_CARTE, "voyage": SCENE_VOYAGE, "tribune": SCENE_TRIBUNE, "duel": SCENE_DUEL,
 			"arene": SCENE_ARENE, "poussee": SCENE_POUSSEE,
-			"pronos": SCENE_PRONOS, "missions": SCENE_MISSIONS, "favoris": SCENE_FAVORIS, "club": SCENE_CLUB, "creation": SCENE_CREATION_CLUB, "buvette": SCENE_BUVETTE,
+			"pronos": SCENE_PRONOS, "missions": SCENE_MISSIONS, "favoris": SCENE_FAVORIS, "club": SCENE_CLUB, "creation": SCENE_CREATION_CLUB, "buvette": SCENE_BUVETTE, "echarpes": SCENE_ECHARPES,
 			"salon": SCENE_SALON, "collection": SCENE_COLLECTION, "classement": SCENE_CLASSEMENT}
 		if args.has("onglet"):
 			p["onglet"] = args["onglet"]  # collection : « carnet » ou « album »
@@ -220,6 +225,19 @@ func finir_service_buvette(paye: int) -> void:
 	buvette_jour = jour
 	buvette_record = maxi(buvette_record, paye)
 	noter_mission("buvette")
+	gagner_jetons(paye)
+
+
+## Services au stand d'écharpes déjà faits aujourd'hui (date du système).
+func services_echarpes_du_jour() -> int:
+	return echarpes_services if echarpes_jour == Time.get_date_string_from_system() else 0
+
+
+## Note la fin d'un service au stand d'écharpes et sa paye.
+func finir_service_echarpes(paye: int) -> void:
+	echarpes_services = services_echarpes_du_jour() + 1
+	echarpes_jour = Time.get_date_string_from_system()
+	echarpes_record = maxi(echarpes_record, paye)
 	gagner_jetons(paye)
 
 
@@ -700,6 +718,7 @@ func sauver() -> void:
 		"duels_joues": duels_joues,
 		"jetons": jetons,
 		"buvette": {"record": buvette_record, "jour": buvette_jour, "services": buvette_services},
+		"stand_echarpes": {"record": echarpes_record, "jour": echarpes_jour, "services": echarpes_services},
 		"club": club,
 		"pronos": pronos,
 		"pronos_finis": pronos_finis,
@@ -738,6 +757,11 @@ func charger() -> void:
 		buvette_record = int(bv.get("record", 0))
 		buvette_jour = str(bv.get("jour", ""))
 		buvette_services = int(bv.get("services", 0))
+	var se: Variant = d.get("stand_echarpes", {})
+	if se is Dictionary:
+		echarpes_record = int(se.get("record", 0))
+		echarpes_jour = str(se.get("jour", ""))
+		echarpes_services = int(se.get("services", 0))
 	club = FanClub.reparer(d.get("club", null))
 	club["membres"] = club["membres"].filter(func(id): return not fanzzy_par_id(str(id)).is_empty())
 	pronos = d.get("pronos", {})
@@ -772,6 +796,9 @@ func reinitialiser() -> void:
 	buvette_record = 0
 	buvette_jour = ""
 	buvette_services = 0
+	echarpes_record = 0
+	echarpes_jour = ""
+	echarpes_services = 0
 	club = FanClub.vide()
 	pronos = {}
 	pronos_finis = []
