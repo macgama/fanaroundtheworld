@@ -135,8 +135,7 @@ func _ready() -> void:
 	bas.add_child(b_tournoi)
 	var b_pass := Ui.bouton("PASS", Ui.NUIT_CLAIR, 30)
 	b_pass.custom_minimum_size = Vector2(210, 88)
-	b_pass.disabled = true
-	b_pass.tooltip_text = "Bientôt"
+	Game.preparer_bouton_pass(b_pass, {"retour": "club"})
 	bas.add_child(b_pass)
 
 	_message = Ui.label("", 30, Ui.BLANC, true, 8)

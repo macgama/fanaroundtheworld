@@ -57,12 +57,16 @@ func _ready() -> void:
 	Game.noter_duel_favori(m, "home", true, "stade")
 	_verifier("j_ambiance" in terminees, "duel d'ambiance joué")
 
+	_verifier(Game.xp_pass == PassSaison.XP_NOUVEAU_STADE, "XP de PASS du premier tampon (%d)" % Game.xp_pass)
 	var jetons := Game.jetons
+	var xp_avant := Game.xp_pass
 	var g := Game.recuperer_mission("jour", 0)
-	_verifier(Game.jetons == jetons + 15 and Game.xp_pass == 50 and g.get("xp_pass") == 50, "récompense versée")
+	# 50 XP, ou 100 pendant le rattrapage du PASS (joueur en retard sur la saison).
+	var xp_mission := 100 if Game.rattrapage_pass() else 50
+	_verifier(Game.jetons == jetons + 15 and g.get("xp_pass") == xp_mission and Game.xp_pass == xp_avant + xp_mission, "récompense versée (%s)" % str(g))
 	_verifier(Game.recuperer_mission("jour", 0).is_empty() and Game.jetons == jetons + 15, "une seule fois")
 	Game.charger()
-	_verifier(Game.xp_pass == 50 and Game.missions["du_jour"][0]["recuperee"], "sauvegardé")
+	_verifier(Game.xp_pass == xp_avant + xp_mission and Game.missions["du_jour"][0]["recuperee"], "sauvegardé")
 	_verifier(Missions.a_recuperer(Game.missions) == 2, "encore 2 récompenses à récupérer")
 
 	# Rejouer le même match le même jour : 100 %, 50 %, 25 %, puis rien.

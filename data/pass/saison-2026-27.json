@@ -1,0 +1,1204 @@
+{
+	"saison": "2026-27",
+	"numero": 1,
+	"titre": "Tour du monde",
+	"debut": "2026-08-01",
+	"fin": "2027-05-30",
+	"xp_par_palier": 1000,
+	"prix": "7,99 €",
+	"chapitres": [
+		{
+			"nom": "Frissons",
+			"theme": "halloween",
+			"theme_nom": "Halloween",
+			"premier": 1
+		},
+		{
+			"nom": "Âge de glace",
+			"theme": "prehistorique",
+			"theme_nom": "Préhistorique",
+			"premier": 26
+		},
+		{
+			"nom": "Fin du monde",
+			"theme": "apocalyptique",
+			"theme_nom": "Apocalyptique",
+			"premier": 51
+		},
+		{
+			"nom": "Les finales",
+			"theme": "dore",
+			"theme_nom": "Doré",
+			"premier": 76
+		}
+	],
+	"paliers": [
+		{
+			"palier": 1,
+			"gratuit": {
+				"type": "recrue",
+				"fanzzy": "VP8",
+				"nom": "Le Photographe Accrédité",
+				"rarete": "commune"
+			},
+			"premium": {
+				"type": "skin",
+				"fanzzy": "VP8",
+				"skin": "VP8_dore",
+				"nom": "Le Photographe Accrédité · Doré"
+			}
+		},
+		{
+			"palier": 2,
+			"gratuit": null,
+			"premium": {
+				"type": "echarpe",
+				"nom": "Écharpe Citrouille"
+			}
+		},
+		{
+			"palier": 3,
+			"gratuit": {
+				"type": "jetons",
+				"n": 200
+			},
+			"premium": {
+				"type": "skin",
+				"fanzzy": "GD4",
+				"skin": "GD4B_halloween",
+				"nom": "La Roue de Secours · Halloween"
+			}
+		},
+		{
+			"palier": 4,
+			"gratuit": null,
+			"premium": {
+				"type": "emote",
+				"nom": "Émote Bouh !"
+			}
+		},
+		{
+			"palier": 5,
+			"gratuit": {
+				"type": "skin",
+				"fanzzy": "AN4",
+				"skin": "AN4_halloween",
+				"nom": "Le Gamin du Comptoir · Halloween"
+			},
+			"premium": {
+				"type": "drapeau",
+				"nom": "Drapeau Fantôme"
+			}
+		},
+		{
+			"palier": 6,
+			"gratuit": null,
+			"premium": {
+				"type": "skin",
+				"fanzzy": "AN3",
+				"skin": "AN3C_halloween",
+				"nom": "La Jetée Vivante · Halloween"
+			}
+		},
+		{
+			"palier": 7,
+			"gratuit": {
+				"type": "jetons",
+				"n": 250
+			},
+			"premium": {
+				"type": "decor",
+				"nom": "Guirlande de citrouilles"
+			}
+		},
+		{
+			"palier": 8,
+			"gratuit": null,
+			"premium": {
+				"type": "son",
+				"nom": "Orgue de minuit"
+			}
+		},
+		{
+			"palier": 9,
+			"gratuit": {
+				"type": "echarpe",
+				"nom": "Écharpe Feu follet"
+			},
+			"premium": {
+				"type": "skin",
+				"fanzzy": "AN2",
+				"skin": "AN2C_halloween",
+				"nom": "Le Capitaine du Long Bateau · Halloween"
+			}
+		},
+		{
+			"palier": 10,
+			"gratuit": null,
+			"premium": {
+				"type": "tifo",
+				"nom": "Tifo Château hanté"
+			}
+		},
+		{
+			"palier": 11,
+			"gratuit": {
+				"type": "jetons",
+				"n": 300
+			},
+			"premium": {
+				"type": "emote",
+				"nom": "Émote Danse du squelette"
+			}
+		},
+		{
+			"palier": 12,
+			"gratuit": null,
+			"premium": {
+				"type": "skin",
+				"fanzzy": "GD3",
+				"skin": "GD3_halloween",
+				"nom": "Le Péagiste Endormi · Halloween"
+			}
+		},
+		{
+			"palier": 13,
+			"gratuit": {
+				"type": "emote",
+				"nom": "Émote Citrouille qui rit"
+			},
+			"premium": {
+				"type": "echarpe",
+				"nom": "Écharpe Toile d'araignée"
+			}
+		},
+		{
+			"palier": 14,
+			"gratuit": null,
+			"premium": {
+				"type": "decor",
+				"nom": "Bougies du local"
+			}
+		},
+		{
+			"palier": 15,
+			"gratuit": {
+				"type": "jetons",
+				"n": 350
+			},
+			"premium": {
+				"type": "couverture",
+				"nom": "Couverture de carnet Grimoire"
+			}
+		},
+		{
+			"palier": 16,
+			"gratuit": null,
+			"premium": {
+				"type": "skin",
+				"fanzzy": "AN4",
+				"skin": "AN4B_halloween",
+				"nom": "Le Peintre d’Enseignes · Halloween"
+			}
+		},
+		{
+			"palier": 17,
+			"gratuit": {
+				"type": "skin",
+				"fanzzy": "GD22",
+				"skin": "GD22_halloween",
+				"nom": "La Grand-Mère du Covoiturage · Halloween"
+			},
+			"premium": {
+				"type": "drapeau",
+				"nom": "Drapeau Lune rousse"
+			}
+		},
+		{
+			"palier": 18,
+			"gratuit": null,
+			"premium": {
+				"type": "emote",
+				"nom": "Émote Balai volant"
+			}
+		},
+		{
+			"palier": 19,
+			"gratuit": {
+				"type": "jetons",
+				"n": 400
+			},
+			"premium": {
+				"type": "tifo",
+				"nom": "Tifo Chaudron"
+			}
+		},
+		{
+			"palier": 20,
+			"gratuit": null,
+			"premium": {
+				"type": "son",
+				"nom": "Cloche du beffroi"
+			}
+		},
+		{
+			"palier": 21,
+			"gratuit": {
+				"type": "decor",
+				"nom": "Lampions orange"
+			},
+			"premium": {
+				"type": "decor",
+				"nom": "Brouillard de virage"
+			}
+		},
+		{
+			"palier": 22,
+			"gratuit": null,
+			"premium": {
+				"type": "titre",
+				"nom": "Titre « Revenant du virage »"
+			}
+		},
+		{
+			"palier": 23,
+			"gratuit": {
+				"type": "jetons",
+				"n": 500
+			},
+			"premium": {
+				"type": "echarpe",
+				"nom": "Écharpe Chauve-souris"
+			}
+		},
+		{
+			"palier": 24,
+			"gratuit": null,
+			"premium": {
+				"type": "emote",
+				"nom": "Émote Frisson"
+			}
+		},
+		{
+			"palier": 25,
+			"gratuit": {
+				"type": "recrue",
+				"fanzzy": "GD16",
+				"nom": "Le Dernier Train",
+				"rarete": "legendaire"
+			},
+			"premium": {
+				"type": "tribune",
+				"nom": "Tribune complète Halloween",
+				"skins": [
+					{
+						"type": "skin",
+						"fanzzy": "AN6",
+						"skin": "AN6B_halloween",
+						"nom": "La Punk à Épingles · Halloween"
+					},
+					{
+						"type": "skin",
+						"fanzzy": "AN1",
+						"skin": "AN1B_halloween",
+						"nom": "Le Garde Écarlate · Halloween"
+					},
+					{
+						"type": "skin",
+						"fanzzy": "GD1",
+						"skin": "GD1B_halloween",
+						"nom": "Le Minibus Réparé · Halloween"
+					},
+					{
+						"type": "skin",
+						"fanzzy": "AN5",
+						"skin": "AN5C_halloween",
+						"nom": "La Reine des Bâtons de Sucre · Halloween"
+					},
+					{
+						"type": "skin",
+						"fanzzy": "GD8",
+						"skin": "GD8_halloween",
+						"nom": "Le Train Supprimé · Halloween"
+					}
+				]
+			}
+		},
+		{
+			"palier": 26,
+			"gratuit": null,
+			"premium": {
+				"type": "echarpe",
+				"nom": "Écharpe en peau de bête"
+			}
+		},
+		{
+			"palier": 27,
+			"gratuit": {
+				"type": "jetons",
+				"n": 200
+			},
+			"premium": {
+				"type": "skin",
+				"fanzzy": "AN5",
+				"skin": "AN5C_prehistorique",
+				"nom": "La Reine des Bâtons de Sucre · Préhistorique"
+			}
+		},
+		{
+			"palier": 28,
+			"gratuit": null,
+			"premium": {
+				"type": "emote",
+				"nom": "Émote Massue"
+			}
+		},
+		{
+			"palier": 29,
+			"gratuit": {
+				"type": "skin",
+				"fanzzy": "GD4",
+				"skin": "GD4_prehistorique",
+				"nom": "Le Pneu Crevé · Préhistorique"
+			},
+			"premium": {
+				"type": "drapeau",
+				"nom": "Drapeau Peinture rupestre"
+			}
+		},
+		{
+			"palier": 30,
+			"gratuit": null,
+			"premium": {
+				"type": "skin",
+				"fanzzy": "GD8",
+				"skin": "GD8_prehistorique",
+				"nom": "Le Train Supprimé · Préhistorique"
+			}
+		},
+		{
+			"palier": 31,
+			"gratuit": {
+				"type": "jetons",
+				"n": 250
+			},
+			"premium": {
+				"type": "decor",
+				"nom": "Feu de camp du local"
+			}
+		},
+		{
+			"palier": 32,
+			"gratuit": null,
+			"premium": {
+				"type": "son",
+				"nom": "Tambour de pierre"
+			}
+		},
+		{
+			"palier": 33,
+			"gratuit": {
+				"type": "drapeau",
+				"nom": "Drapeau Empreinte de main"
+			},
+			"premium": {
+				"type": "skin",
+				"fanzzy": "GD4",
+				"skin": "GD4B_prehistorique",
+				"nom": "La Roue de Secours · Préhistorique"
+			}
+		},
+		{
+			"palier": 34,
+			"gratuit": null,
+			"premium": {
+				"type": "tifo",
+				"nom": "Tifo Fresque de la grotte"
+			}
+		},
+		{
+			"palier": 35,
+			"gratuit": {
+				"type": "jetons",
+				"n": 300
+			},
+			"premium": {
+				"type": "emote",
+				"nom": "Émote Danse du feu"
+			}
+		},
+		{
+			"palier": 36,
+			"gratuit": null,
+			"premium": {
+				"type": "skin",
+				"fanzzy": "AN3",
+				"skin": "AN3C_prehistorique",
+				"nom": "La Jetée Vivante · Préhistorique"
+			}
+		},
+		{
+			"palier": 37,
+			"gratuit": {
+				"type": "recrue",
+				"fanzzy": "VP6",
+				"nom": "Le Consultant en Costume",
+				"rarete": "commune"
+			},
+			"premium": {
+				"type": "echarpe",
+				"nom": "Écharpe Silex"
+			}
+		},
+		{
+			"palier": 38,
+			"gratuit": null,
+			"premium": {
+				"type": "decor",
+				"nom": "Grotte du fan club"
+			}
+		},
+		{
+			"palier": 39,
+			"gratuit": {
+				"type": "emote",
+				"nom": "Émote Dino"
+			},
+			"premium": {
+				"type": "couverture",
+				"nom": "Couverture de carnet Pierre gravée"
+			}
+		},
+		{
+			"palier": 40,
+			"gratuit": null,
+			"premium": {
+				"type": "skin",
+				"fanzzy": "AN2",
+				"skin": "AN2C_prehistorique",
+				"nom": "Le Capitaine du Long Bateau · Préhistorique"
+			}
+		},
+		{
+			"palier": 41,
+			"gratuit": {
+				"type": "jetons",
+				"n": 350
+			},
+			"premium": {
+				"type": "drapeau",
+				"nom": "Drapeau Feu de camp"
+			}
+		},
+		{
+			"palier": 42,
+			"gratuit": null,
+			"premium": {
+				"type": "emote",
+				"nom": "Émote Ouga ouga"
+			}
+		},
+		{
+			"palier": 43,
+			"gratuit": {
+				"type": "skin",
+				"fanzzy": "AN3",
+				"skin": "AN3B_prehistorique",
+				"nom": "Le Roi de la Promenade · Préhistorique"
+			},
+			"premium": {
+				"type": "tifo",
+				"nom": "Tifo Mammouth géant"
+			}
+		},
+		{
+			"palier": 44,
+			"gratuit": null,
+			"premium": {
+				"type": "son",
+				"nom": "Corne de mammouth"
+			}
+		},
+		{
+			"palier": 45,
+			"gratuit": {
+				"type": "jetons",
+				"n": 400
+			},
+			"premium": {
+				"type": "decor",
+				"nom": "Os de dinosaure"
+			}
+		},
+		{
+			"palier": 46,
+			"gratuit": null,
+			"premium": {
+				"type": "titre",
+				"nom": "Titre « Ancêtre des tribunes »"
+			}
+		},
+		{
+			"palier": 47,
+			"gratuit": {
+				"type": "decor",
+				"nom": "Peaux de bête au mur"
+			},
+			"premium": {
+				"type": "echarpe",
+				"nom": "Écharpe Mammouth"
+			}
+		},
+		{
+			"palier": 48,
+			"gratuit": null,
+			"premium": {
+				"type": "emote",
+				"nom": "Émote Silex"
+			}
+		},
+		{
+			"palier": 49,
+			"gratuit": {
+				"type": "jetons",
+				"n": 500
+			},
+			"premium": {
+				"type": "decor",
+				"nom": "Stalactites"
+			}
+		},
+		{
+			"palier": 50,
+			"gratuit": {
+				"type": "recrue",
+				"fanzzy": "GD11",
+				"nom": "La Nuit du 8e",
+				"rarete": "legendaire"
+			},
+			"premium": {
+				"type": "tribune",
+				"nom": "Tribune complète Préhistorique",
+				"skins": [
+					{
+						"type": "skin",
+						"fanzzy": "AN2",
+						"skin": "AN2B_prehistorique",
+						"nom": "Le Batelier des Roses · Préhistorique"
+					},
+					{
+						"type": "skin",
+						"fanzzy": "AN4",
+						"skin": "AN4_prehistorique",
+						"nom": "Le Gamin du Comptoir · Préhistorique"
+					},
+					{
+						"type": "skin",
+						"fanzzy": "AN6",
+						"skin": "AN6B_prehistorique",
+						"nom": "La Punk à Épingles · Préhistorique"
+					},
+					{
+						"type": "skin",
+						"fanzzy": "AN1",
+						"skin": "AN1B_prehistorique",
+						"nom": "Le Garde Écarlate · Préhistorique"
+					},
+					{
+						"type": "skin",
+						"fanzzy": "GD1",
+						"skin": "GD1B_prehistorique",
+						"nom": "Le Minibus Réparé · Préhistorique"
+					}
+				]
+			}
+		},
+		{
+			"palier": 51,
+			"gratuit": {
+				"type": "jetons",
+				"n": 200
+			},
+			"premium": {
+				"type": "echarpe",
+				"nom": "Écharpe Rouille"
+			}
+		},
+		{
+			"palier": 52,
+			"gratuit": null,
+			"premium": {
+				"type": "skin",
+				"fanzzy": "GD3",
+				"skin": "GD3C_apocalyptique",
+				"nom": "Celui de la Cabine 4 · Apocalyptique"
+			}
+		},
+		{
+			"palier": 53,
+			"gratuit": {
+				"type": "skin",
+				"fanzzy": "AN1",
+				"skin": "AN1_apocalyptique",
+				"nom": "Le Petit Visiteur de la Tour · Apocalyptique"
+			},
+			"premium": {
+				"type": "emote",
+				"nom": "Émote Survivant"
+			}
+		},
+		{
+			"palier": 54,
+			"gratuit": null,
+			"premium": {
+				"type": "drapeau",
+				"nom": "Drapeau Radar"
+			}
+		},
+		{
+			"palier": 55,
+			"gratuit": {
+				"type": "jetons",
+				"n": 250
+			},
+			"premium": {
+				"type": "skin",
+				"fanzzy": "AN4",
+				"skin": "AN4_apocalyptique",
+				"nom": "Le Gamin du Comptoir · Apocalyptique"
+			}
+		},
+		{
+			"palier": 56,
+			"gratuit": null,
+			"premium": {
+				"type": "decor",
+				"nom": "Néons du local"
+			}
+		},
+		{
+			"palier": 57,
+			"gratuit": {
+				"type": "echarpe",
+				"nom": "Écharpe Fil de fer"
+			},
+			"premium": {
+				"type": "son",
+				"nom": "Sirène lointaine"
+			}
+		},
+		{
+			"palier": 58,
+			"gratuit": null,
+			"premium": {
+				"type": "skin",
+				"fanzzy": "GD22",
+				"skin": "GD22_apocalyptique",
+				"nom": "La Grand-Mère du Covoiturage · Apocalyptique"
+			}
+		},
+		{
+			"palier": 59,
+			"gratuit": {
+				"type": "jetons",
+				"n": 300
+			},
+			"premium": {
+				"type": "tifo",
+				"nom": "Tifo Ville en ruines"
+			}
+		},
+		{
+			"palier": 60,
+			"gratuit": null,
+			"premium": {
+				"type": "emote",
+				"nom": "Émote Bidon tambour"
+			}
+		},
+		{
+			"palier": 61,
+			"gratuit": {
+				"type": "emote",
+				"nom": "Émote Radio grésille"
+			},
+			"premium": {
+				"type": "skin",
+				"fanzzy": "AN6",
+				"skin": "AN6B_apocalyptique",
+				"nom": "La Punk à Épingles · Apocalyptique"
+			}
+		},
+		{
+			"palier": 62,
+			"gratuit": null,
+			"premium": {
+				"type": "echarpe",
+				"nom": "Écharpe Néon"
+			}
+		},
+		{
+			"palier": 63,
+			"gratuit": {
+				"type": "recrue",
+				"fanzzy": "VP20",
+				"nom": "Le Parapluie de Loge",
+				"rarete": "commune"
+			},
+			"premium": {
+				"type": "decor",
+				"nom": "Tôles et boulons"
+			}
+		},
+		{
+			"palier": 64,
+			"gratuit": null,
+			"premium": {
+				"type": "couverture",
+				"nom": "Couverture de carnet Blindée"
+			}
+		},
+		{
+			"palier": 65,
+			"gratuit": {
+				"type": "jetons",
+				"n": 350
+			},
+			"premium": {
+				"type": "skin",
+				"fanzzy": "AN1",
+				"skin": "AN1B_apocalyptique",
+				"nom": "Le Garde Écarlate · Apocalyptique"
+			}
+		},
+		{
+			"palier": 66,
+			"gratuit": null,
+			"premium": {
+				"type": "drapeau",
+				"nom": "Drapeau Dernier refuge"
+			}
+		},
+		{
+			"palier": 67,
+			"gratuit": {
+				"type": "skin",
+				"fanzzy": "GD1",
+				"skin": "GD1_apocalyptique",
+				"nom": "Le Minibus en Panne · Apocalyptique"
+			},
+			"premium": {
+				"type": "emote",
+				"nom": "Émote Masque à gaz"
+			}
+		},
+		{
+			"palier": 68,
+			"gratuit": null,
+			"premium": {
+				"type": "tifo",
+				"nom": "Tifo Soleil rouge"
+			}
+		},
+		{
+			"palier": 69,
+			"gratuit": {
+				"type": "jetons",
+				"n": 400
+			},
+			"premium": {
+				"type": "son",
+				"nom": "Bidon de ferraille"
+			}
+		},
+		{
+			"palier": 70,
+			"gratuit": null,
+			"premium": {
+				"type": "decor",
+				"nom": "Bunker du fan club"
+			}
+		},
+		{
+			"palier": 71,
+			"gratuit": {
+				"type": "decor",
+				"nom": "Barils lumineux"
+			},
+			"premium": {
+				"type": "titre",
+				"nom": "Titre « Dernier debout »"
+			}
+		},
+		{
+			"palier": 72,
+			"gratuit": null,
+			"premium": {
+				"type": "echarpe",
+				"nom": "Écharpe Boulons"
+			}
+		},
+		{
+			"palier": 73,
+			"gratuit": {
+				"type": "jetons",
+				"n": 500
+			},
+			"premium": {
+				"type": "emote",
+				"nom": "Émote Signal"
+			}
+		},
+		{
+			"palier": 74,
+			"gratuit": null,
+			"premium": {
+				"type": "decor",
+				"nom": "Antenne de fortune"
+			}
+		},
+		{
+			"palier": 75,
+			"gratuit": {
+				"type": "recrue",
+				"fanzzy": "VP12",
+				"nom": "L’Ancienne Gloire",
+				"rarete": "legendaire"
+			},
+			"premium": {
+				"type": "tribune",
+				"nom": "Tribune complète Apocalyptique",
+				"skins": [
+					{
+						"type": "skin",
+						"fanzzy": "AN5",
+						"skin": "AN5B_apocalyptique",
+						"nom": "La Confiseuse du Front de Mer · Apocalyptique"
+					},
+					{
+						"type": "skin",
+						"fanzzy": "GD8",
+						"skin": "GD8C_apocalyptique",
+						"nom": "Le Quai 3 · Apocalyptique"
+					},
+					{
+						"type": "skin",
+						"fanzzy": "GD4",
+						"skin": "GD4_apocalyptique",
+						"nom": "Le Pneu Crevé · Apocalyptique"
+					},
+					{
+						"type": "skin",
+						"fanzzy": "AN3",
+						"skin": "AN3B_apocalyptique",
+						"nom": "Le Roi de la Promenade · Apocalyptique"
+					},
+					{
+						"type": "skin",
+						"fanzzy": "AN2",
+						"skin": "AN2B_apocalyptique",
+						"nom": "Le Batelier des Roses · Apocalyptique"
+					}
+				]
+			}
+		},
+		{
+			"palier": 76,
+			"gratuit": null,
+			"premium": {
+				"type": "echarpe",
+				"nom": "Écharpe Dorée"
+			}
+		},
+		{
+			"palier": 77,
+			"gratuit": {
+				"type": "jetons",
+				"n": 200
+			},
+			"premium": {
+				"type": "skin",
+				"fanzzy": "AN1",
+				"skin": "AN1_dore",
+				"nom": "Le Petit Visiteur de la Tour · Doré"
+			}
+		},
+		{
+			"palier": 78,
+			"gratuit": null,
+			"premium": {
+				"type": "emote",
+				"nom": "Émote Soulever la coupe"
+			}
+		},
+		{
+			"palier": 79,
+			"gratuit": {
+				"type": "skin",
+				"fanzzy": "AN2",
+				"skin": "AN2_dore",
+				"nom": "Le Gamin de l’Écluse · Doré"
+			},
+			"premium": {
+				"type": "drapeau",
+				"nom": "Drapeau Doré"
+			}
+		},
+		{
+			"palier": 80,
+			"gratuit": null,
+			"premium": {
+				"type": "skin",
+				"fanzzy": "GD1",
+				"skin": "GD1_dore",
+				"nom": "Le Minibus en Panne · Doré"
+			}
+		},
+		{
+			"palier": 81,
+			"gratuit": {
+				"type": "jetons",
+				"n": 250
+			},
+			"premium": {
+				"type": "decor",
+				"nom": "Vitrine à trophées"
+			}
+		},
+		{
+			"palier": 82,
+			"gratuit": null,
+			"premium": {
+				"type": "son",
+				"nom": "Fanfare de finale"
+			}
+		},
+		{
+			"palier": 83,
+			"gratuit": {
+				"type": "drapeau",
+				"nom": "Drapeau Étoile dorée"
+			},
+			"premium": {
+				"type": "skin",
+				"fanzzy": "TR3",
+				"skin": "TR3B_dore",
+				"nom": "La Banderole Écrite · Doré"
+			}
+		},
+		{
+			"palier": 84,
+			"gratuit": null,
+			"premium": {
+				"type": "tifo",
+				"nom": "Tifo Trophée géant"
+			}
+		},
+		{
+			"palier": 85,
+			"gratuit": {
+				"type": "jetons",
+				"n": 300
+			},
+			"premium": {
+				"type": "emote",
+				"nom": "Émote Tour d'honneur"
+			}
+		},
+		{
+			"palier": 86,
+			"gratuit": null,
+			"premium": {
+				"type": "skin",
+				"fanzzy": "AN5",
+				"skin": "AN5B_dore",
+				"nom": "La Confiseuse du Front de Mer · Doré"
+			}
+		},
+		{
+			"palier": 87,
+			"gratuit": {
+				"type": "recrue",
+				"fanzzy": "VP31",
+				"nom": "Le Chapeau Melon",
+				"rarete": "commune"
+			},
+			"premium": {
+				"type": "echarpe",
+				"nom": "Écharpe Coupe aux grandes oreilles"
+			}
+		},
+		{
+			"palier": 88,
+			"gratuit": null,
+			"premium": {
+				"type": "decor",
+				"nom": "Confettis dorés"
+			}
+		},
+		{
+			"palier": 89,
+			"gratuit": {
+				"type": "emote",
+				"nom": "Émote Médaille"
+			},
+			"premium": {
+				"type": "couverture",
+				"nom": "Couverture de carnet Dorée"
+			}
+		},
+		{
+			"palier": 90,
+			"gratuit": null,
+			"premium": {
+				"type": "skin",
+				"fanzzy": "GD8",
+				"skin": "GD8C_dore",
+				"nom": "Le Quai 3 · Doré"
+			}
+		},
+		{
+			"palier": 91,
+			"gratuit": {
+				"type": "jetons",
+				"n": 350
+			},
+			"premium": {
+				"type": "drapeau",
+				"nom": "Drapeau Finale"
+			}
+		},
+		{
+			"palier": 92,
+			"gratuit": null,
+			"premium": {
+				"type": "emote",
+				"nom": "Émote Champion"
+			}
+		},
+		{
+			"palier": 93,
+			"gratuit": {
+				"type": "skin",
+				"fanzzy": "MS30",
+				"skin": "MS30B_dore",
+				"nom": "Tambour Major · Doré"
+			},
+			"premium": {
+				"type": "tifo",
+				"nom": "Tifo Pluie d'or"
+			}
+		},
+		{
+			"palier": 94,
+			"gratuit": null,
+			"premium": {
+				"type": "son",
+				"nom": "Feu d'artifice"
+			}
+		},
+		{
+			"palier": 95,
+			"gratuit": {
+				"type": "jetons",
+				"n": 400
+			},
+			"premium": {
+				"type": "decor",
+				"nom": "Tapis rouge"
+			}
+		},
+		{
+			"palier": 96,
+			"gratuit": null,
+			"premium": {
+				"type": "titre",
+				"nom": "Titre « Finaliste »"
+			}
+		},
+		{
+			"palier": 97,
+			"gratuit": {
+				"type": "decor",
+				"nom": "Ruban de finale"
+			},
+			"premium": {
+				"type": "echarpe",
+				"nom": "Écharpe Étoile"
+			}
+		},
+		{
+			"palier": 98,
+			"gratuit": null,
+			"premium": {
+				"type": "emote",
+				"nom": "Émote Bisou au trophée"
+			}
+		},
+		{
+			"palier": 99,
+			"gratuit": {
+				"type": "jetons",
+				"n": 500
+			},
+			"premium": {
+				"type": "tribune",
+				"nom": "Tribune complète Doré",
+				"skins": [
+					{
+						"type": "skin",
+						"fanzzy": "GD3",
+						"skin": "GD3B_dore",
+						"nom": "Le Péagiste Qui Reconnaît le Car · Doré"
+					},
+					{
+						"type": "skin",
+						"fanzzy": "TR1",
+						"skin": "TR1C_dore",
+						"nom": "Le Vieux Teigneux · Doré"
+					},
+					{
+						"type": "skin",
+						"fanzzy": "AN4",
+						"skin": "AN4C_dore",
+						"nom": "Le Maître des Quatre Coins · Doré"
+					},
+					{
+						"type": "skin",
+						"fanzzy": "GD22",
+						"skin": "GD22C_dore",
+						"nom": "La Reine du Rallye · Doré"
+					},
+					{
+						"type": "skin",
+						"fanzzy": "AN6",
+						"skin": "AN6_dore",
+						"nom": "La Timide du Grand Boulevard · Doré"
+					}
+				]
+			}
+		},
+		{
+			"palier": 100,
+			"gratuit": {
+				"type": "recrue",
+				"fanzzy": "GD15",
+				"nom": "La Mosaïque de Séville",
+				"rarete": "legendaire"
+			},
+			"premium": {
+				"type": "tribune",
+				"nom": "La Mosaïque de Séville doré + titre « Tour du monde 2026-27 »",
+				"skins": [
+					{
+						"type": "skin",
+						"fanzzy": "GD15",
+						"skin": "GD15_dore",
+						"nom": "La Mosaïque de Séville · Doré"
+					}
+				],
+				"titre": "Tour du monde 2026-27"
+			}
+		}
+	]
+}
