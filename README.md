@@ -150,11 +150,12 @@ Supprime ce fichier pour recommencer à zéro.
 | `assets/ui/` | Boutons, cadres, icônes de l'interface |
 | `assets/fonts/` | Polices (libres de droits uniquement) |
 | `assets/audio/` | Chants (`chants/`) et bruitages (`sfx/`) |
+| `data/langues/` | Traductions : un dossier par langue (`en/`), un fichier JSON par écran `{ "texte français": "traduction" }` (voir « Langues » plus bas) |
 | `data/` | Données JSON : carte (`carte/`), noms fictifs des clubs (`clubs/`), rivalités pour les derbys et Grand Choc (`evenements/`), matchs d'exemple hors ligne (`exemple/`) |
 | `tools/` | Scripts de préparation des données (carte du monde, repérage des bras des FANZZY) |
 | `mods/` | Format des mods Steam Workshop (noms et couleurs de clubs) |
 | `docs/` | Game design et maquettes |
-| `tests/` | Tests automatiques (`godot --headless --path . --script tests/test_logique.gd`, `tests/test_pronostics.gd`, `tests/test_club.gd`, `tests/test_supporters.gd`, `tests/test_classement.gd`, `tests/test_buvette.gd`, `tests/test_tifo.gd`, `tests/test_echarpes.gd`, `tests/test_speaker.gd`, `tests/test_ramasseur.gd`, `tests/test_collection.gd`, `tests/test_evenements.gd`, `tests/test_audio.gd`, et le parcours complet : `godot --headless --path . res://tests/test_pronostics_jeu.tscn -- --hors-ligne`, le tutoriel : `res://tests/test_tutoriel.tscn -- --hors-ligne`, le classement en ligne : `res://tests/test_classement_jeu.tscn -- --hors-ligne`, le tournoi : `tests/test_tournoi.gd` et `res://tests/test_tournoi_jeu.tscn -- --hors-ligne`, le tour de tous les écrans (chaque bouton pressé, parties au clavier, pause) : `res://tests/test_ecrans.tscn -- --hors-ligne`) |
+| `tests/` | Tests automatiques (`godot --headless --path . --script tests/test_logique.gd`, `tests/test_pronostics.gd`, `tests/test_club.gd`, `tests/test_supporters.gd`, `tests/test_classement.gd`, `tests/test_buvette.gd`, `tests/test_tifo.gd`, `tests/test_echarpes.gd`, `tests/test_speaker.gd`, `tests/test_ramasseur.gd`, `tests/test_collection.gd`, `tests/test_evenements.gd`, `tests/test_audio.gd`, `tests/test_langues.gd`, et le parcours complet : `godot --headless --path . res://tests/test_pronostics_jeu.tscn -- --hors-ligne`, le tutoriel : `res://tests/test_tutoriel.tscn -- --hors-ligne`, le classement en ligne : `res://tests/test_classement_jeu.tscn -- --hors-ligne`, le tournoi : `tests/test_tournoi.gd` et `res://tests/test_tournoi_jeu.tscn -- --hors-ligne`, le tour de tous les écrans (chaque bouton pressé, parties au clavier, pause) : `res://tests/test_ecrans.tscn -- --hors-ligne`) |
 
 ## Règles du projet
 
@@ -162,6 +163,20 @@ Supprime ce fichier pour recommencer à zéro.
 - **FANZZY** : leur famille donne leur geste en duel ; leurs **skins sont purement cosmétiques**.
 - **Budget zéro** : uniquement des outils et des ressources gratuits ou libres de droits.
 - Le texte du jeu est en français d'abord.
+
+## Langues (français, anglais)
+
+Le jeu est écrit en français ; le texte français sert de clé de traduction. Au premier lancement, le jeu prend la langue du système (français si le système est en français, sinon anglais) ; on la change dans **Options > Langue**. `-- --langue=en` force une langue pour un essai.
+
+Pour un nouvel écran ou un nouveau texte :
+
+1. Écrire le texte en français dans le code, comme d'habitude. Un `Label`, un `Button` ou une infobulle dont le texte est exactement une clé est traduit tout seul.
+2. Un texte construit passe par `tr()` : `tr("Niveau %d") % n`, `tr("Fan club : ") + nom` (dans une fonction `static` : `Trad.t("…")`). Pour un pluriel, deux phrases entières plutôt que `"%d point%s"` avec deux `%s`.
+3. Ajouter les traductions dans **son propre fichier** `data/langues/en/<écran>.json` (pas besoin de toucher aux autres fichiers). Une valeur `""` garde le texte tel quel (noms propres).
+4. `godot --headless --path . --script tests/test_langues.gd` signale tout texte oublié (`-- --manquants` les écrit en JSON, prêts à remplir) et vérifie que les `%d`/`%s` correspondent. Une ligne qui ne contient que des identifiants ou des noms peut porter `# sans_traduction`.
+5. `res://tests/test_ecrans.tscn -- --hors-ligne --langue=en` liste à la fin les textes affichés qui ont encore l'air français.
+
+Les noms fictifs (clubs, stades, ligues comme « Ligue Hexagone », joueurs, pseudos de fans) restent en français dans toutes les langues ; les pays prennent leur nom anglais.
 
 ## Crédits
 

@@ -54,15 +54,15 @@ func _ready() -> void:
 	vg.add_child(Ui.label("Comment ça marche", 26, Ui.BLANC, true))
 	for ligne in [
 		"Choisis un match à venir sur la carte, puis un score et l'équipe qui marque en premier.",
-		"Bon résultat (victoire, nul ou défaite) : +%d Jetons." % Pronostics.RECOMPENSE_RESULTAT,
-		"Score exact : +%d de plus." % Pronostics.RECOMPENSE_SCORE,
-		"Premier but trouvé : +%d." % Pronostics.RECOMPENSE_PREMIER_BUT,
-		"Chaque bon résultat d'affilée ajoute +%d %% à tes gains, jusqu'à ×%s." % [int(Pronostics.PAS_SERIE * 100), str(Pronostics.MULTI_MAX)],
+		tr("Bon résultat (victoire, nul ou défaite) : +%d Jetons.") % Pronostics.RECOMPENSE_RESULTAT,
+		tr("Score exact : +%d de plus.") % Pronostics.RECOMPENSE_SCORE,
+		tr("Premier but trouvé : +%d.") % Pronostics.RECOMPENSE_PREMIER_BUT,
+		tr("Chaque bon résultat d'affilée ajoute +%d %% à tes gains, jusqu'à ×%s.") % [int(Pronostics.PAS_SERIE * 100), str(Pronostics.MULTI_MAX)],
 		"Rien à miser, rien à perdre : un mauvais prono remet juste la série à zéro.",
 		"Score de fin de match, prolongation comprise, sans les tirs au but. Modifiable jusqu'au coup d'envoi.",
-		"%d pronos en attente au maximum." % Pronostics.MAX_EN_ATTENTE,
+		tr("%d pronos en attente au maximum.") % Pronostics.MAX_EN_ATTENTE,
 	]:
-		var l := Ui.label("• " + ligne, 19, Ui.GRIS)
+		var l := Ui.label("• " + tr(ligne), 19, Ui.GRIS)
 		l.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 		vg.add_child(l)
 
@@ -93,14 +93,14 @@ func _ready() -> void:
 func _remplir() -> void:
 	_jetons.text = "%d" % Game.jetons
 	var multi := Pronostics.multiplicateur(Game.serie_pronos)
-	_serie.text = "%d bon%s résultat%s d'affilée · gains ×%s\nMeilleure série : %d" % [
-		Game.serie_pronos, "s" if Game.serie_pronos > 1 else "", "s" if Game.serie_pronos > 1 else "",
-		str(multi), Game.meilleure_serie]
+	_serie.text = (tr("%d bons résultats d'affilée · gains ×%s\nMeilleure série : %d") if Game.serie_pronos > 1
+		else tr("%d bon résultat d'affilée · gains ×%s\nMeilleure série : %d")) % [
+		Game.serie_pronos, str(multi), Game.meilleure_serie]
 	for c in _liste.get_children():
 		c.queue_free()
 	var attente := Game.pronos.values()
 	attente.sort_custom(func(a, b): return int(a["kickoff"]) < int(b["kickoff"]))
-	_liste.add_child(Ui.label("En attente (%d / %d)" % [attente.size(), Pronostics.MAX_EN_ATTENTE], 28, Ui.BLANC, true, 6))
+	_liste.add_child(Ui.label(tr("En attente (%d / %d)") % [attente.size(), Pronostics.MAX_EN_ATTENTE], 28, Ui.BLANC, true, 6))
 	if attente.is_empty():
 		var l := Ui.label("Aucun prono en cours. Ouvre un match à venir sur la carte pour en faire un.", 19, Ui.GRIS)
 		l.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
@@ -136,7 +136,7 @@ func _ligne(p: Dictionary) -> Control:
 	v.add_child(noms)
 	v.add_child(Ui.label("%s · %s %s" % [Fiction.competition(p.get("competition", {})),
 		FicheMatch.date_texte(int(p.get("kickoff", 0))), FicheMatch.heure_texte(int(p.get("kickoff", 0)))], 15, Ui.GRIS))
-	v.add_child(Ui.label("Ton prono : " + PronoTexte.resume(p, dom["nom"], ext["nom"]), 18, Ui.JAUNE, true))
+	v.add_child(Ui.label(tr("Ton prono : ") + PronoTexte.resume(p, dom["nom"], ext["nom"]), 18, Ui.JAUNE, true))
 	var e := Ui.label(PronoTexte.etat(p), 16, Ui.BLANC)
 	e.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	v.add_child(e)

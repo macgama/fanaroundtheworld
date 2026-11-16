@@ -1,0 +1,15 @@
+{
+	"Le chant du club": "The club chant",
+	"Donne un nom à ton chant.": "Give your chant a name.",
+	"Le nom est trop long (%d lettres au plus).": "The name is too long (%d letters max).",
+	"Choisis un tempo.": "Choose a tempo.",
+	"Le tempo « %s » s'ouvre au niveau %d.": "The \"%s\" tempo unlocks at level %d.",
+	"Il faut au moins %d mesures.": "You need at least %d bars.",
+	"Pas plus de %d mesures.": "No more than %d bars.",
+	"Mesure %d : choisis un morceau.": "Bar %d: choose a piece.",
+	"Mesure %d : « %s » s'ouvre au niveau %d.": "Bar %d: \"%s\" unlocks at level %d.",
+	"Mesure %d : parole inconnue.": "Bar %d: unknown lyric.",
+	"Mesure %d : cette parole s'ouvre au niveau %d.": "Bar %d: this lyric unlocks at level %d.",
+	"Ton chant n'a aucun clap pour la tribune.": "Your chant has no claps for the stand.",
+	"le club": "the club"
+}

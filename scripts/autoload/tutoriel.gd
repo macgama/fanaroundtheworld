@@ -47,7 +47,7 @@ const ETAPES := [
 		"cible": "Valider mon prono", "bouton": "Plus tard"},
 	{"id": "lieu", "scenes": [SC_CARTE], "titre": "Où suivre le match ?",
 		"texte": "Choisis ton camp et où suivre le match : au stade, tu gagnes le tampon du stade ; à la maison, c'est gratuit. Puis appuie sur C'EST PARTI !",
-		"cible": "C'EST PARTI"},
+		"cible": "C'EST PARTI"},  # sans_traduction
 	{"id": "voyage", "scenes": [SC_VOYAGE], "titre": "En route !",
 		"texte": "Le car du fan club file vers le stade. Une fois arrivé, entre dans le stade !",
 		"cible": "ENTRER DANS LE STADE"},
@@ -241,7 +241,7 @@ func _etape_faite() -> bool:
 		"club":
 			return Game.club_cree()
 		"match":
-			return sc == SC_CARTE and _trouver("C'EST PARTI") != null
+			return sc == SC_CARTE and _trouver("C'EST PARTI") != null  # sans_traduction
 		"prono":
 			if Game.pronos.size() + Game.pronos_finis.size() > _ref_pronos:
 				return true
@@ -271,7 +271,7 @@ func _trouver(debut: String) -> Control:
 func _chercher(n: Node, debut: String) -> Control:
 	if n is Control and not (n as Control).is_visible_in_tree():
 		return null
-	if debut == "LineEdit" and n is LineEdit:
+	if debut == "LineEdit" and n is LineEdit:  # sans_traduction
 		return n
 	if n is Button and (n as Button).text.begins_with(debut):
 		return n
@@ -288,15 +288,15 @@ func _suivre_cible() -> void:
 	if not _bulle.visible:
 		cible = null
 	elif etape == "club":
-		var champ := _trouver("LineEdit") as LineEdit
-		cible = champ if champ and champ.text.strip_edges().length() < 3 else _trouver("FONDER")
+		var champ := _trouver("LineEdit") as LineEdit  # sans_traduction
+		cible = champ if champ and champ.text.strip_edges().length() < 3 else _trouver("FONDER")  # sans_traduction
 	elif f.has("cible"):
 		cible = _trouver(f["cible"])
 	_cible = cible
 	_projecteur.cible = cible
 	# Un tutoriel qui parle de prono sans fiche ouverte : on rappelle d'ouvrir un match.
 	if etape == "prono" or etape == "lieu":
-		var fiche_ouverte := _trouver("C'EST PARTI") != null
+		var fiche_ouverte := _trouver("C'EST PARTI") != null  # sans_traduction
 		_ecrire(f["texte"] if fiche_ouverte else "Rouvre un match dans la liste à gauche pour continuer.")
 
 
@@ -320,9 +320,9 @@ func _maj_affichage() -> void:
 	var id_guide: String = guide.get("id", "")
 	_portrait.texture = Game.texture_fanzzy(id_guide, true) if id_guide != "" else null
 	_titre.text = f["titre"]
-	var t: String = f["texte"]
+	var t: String = tr(f["texte"])
 	if etape == "club":
-		t = t % str(guide.get("nom", "ton premier supporter"))
+		t = t % str(guide.get("nom", tr("ton premier supporter")))
 	elif etape == "bravo":
 		t = t % RECOMPENSE
 	_ecrire(t)

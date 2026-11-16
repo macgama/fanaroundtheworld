@@ -150,7 +150,7 @@ func _construire() -> void:
 	var ps := Ui.panneau(Ui.NUIT, 20, 5)
 	_lbl_serie = Ui.label("Série x0", 30, Ui.BLANC, true, 6)
 	ps.add_child(_lbl_serie)
-	ps.tooltip_text = "Ballons attrapés d'affilée : +1 Jeton tous les %d" % RamasseurRegles.SERIE_BONUS
+	ps.tooltip_text = tr("Ballons attrapés d'affilée : +1 Jeton tous les %d") % RamasseurRegles.SERIE_BONUS
 	haut.add_child(ps)
 	var pj := Ui.panneau(Ui.NUIT, 20, 5)
 	var hj := Ui.hbox(8)
@@ -337,7 +337,7 @@ func _attraper(b: Dictionary) -> void:
 	_receveur_x = clampf(px(b["x"]) + randf_range(-140, 140), X_GAUCHE + 40, X_DROITE - 40)
 	var ici := Vector2(px(x_joueur) - 60, Y_MAINS - 120)
 	if p["bonus"] > 0:
-		_gain_flottant(ici, "+%d  SÉRIE x%d !" % [p["total"], serie], Ui.JAUNE)
+		_gain_flottant(ici, tr("+%d  SÉRIE x%d !") % [p["total"], serie], Ui.JAUNE)
 		_sons.jouer("ui_combo_%d" % clampi(serie / RamasseurRegles.SERIE_BONUS, 1, 4))
 	else:
 		_gain_flottant(ici, "+%d" % p["total"], Ui.JAUNE)
@@ -367,7 +367,7 @@ func relancer() -> void:
 	paye_remises += r
 	if r > 0:
 		remises_rapides += 1
-		_gain_flottant(Vector2(_receveur_x - 120, Y_TOUCHE - 200), "Remise rapide +%d" % r, Ui.VERT)
+		_gain_flottant(Vector2(_receveur_x - 120, Y_TOUCHE - 200), tr("Remise rapide +%d") % r, Ui.VERT)
 	_relance = {"de": Vector2(px(x_joueur), Y_MAINS - 20), "vers": Vector2(_receveur_x, Y_TOUCHE - 70), "t": 0.0}
 	_perso.cap = signf(_receveur_x - px(x_joueur)) if absf(_receveur_x - px(x_joueur)) > 1.0 else 1.0
 	_perso.jouer(&"lancer")
@@ -443,7 +443,7 @@ func _basculer_pause() -> void:
 func _maj_hud() -> void:
 	_lbl_paye.text = str(brut())
 	Ui.pop(_lbl_paye, 1.25, 0.2)
-	_lbl_serie.text = "Série x%d" % serie
+	_lbl_serie.text = tr("Série x%d") % serie
 	_lbl_serie.add_theme_color_override("font_color", Ui.JAUNE if serie >= RamasseurRegles.SERIE_BONUS else Ui.BLANC)
 
 
@@ -530,7 +530,7 @@ func _finir() -> void:
 		["Bonus de série", "+%d" % bonus],
 	]
 	if paye < total:
-		lignes.append(["Fatigue (%de partie du jour)" % (deja + 1), "paye ÷ 2"])
+		lignes.append([tr("Fatigue (%de partie du jour)") % (deja + 1), tr("paye ÷ 2")])
 	lignes.append(["Jetons gagnés", "+%d" % paye])
 	lignes.append(["XP du fan club", "+%d" % xp])
 	for l in lignes:

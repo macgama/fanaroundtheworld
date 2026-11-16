@@ -1,0 +1,20 @@
+{
+	"MES PRONOS": "MY PREDICTIONS",
+	"Gratuits, sans mise : devine les vrais matchs et gagne des Jetons.": "Free, no stakes: guess the real matches and earn Tokens.",
+	"Ta série": "Your streak",
+	"Comment ça marche": "How it works",
+	"Choisis un match à venir sur la carte, puis un score et l'équipe qui marque en premier.": "Pick an upcoming match on the map, then a score and the team that scores first.",
+	"Bon résultat (victoire, nul ou défaite) : +%d Jetons.": "Right result (win, draw or loss): +%d Tokens.",
+	"Score exact : +%d de plus.": "Exact score: +%d more.",
+	"Premier but trouvé : +%d.": "First goal right: +%d.",
+	"Chaque bon résultat d'affilée ajoute +%d %% à tes gains, jusqu'à ×%s.": "Each right result in a row adds +%d %% to your rewards, up to ×%s.",
+	"Rien à miser, rien à perdre : un mauvais prono remet juste la série à zéro.": "Nothing to stake, nothing to lose: a wrong prediction just resets the streak.",
+	"Score de fin de match, prolongation comprise, sans les tirs au but. Modifiable jusqu'au coup d'envoi.": "Full-time score, extra time included, without penalties. Can be changed until kick-off.",
+	"%d pronos en attente au maximum.": "%d pending predictions at most.",
+	"En attente (%d / %d)": "Pending (%d / %d)",
+	"Aucun prono en cours. Ouvre un match à venir sur la carte pour en faire un.": "No prediction in progress. Open an upcoming match on the map to make one.",
+	"Résultats": "Results",
+	"Ton prono : ": "Your prediction: ",
+	"Domicile": "Home",
+	"Extérieur": "Away"
+}

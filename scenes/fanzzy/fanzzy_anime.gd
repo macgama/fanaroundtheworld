@@ -234,7 +234,7 @@ func _ready() -> void:
 ## `delai` permet d'échelonner une foule (ola, réaction à un but).
 func jouer(nouvelle: StringName, duree := -1.0, delai := 0.0) -> void:
 	if not ACTIONS.has(nouvelle):
-		push_warning("FanzzyAnime : action inconnue « %s »" % nouvelle)
+		push_warning("FanzzyAnime : action inconnue « %s »" % nouvelle)  # sans_traduction
 		return
 	if delai > 0.0:
 		get_tree().create_timer(delai).timeout.connect(jouer.bind(nouvelle, duree, 0.0))
@@ -292,14 +292,14 @@ func _preparer() -> void:
 		return
 	if _corps == null:
 		_corps = MeshInstance2D.new()
-		_corps.name = "Corps"
+		_corps.name = "Corps"  # sans_traduction
 		add_child(_corps)
 		_effets = Node2D.new()
-		_effets.name = "Effets"
+		_effets.name = "Effets"  # sans_traduction
 		add_child(_effets)
 		_effets.draw.connect(_dessiner_effets)
 		_derriere = Node2D.new()
-		_derriere.name = "Derriere"
+		_derriere.name = "Derriere"  # sans_traduction
 		add_child(_derriere)
 		move_child(_derriere, 0) # derrière le corps
 		_derriere.draw.connect(_dessiner_derriere)
@@ -314,7 +314,7 @@ func _preparer() -> void:
 		_corps.material = _mat
 		# paupières : calque « cligne » (yeux fermés seuls) posé sur le corps
 		_paupieres = MeshInstance2D.new()
-		_paupieres.name = "Paupieres"
+		_paupieres.name = "Paupieres"  # sans_traduction
 		_paupieres.material = _mat
 		_paupieres.visible = false
 		_corps.add_child(_paupieres)
@@ -322,7 +322,7 @@ func _preparer() -> void:
 		# morceaux du squelette 2D : la même image, découpée par le shader
 		for partie in [1, 2, 3, 4]:
 			var m := MeshInstance2D.new()
-			m.name = ["", "JambeG", "JambeD", "BrasG", "BrasD"][partie]
+			m.name = ["", "JambeG", "JambeD", "BrasG", "BrasD"][partie]  # sans_traduction
 			var mat := ShaderMaterial.new()
 			mat.shader = SHADER
 			mat.set_shader_parameter(&"partie", partie)

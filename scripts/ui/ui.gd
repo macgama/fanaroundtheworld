@@ -57,27 +57,27 @@ static func creer_theme() -> Theme:
 	var t := Theme.new()
 	t.default_font = police_texte()
 	t.default_font_size = 22
-	t.set_color("font_color", "Label", BLANC)
-	t.set_color("font_outline_color", "Label", CONTOUR)
-	t.set_constant("outline_size", "Label", 0)
+	t.set_color("font_color", "Label", BLANC)  # sans_traduction
+	t.set_color("font_outline_color", "Label", CONTOUR)  # sans_traduction
+	t.set_constant("outline_size", "Label", 0)  # sans_traduction
 
-	t.set_font("font", "Button", police_titre())
-	t.set_font_size("font_size", "Button", 26)
-	t.set_color("font_color", "Button", BLANC)
-	t.set_color("font_hover_color", "Button", BLANC)
-	t.set_color("font_pressed_color", "Button", BLANC)
-	t.set_color("font_focus_color", "Button", BLANC)
-	t.set_color("font_disabled_color", "Button", Color(1, 1, 1, 0.45))
-	t.set_color("font_outline_color", "Button", CONTOUR)
-	t.set_constant("outline_size", "Button", 6)
-	t.set_stylebox("normal", "Button", boite(BLEU, 18, 5, 6))
-	t.set_stylebox("hover", "Button", boite(BLEU.lightened(0.15), 18, 5, 6))
-	t.set_stylebox("pressed", "Button", boite(BLEU.darkened(0.15), 18, 5, 2))
-	t.set_stylebox("disabled", "Button", boite(Color("#55507f"), 18, 5, 4))
-	t.set_stylebox("focus", "Button", StyleBoxEmpty.new())
+	t.set_font("font", "Button", police_titre())  # sans_traduction
+	t.set_font_size("font_size", "Button", 26)  # sans_traduction
+	t.set_color("font_color", "Button", BLANC)  # sans_traduction
+	t.set_color("font_hover_color", "Button", BLANC)  # sans_traduction
+	t.set_color("font_pressed_color", "Button", BLANC)  # sans_traduction
+	t.set_color("font_focus_color", "Button", BLANC)  # sans_traduction
+	t.set_color("font_disabled_color", "Button", Color(1, 1, 1, 0.45))  # sans_traduction
+	t.set_color("font_outline_color", "Button", CONTOUR)  # sans_traduction
+	t.set_constant("outline_size", "Button", 6)  # sans_traduction
+	t.set_stylebox("normal", "Button", boite(BLEU, 18, 5, 6))  # sans_traduction
+	t.set_stylebox("hover", "Button", boite(BLEU.lightened(0.15), 18, 5, 6))  # sans_traduction
+	t.set_stylebox("pressed", "Button", boite(BLEU.darkened(0.15), 18, 5, 2))  # sans_traduction
+	t.set_stylebox("disabled", "Button", boite(Color("#55507f"), 18, 5, 4))  # sans_traduction
+	t.set_stylebox("focus", "Button", StyleBoxEmpty.new())  # sans_traduction
 
-	t.set_stylebox("panel", "PanelContainer", boite(NUIT, 28, 6, 8))
-	t.set_stylebox("panel", "Panel", boite(NUIT, 28, 6, 8))
+	t.set_stylebox("panel", "PanelContainer", boite(NUIT, 28, 6, 8))  # sans_traduction
+	t.set_stylebox("panel", "Panel", boite(NUIT, 28, 6, 8))  # sans_traduction
 
 	var fond_scroll := StyleBoxFlat.new()
 	fond_scroll.bg_color = Color(1, 1, 1, 0.25)
@@ -85,13 +85,13 @@ static func creer_theme() -> Theme:
 	var grab := StyleBoxFlat.new()
 	grab.bg_color = Color(1, 1, 1, 0.7)
 	grab.set_corner_radius_all(6)
-	t.set_stylebox("scroll", "VScrollBar", fond_scroll)
-	t.set_stylebox("grabber", "VScrollBar", grab)
-	t.set_stylebox("grabber_highlight", "VScrollBar", grab)
-	t.set_stylebox("grabber_pressed", "VScrollBar", grab)
+	t.set_stylebox("scroll", "VScrollBar", fond_scroll)  # sans_traduction
+	t.set_stylebox("grabber", "VScrollBar", grab)  # sans_traduction
+	t.set_stylebox("grabber_highlight", "VScrollBar", grab)  # sans_traduction
+	t.set_stylebox("grabber_pressed", "VScrollBar", grab)  # sans_traduction
 
-	t.set_stylebox("panel", "TooltipPanel", boite(NUIT, 12, 3))
-	t.set_color("font_color", "TooltipLabel", BLANC)
+	t.set_stylebox("panel", "TooltipPanel", boite(NUIT, 12, 3))  # sans_traduction
+	t.set_color("font_color", "TooltipLabel", BLANC)  # sans_traduction
 	return t
 
 
@@ -197,7 +197,7 @@ static func pop(n: CanvasItem, echelle := 1.15, duree := 0.18) -> void:
 
 
 class Ecusson extends Control:
-	var sigle := "FC"
+	var sigle := "FC"  # sans_traduction
 	var c1 := Ui.BLEU
 	var c2 := Ui.BLANC
 

@@ -151,7 +151,7 @@ func _remplir() -> void:
 
 func _remplir_carnet() -> void:
 	var lieux := Game.lieux_visites()
-	_titre.text = "CARNET DE VOYAGE · %d stade%s · %d pays" % [Game.tampons.size(), "" if Game.tampons.size() == 1 else "s", lieux["pays"].size()]
+	_titre.text = tr("CARNET DE VOYAGE · %d stade%s · %d pays") % [Game.tampons.size(), "" if Game.tampons.size() == 1 else "s", lieux["pays"].size()]
 	if Game.tampons.is_empty():
 		var vide := Ui.label("Aucun stade tamponné pour l'instant.\nChoisis un match sur la carte et va le voir « Au stade » : le stade du club qui reçoit rejoint ton carnet.", 24, Ui.GRIS)
 		vide.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
@@ -223,7 +223,7 @@ func _date_courte(d: String) -> String:
 func _remplir_album() -> void:
 	var c: Dictionary = Game.collection
 	var nb := Game.fanzzy.filter(func(z): return Collection.a_fanzzy(c, z["id"])).size()
-	_titre.text = "ALBUM FANZZY · %d / %d" % [nb, Game.fanzzy.size()]
+	_titre.text = tr("ALBUM FANZZY · %d / %d") % [nb, Game.fanzzy.size()]
 	var aide := Ui.label("Un FANZZY rejoint l'album quand il joue un duel dans ta tribune (bouton FANZZY de la carte).", 20, Ui.GRIS)
 	aide.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_gauche.add_child(aide)
@@ -278,7 +278,7 @@ func _carte_fanzzy(z: Dictionary, c: Dictionary) -> Control:
 		hs.add_child(rond)
 	v.add_child(hs)
 	if vu:
-		pan.tooltip_text = "%s\nSérie : %s\nDans l'album depuis le %s\nGarde-robe : %d / %d skins portés" % [
+		pan.tooltip_text = tr("%s\nSérie : %s\nDans l'album depuis le %s\nGarde-robe : %d / %d skins portés") % [
 			z["nom"], Game.series_fanzzy.get(z.get("serie", ""), {}).get("nom", z.get("serie", "")),
 			c["fanzzy"][z["id"]], portes, skins.size()]
 	else:
@@ -352,7 +352,7 @@ func _reclamer(id: String, b: Button) -> void:
 func _remplir_succes() -> void:
 	var etat := Game.etat_succes()
 	var n := Game.succes.size()
-	_titre.text = "SUCCÈS · %d / %d" % [n, Succes.LISTE.size()]
+	_titre.text = tr("SUCCÈS · %d / %d") % [n, Succes.LISTE.size()]
 	# Gagnés d'abord (les plus récents en tête), puis les plus avancés.
 	var liste: Array = Succes.LISTE.duplicate()
 	var rang := func(x: Dictionary) -> float:
@@ -372,7 +372,7 @@ func _remplir_succes() -> void:
 	var pan := Ui.panneau(Ui.NUIT_CLAIR, 18, 4)
 	var v := Ui.vbox(10)
 	pan.add_child(v)
-	v.add_child(Ui.label("%d succès gagnés sur %d" % [n, Succes.LISTE.size()], 28, Ui.BLANC, true, 4))
+	v.add_child(Ui.label(tr("%d succès gagnés sur %d") % [n, Succes.LISTE.size()], 28, Ui.BLANC, true, 4))
 	var barre := _barre(n, Succes.LISTE.size(), Ui.JAUNE)
 	v.add_child(barre)
 	_droite.add_child(pan)
@@ -410,7 +410,7 @@ func _carte_succes(x: Dictionary, etat: Dictionary) -> Control:
 	v.add_child(t)
 	if gagne:
 		var d := Time.get_date_dict_from_unix_time(int(Game.succes[x["id"]]))
-		v.add_child(Ui.label("Gagné le %02d/%02d/%d" % [d["day"], d["month"], d["year"]], 16, Ui.JAUNE, true))
+		v.add_child(Ui.label(tr("Gagné le %02d/%02d/%d") % [d["day"], d["month"], d["year"]], 16, Ui.JAUNE, true))
 	else:
 		var p := Succes.progres(x, etat)
 		var hb := Ui.hbox(8)

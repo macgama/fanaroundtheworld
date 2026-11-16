@@ -14,13 +14,13 @@ extends RefCounted
 const CONTINENTS := ["Europe", "Africa", "Asia", "North America", "South America", "Oceania"]
 const CENTRES_CONTINENTS := {
 	"Europe": Vector2(12.0, 49.0), "Africa": Vector2(20.0, 3.0), "Asia": Vector2(95.0, 32.0),
-	"North America": Vector2(-95.0, 35.0), "South America": Vector2(-60.0, -18.0), "Oceania": Vector2(140.0, -25.0),
+	"North America": Vector2(-95.0, 35.0), "South America": Vector2(-60.0, -18.0), "Oceania": Vector2(140.0, -25.0),  # sans_traduction
 }
 ## Vue (centre lon/lat, largeur en degrés) de chaque continent.
 const VUES_CONTINENTS := {
 	"Europe": [Vector2(12.0, 52.0), 60.0], "Africa": [Vector2(18.0, 2.0), 85.0], "Asia": [Vector2(95.0, 30.0), 110.0],
-	"North America": [Vector2(-92.0, 33.0), 95.0], "South America": [Vector2(-60.0, -22.0), 70.0],
-	"Oceania": [Vector2(150.0, -22.0), 75.0],
+	"North America": [Vector2(-92.0, 33.0), 95.0], "South America": [Vector2(-60.0, -22.0), 70.0],  # sans_traduction
+	"Oceania": [Vector2(150.0, -22.0), 75.0],  # sans_traduction
 }
 
 static var _d: Dictionary = {}
@@ -72,18 +72,18 @@ static func info_pays(cle: String) -> Dictionary:
 
 ## Noms de sélections propres au flux API-Football, absents de pays.json.
 const ALIAS_FLUX := {
-	"cape verde islands": "cape verde", "fyr macedonia": "republic of macedonia",
-	"french guyana": "french guiana", "rep. of ireland": "ireland", "türkiye": "turkey",
-	"korea republic": "south korea", "korea dpr": "north korea", "bonaire": "bonaire, sint eustatius and saba",
-	"sint maarten": "sint maarten (dutch part)", "saint martin": "saint martin (french part)",
-	"st. vincent / grenadines": "saint vincent and the grenadines", "chinese taipei": "taiwan",
+	"cape verde islands": "cape verde", "fyr macedonia": "republic of macedonia",  # sans_traduction
+	"french guyana": "french guiana", "rep. of ireland": "ireland", "türkiye": "turkey",  # sans_traduction
+	"korea republic": "south korea", "korea dpr": "north korea", "bonaire": "bonaire, sint eustatius and saba",  # sans_traduction
+	"sint maarten": "sint maarten (dutch part)", "saint martin": "saint martin (french part)",  # sans_traduction
+	"st. vincent / grenadines": "saint vincent and the grenadines", "chinese taipei": "taiwan",  # sans_traduction
 }
 
 
 ## Sépare « France U20 » en ["France", " U20"] (sélections de jeunes, olympiques, féminines).
 static func _separer_suffixe(nom: String) -> PackedStringArray:
 	if _re_suffixe == null:
-		_re_suffixe = RegEx.create_from_string("^(.*?)( (?:U-?\\d{2}|W|Women|Olympic))$")
+		_re_suffixe = RegEx.create_from_string("^(.*?)( (?:U-?\\d{2}|W|Women|Olympic))$")  # sans_traduction
 	var res := _re_suffixe.search(nom.strip_edges())
 	if res:
 		return PackedStringArray([res.get_string(1), res.get_string(2)])
@@ -94,7 +94,7 @@ static func cle_pays(nom: String) -> String:
 	var pays: Dictionary = _donnees().get("pays", {})
 	var alias: Dictionary = _donnees().get("alias", {})
 	var base := _separer_suffixe(nom)[0].to_lower()
-	for k in [base, base.replace("-", " "), base.replace(" & ", " and "), base.replace("st. ", "saint ")]:
+	for k in [base, base.replace("-", " "), base.replace(" & ", " and "), base.replace("st. ", "saint ")]:  # sans_traduction
 		if pays.has(k):
 			return k
 		if alias.has(k):
@@ -105,7 +105,25 @@ static func cle_pays(nom: String) -> String:
 
 
 static func nom_pays(cle: String) -> String:
+	if not Trad.est_source():
+		return nom_anglais(cle)
 	return info_pays(cle).get("nom", cle.capitalize())
+
+
+## Nom anglais d'un pays : sa clé (« south korea ») mise en forme.
+static func nom_anglais(cle: String) -> String:
+	if cle in ["usa", "uae"]:
+		return cle.to_upper()
+	var mots := []
+	for m in cle.split(" "):
+		if m in ["and", "of", "the", "da", "de"]:
+			mots.append(m)
+			continue
+		var parts := []
+		for x in m.split("-"):
+			parts.append(x.left(1).to_upper() + x.substr(1))
+		mots.append("-".join(parts))
+	return " ".join(mots)
 
 
 static func nom_pays_fr(nom_anglais: String) -> String:
@@ -115,7 +133,7 @@ static func nom_pays_fr(nom_anglais: String) -> String:
 
 
 static func continent_de(cle_pays: String) -> String:
-	return info_pays(cle_pays).get("continent", "World")
+	return info_pays(cle_pays).get("continent", "World")  # sans_traduction
 
 
 static func niveau_competition(id: String) -> String:
@@ -123,7 +141,7 @@ static func niveau_competition(id: String) -> String:
 	var info := info_competition(id)
 	if info.has("pays"):
 		return "pays"
-	var r: String = info.get("region", "World")
+	var r: String = info.get("region", "World")  # sans_traduction
 	return "continent" if r in CONTINENTS else "monde"
 
 
@@ -141,7 +159,7 @@ static func lieu_match(m: Dictionary) -> Dictionary:
 		pays = cle_pays(str(home.get("name", "")))
 	else:
 		pays = pays_des_equipes.get(id_home, "")
-	var continent: String = info.get("region", "World") if niveau == "continent" else continent_de(pays)
+	var continent: String = info.get("region", "World") if niveau == "continent" else continent_de(pays)  # sans_traduction
 	var pos := position_stade(pays, id_home) if pays != "" else _repli(continent, id_home)
 	return {"niveau": niveau, "continent": continent, "pays": pays, "lon": pos.x, "lat": pos.y, "stade": "stade:" + id_home}
 

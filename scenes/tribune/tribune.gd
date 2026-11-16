@@ -35,7 +35,7 @@ func _ready() -> void:
 		var f := FicheMatch.de(m)
 		var info := Ui.panneau(Ui.NUIT, 18, 5)
 		var mode: Dictionary = Game.MODES_SUIVI.get(p.get("mode", "stade"), {})
-		info.add_child(Ui.label("%s – %s · %s" % [f["dom"]["nom"], f["ext"]["nom"], mode.get("titre", "")], 22, Ui.BLANC, true))
+		info.add_child(Ui.label("%s – %s · %s" % [f["dom"]["nom"], f["ext"]["nom"], tr(mode.get("titre", ""))], 22, Ui.BLANC, true))
 		haut.add_child(info)
 
 	_colonnes = Ui.hbox(24)
@@ -105,13 +105,13 @@ func _colonne(i: int) -> Control:
 	var v := Ui.vbox(8)
 	pan.add_child(v)
 	var h := Ui.hbox(10)
-	h.add_child(Ui.label(info["titre"].to_upper(), 40, Ui.BLANC, true, 8))
-	var touche := Ui.pastille("touche " + info["touche"], Ui.NUIT_CLAIR, 16)
+	h.add_child(Ui.label(tr(info["titre"]).to_upper(), 40, Ui.BLANC, true, 8))
+	var touche := Ui.pastille(tr("touche ") + info["touche"], Ui.NUIT_CLAIR, 16)
 	touche.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	h.add_child(touche)
 	v.add_child(h)
 	var fams: Array = info["familles"]
-	v.add_child(Ui.label(" ou ".join(fams.map(func(fa): return Game.nom_famille(fa))), 18, Ui.GRIS))
+	v.add_child(Ui.label(tr(" ou ").join(fams.map(func(fa): return Game.nom_famille(fa))), 18, Ui.GRIS))
 
 	var hz := Ui.hbox(12)
 	hz.size_flags_vertical = Control.SIZE_EXPAND_FILL
@@ -129,7 +129,7 @@ func _colonne(i: int) -> Control:
 	nom.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	vd.add_child(nom)
 	vd.add_child(Ui.pastille(Game.nom_famille(z["famille"]), Game.couleur_famille(z["famille"]), 16, z["famille"] in ["voix", "fide"]))
-	var cri := Ui.label("Cri : « %s »" % z["cri"]["label"], 18, Ui.BLANC, true)
+	var cri := Ui.label(tr("Cri : « %s »") % tr(z["cri"]["label"]), 18, Ui.BLANC, true)
 	cri.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	vd.add_child(cri)
 	for e in Duel.effets_texte(z):
@@ -147,7 +147,7 @@ func _colonne(i: int) -> Control:
 	var idx := skins.map(func(s): return s["id"]).find(Game.skin_de(z["id"]))
 	var g := Ui.bouton("<", Ui.NUIT_CLAIR, 24)
 	var d := Ui.bouton(">", Ui.NUIT_CLAIR, 24)
-	var lbl := Ui.label("Skin %d / %d" % [idx + 1, skins.size()], 20, Ui.BLANC, true)
+	var lbl := Ui.label(tr("Skin %d / %d") % [idx + 1, skins.size()], 20, Ui.BLANC, true)
 	g.pressed.connect(func(): _changer_skin(z, -1))
 	d.pressed.connect(func(): _changer_skin(z, 1))
 	hs.add_child(g)

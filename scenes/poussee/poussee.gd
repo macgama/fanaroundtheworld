@@ -665,7 +665,7 @@ const RAISONS_CODE := {"BUUUUT !": "but", "TRIBUNE CONQUISE !": "tribune", "ILS 
 func _preparer_en_ligne() -> void:
 	Reseau.message.connect(_sur_message)
 	Reseau.adversaire_parti.connect(_sur_adversaire_parti)
-	annoncer("En attente de %s…" % Reseau.adversaire.get("nom", "l'adversaire"), Ui.BLANC)
+	annoncer(tr("En attente de %s…") % Reseau.adversaire.get("nom", tr("l'adversaire")), Ui.BLANC)
 	Reseau.envoyer(Protocole.msg("pret"))
 
 

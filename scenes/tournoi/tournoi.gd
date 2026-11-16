@@ -17,8 +17,8 @@ var _couleurs: Array = []
 
 func _ready() -> void:
 	for arg in OS.get_cmdline_user_args():
-		if arg.begins_with("--onglet="):
-			_onglet = arg.trim_prefix("--onglet=")
+		if arg.begins_with("--onglet="):  # sans_traduction
+			_onglet = arg.trim_prefix("--onglet=")  # sans_traduction
 	Game.actualiser_tournoi()
 	var t: Dictionary = Game.tournoi
 	if bool(t["inscrit"]) or not (t["historique"] as Array).is_empty():
@@ -91,10 +91,10 @@ func _remplir() -> void:
 		return
 	var f := Game.actualiser_tournoi()
 	if f["etat"] == "actif":
-		_sous_titre.text = "Ce week-end, ton fan club affronte ceux des autres joueurs sur les vrais matchs. Fin %s à %s." % [
+		_sous_titre.text = tr("Ce week-end, ton fan club affronte ceux des autres joueurs sur les vrais matchs. Fin %s à %s.") % [
 			FicheMatch.date_texte(int(f["fin"])), FicheMatch.heure_texte(int(f["fin"]))]
 	else:
-		_sous_titre.text = "Prochain tournoi : %s à %s. Prépare ta tribune !" % [
+		_sous_titre.text = tr("Prochain tournoi : %s à %s. Prépare ta tribune !") % [
 			FicheMatch.date_texte(int(f["prochain"])), FicheMatch.heure_texte(int(f["prochain"]))]
 	_remplir_gauche(f)
 	_remplir_droite(f)
@@ -117,7 +117,7 @@ func _remplir_gauche(f: Dictionary) -> void:
 		return
 	_gauche.add_child(_carte_club(t))
 	if f["etat"] != "actif":
-		_texte(_gauche, "Le tournoi ouvre chaque vendredi à %s et se termine le lundi à %s (heure locale). Les inscriptions ouvrent avec lui." % [
+		_texte(_gauche, tr("Le tournoi ouvre chaque vendredi à %s et se termine le lundi à %s (heure locale). Les inscriptions ouvrent avec lui.") % [
 			FicheMatch.heure_texte(int(f["prochain"])), FicheMatch.heure_texte(int(f["prochain"]) + Tournoi.DUREE_S)], 19, Ui.GRIS)
 		_historique(t)
 		return
@@ -140,7 +140,7 @@ func _carte_club(t: Dictionary) -> Control:
 	var l := Ui.label(nom, 32, Ui.JAUNE, true, 6)
 	l.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	v.add_child(l)
-	v.add_child(Ui.label("Fan club : %s · niv. %d" % [Game.fan_club_nom, Game.niveau()], 18, Ui.GRIS))
+	v.add_child(Ui.label(tr("Fan club : %s · niv. %d") % [Game.fan_club_nom, Game.niveau()], 18, Ui.GRIS))
 	if bool(t["inscrit"]):
 		var p := Ui.pastille("Inscrit ce week-end", Ui.VERT, 16, true)
 		p.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
@@ -175,7 +175,7 @@ func _inscription() -> void:
 			b.add_theme_stylebox_override("hover", Ui.boite(Color(FanClub.COULEURS[i]).lightened(0.2), 12, 3))
 			b.add_theme_stylebox_override("pressed", Ui.boite(Ui.JAUNE, 12, 3))
 			b.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
-			b.tooltip_text = "Couleur %d" % (k + 1)
+			b.tooltip_text = tr("Couleur %d") % (k + 1)
 			var kk := k
 			var ii := i
 			b.pressed.connect(func():
@@ -204,15 +204,15 @@ func _stats(t: Dictionary) -> void:
 		for l in Tournoi.classement_simule(t, Game.maintenant()):
 			if l["moi"]:
 				rang = int(l["rang"])
-	hs.add_child(_case("Points", str(pts), "%d duel%s sur %d" % [nb, "" if nb == 1 else "s", Tournoi.DUELS_MAX]))
+	hs.add_child(_case("Points", str(pts), tr("%d duel%s sur %d") % [nb, "" if nb == 1 else "s", Tournoi.DUELS_MAX]))
 	hs.add_child(_case("Classement", Classement._ordinal(rang) if rang > 0 else "—",
-		"sur %d clubs" % clubs if clubs > 0 else ("entraînement" if not EnLigne.joignable else "")))
-	hs.add_child(_case("Tribune solide", "+%d" % clampi(int(t["defense"]), 0, Tournoi.DEFENSE_MAX), "max %d" % Tournoi.DEFENSE_MAX))
+		tr("sur %d clubs") % clubs if clubs > 0 else (tr("entraînement") if not EnLigne.joignable else "")))
+	hs.add_child(_case("Tribune solide", "+%d" % clampi(int(t["defense"]), 0, Tournoi.DEFENSE_MAX), tr("max %d") % Tournoi.DEFENSE_MAX))
 	var suivant := Tournoi.prochain_palier(pts)
 	var p := Tournoi.palier(pts)
-	var txt := "Palier atteint : %s (%d Jetons, %d XP PASS)." % [p["titre"], p["jetons"], p["xp_pass"]] if not p.is_empty() else "Pas encore de palier."
+	var txt := tr("Palier atteint : %s (%d Jetons, %d XP PASS).") % [tr(p["titre"]), p["jetons"], p["xp_pass"]] if not p.is_empty() else tr("Pas encore de palier.")
 	if not suivant.is_empty():
-		txt += " Prochain : %s à %d points." % [suivant["titre"], suivant["points"]]
+		txt += tr(" Prochain : %s à %d points.") % [tr(suivant["titre"]), suivant["points"]]
 	_texte(_gauche, txt, 18, Ui.BLANC)
 	var barre := ProgressBar.new()
 	barre.custom_minimum_size = Vector2(0, 18)
@@ -226,7 +226,7 @@ func _stats(t: Dictionary) -> void:
 
 func _adversaire(t: Dictionary) -> void:
 	if (t["duels"] as Array).size() >= Tournoi.DUELS_MAX:
-		_texte(_gauche, "Tes %d duels sont joués ! Reviens lundi chercher ta récompense." % Tournoi.DUELS_MAX, 22, Ui.VERT, true)
+		_texte(_gauche, tr("Tes %d duels sont joués ! Reviens lundi chercher ta récompense.") % Tournoi.DUELS_MAX, 22, Ui.VERT, true)
 		return
 	var a := Tournoi.adversaire(t)
 	_texte(_gauche, "Prochain adversaire", 26, Ui.BLANC, true)
@@ -240,7 +240,7 @@ func _adversaire(t: Dictionary) -> void:
 	v.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	h.add_child(v)
 	v.add_child(Ui.label(nom, 26, Ui.JAUNE, true, 5))
-	v.add_child(Ui.label(("Club du jeu" if bool(a.get("bot", false)) else "Fan club d'un joueur") + " · niv. %d" % int(a.get("niveau", 1)), 17, Ui.GRIS))
+	v.add_child(Ui.label(tr("Club du jeu" if bool(a.get("bot", false)) else "Fan club d'un joueur") + tr(" · niv. %d") % int(a.get("niveau", 1)), 17, Ui.GRIS))
 	var b := Ui.bouton("Choisir un match", Ui.VERT, 22)
 	Ui.colorer_bouton(b, Ui.VERT, true)
 	b.size_flags_vertical = Control.SIZE_SHRINK_CENTER
@@ -257,11 +257,11 @@ func _carte_recompense(r: Dictionary) -> Control:
 	var carte := Ui.panneau(Ui.JAUNE.darkened(0.45), 22, 5)
 	var v := Ui.vbox(8)
 	carte.add_child(v)
-	v.add_child(Ui.label("Tournoi terminé (%s) !" % _date_id(str(r["id"])), 28, Ui.JAUNE, true, 6))
+	v.add_child(Ui.label(tr("Tournoi terminé (%s) !") % _date_id(str(r["id"])), 28, Ui.JAUNE, true, 6))
 	var rang := int(r.get("rang", 0))
-	var details := "%d points · %d duels" % [int(r["points"]), int(r.get("duels", 0))]
+	var details := tr("%d points · %d duels") % [int(r["points"]), int(r.get("duels", 0))]
 	if rang > 0:
-		details += " · %s sur %d clubs" % [Classement._ordinal(rang), int(r.get("clubs", 0))]
+		details += tr(" · %s sur %d clubs") % [Classement._ordinal(rang), int(r.get("clubs", 0))]
 	v.add_child(Ui.label(details, 20, Ui.BLANC))
 	var quoi: Array = []
 	if g["palier"] != "":
@@ -271,8 +271,8 @@ func _carte_recompense(r: Dictionary) -> Control:
 	if not quoi.is_empty():
 		v.add_child(Ui.label(" + ".join(quoi), 20, Ui.BLANC, true))
 	if rien:
-		v.add_child(Ui.label("Il fallait %d points pour le premier palier. Au week-end prochain !" % int(Tournoi.PALIERS[-1]["points"]), 17, Ui.GRIS))
-	var b := Ui.bouton("OK" if rien else "Récupérer : %d Jetons · %d XP PASS" % [g["jetons"], g["xp_pass"]], Ui.VERT, 24)
+		v.add_child(Ui.label(tr("Il fallait %d points pour le premier palier. Au week-end prochain !") % int(Tournoi.PALIERS[-1]["points"]), 17, Ui.GRIS))
+	var b := Ui.bouton("OK" if rien else tr("Récupérer : %d Jetons · %d XP PASS") % [g["jetons"], g["xp_pass"]], Ui.VERT, 24)
 	Ui.colorer_bouton(b, Ui.VERT, true)
 	# En ligne, on attend le rang final (bonus de classement) avant de verser.
 	if not bool(r.get("verifie", false)) and EnLigne.joignable and not rien:
@@ -292,7 +292,7 @@ func _historique(t: Dictionary) -> void:
 	_texte(_gauche, "Tes derniers tournois", 24, Ui.BLANC, true)
 	for r in h:
 		var rang := int(r.get("rang", 0))
-		_texte(_gauche, "• %s : %d points%s · +%d Jetons" % [_date_id(str(r["id"])), int(r["points"]),
+		_texte(_gauche, tr("• %s : %d points%s · +%d Jetons") % [_date_id(str(r["id"])), int(r["points"]),
 			" · %s" % Classement._ordinal(rang) if rang > 0 else "", int(r.get("jetons", 0))], 18, Ui.GRIS)
 
 
@@ -337,7 +337,7 @@ func _classement(liste: VBoxContainer, f: Dictionary) -> void:
 		if top.is_empty():
 			_texte(liste, "Aucun club n'a encore marqué ce week-end : à toi d'ouvrir le score !", 20, Ui.GRIS)
 			return
-		_texte(liste, "%d fan clubs inscrits" % int(d.get("inscrits", top.size())), 18, Ui.GRIS)
+		_texte(liste, tr("%d fan clubs inscrits") % int(d.get("inscrits", top.size())), 18, Ui.GRIS)
 		var moi_dedans := false
 		for c in top:
 			var c_moi: bool = str(c.get("id", "")) == str(EnLigne.identite["id"])
@@ -373,8 +373,8 @@ func _ligne_club(rang: int, nom_v: Variant, couleurs: Variant, points: int, duel
 	n.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
 	h.add_child(n)
 	if duels >= 0:
-		h.add_child(Ui.pastille("%d duel%s" % [duels, "" if duels == 1 else "s"], Ui.BLEU, 14))
-	var p := Ui.label("%d pts" % points, 22, Ui.JAUNE, true)
+		h.add_child(Ui.pastille(tr("%d duel%s") % [duels, "" if duels == 1 else "s"], Ui.BLEU, 14))
+	var p := Ui.label(tr("%d pts") % points, 22, Ui.JAUNE, true)
 	p.custom_minimum_size = Vector2(110, 0)
 	p.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 	h.add_child(p)
@@ -405,7 +405,7 @@ func _liste_matchs(liste: VBoxContainer, f: Dictionary) -> void:
 	if matchs.is_empty():
 		_texte(liste, "Aucun match du week-end dans le calendrier pour l'instant.", 20, Ui.GRIS)
 		return
-	_texte(liste, "Chaque match ne compte qu'une fois. Au stade : +%d point. Derby, finale, Grand Choc : +%d point." % [Tournoi.BONUS_STADE, Tournoi.BONUS_EVENEMENT], 17, Ui.GRIS)
+	_texte(liste, tr("Chaque match ne compte qu'une fois. Au stade : +%d point. Derby, finale, Grand Choc : +%d point.") % [Tournoi.BONUS_STADE, Tournoi.BONUS_EVENEMENT], 17, Ui.GRIS)
 	for m in matchs.slice(0, 60):
 		liste.add_child(_ligne_match(m, t))
 
@@ -457,7 +457,7 @@ func _liste_duels(liste: VBoxContainer) -> void:
 		var v := Ui.vbox(0)
 		v.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		h.add_child(v)
-		v.add_child(Ui.label("contre %s" % Tournoi.nom_texte(x["nom_adv"]), 21, Ui.BLANC, true))
+		v.add_child(Ui.label(tr("contre %s") % Tournoi.nom_texte(x["nom_adv"]), 21, Ui.BLANC, true))
 		var sous := ""
 		if not m.is_empty():
 			var fi := FicheMatch.de(m)
@@ -478,14 +478,14 @@ func _liste_duels(liste: VBoxContainer) -> void:
 
 func _regles(liste: VBoxContainer, f: Dictionary) -> void:
 	for ligne in [
-		"Le tournoi dure du vendredi %s au lundi %s (heure locale). Inscription gratuite, avec ton fan club." % [
+		tr("Le tournoi dure du vendredi %s au lundi %s (heure locale). Inscription gratuite, avec ton fan club.") % [
 			FicheMatch.heure_texte(int(f["debut"])), FicheMatch.heure_texte(int(f["fin"]))],
 		"Chaque duel (ambiance, Arène ou Poussée, contre l'ordinateur) joué sur un match du week-end compte contre un autre fan club, tiré au sort parmi les clubs inscrits.",
-		"Victoire : %d points. Défaite : %d point. Au stade : +%d. Derby, finale ou Grand Choc : +%d." % [Tournoi.POINTS_VICTOIRE, Tournoi.POINTS_DEFAITE, Tournoi.BONUS_STADE, Tournoi.BONUS_EVENEMENT],
-		"%d duels au plus, chacun sur un match différent et contre un club différent. Rejouer un match ne rapporte pas de point de tournoi, et ses Jetons baissent comme d'habitude (100 %%, 50 %%, 25 %%, puis rien)." % Tournoi.DUELS_MAX,
-		"Quand un club perd contre le tien, ta tribune a tenu bon : +1 point (%d au plus)." % Tournoi.DEFENSE_MAX,
-		"Lundi, récupère ta récompense : %s." % ", ".join(Tournoi.PALIERS.map(func(p): return "%d pts = %d Jetons" % [p["points"], p["jetons"]])),
-		"Bonus de classement s'il y a au moins %d clubs : 1er +150, 2e +100, 3e +75, top 10 +40, top 25 %% +20 Jetons." % Tournoi.CLUBS_MIN_BONUS,
+		tr("Victoire : %d points. Défaite : %d point. Au stade : +%d. Derby, finale ou Grand Choc : +%d.") % [Tournoi.POINTS_VICTOIRE, Tournoi.POINTS_DEFAITE, Tournoi.BONUS_STADE, Tournoi.BONUS_EVENEMENT],
+		tr("%d duels au plus, chacun sur un match différent et contre un club différent. Rejouer un match ne rapporte pas de point de tournoi, et ses Jetons baissent comme d'habitude (100 %%, 50 %%, 25 %%, puis rien).") % Tournoi.DUELS_MAX,
+		tr("Quand un club perd contre le tien, ta tribune a tenu bon : +1 point (%d au plus).") % Tournoi.DEFENSE_MAX,
+		tr("Lundi, récupère ta récompense : %s.") % ", ".join(Tournoi.PALIERS.map(func(p): return tr("%d pts = %d Jetons") % [p["points"], p["jetons"]])),
+		tr("Bonus de classement s'il y a au moins %d clubs : 1er +150, 2e +100, 3e +75, top 10 +40, top 25 %% +20 Jetons.") % Tournoi.CLUBS_MIN_BONUS,
 		"Les duels en ligne contre un vrai joueur ne comptent pas : ils ont leur propre salon.",
 	]:
 		_texte(liste, "• " + ligne, 19, Ui.BLANC)
@@ -525,4 +525,4 @@ func _choix(mots: Array, choisi: int) -> OptionButton:
 static func _date_id(id: String) -> String:
 	var t := int(Time.get_unix_time_from_datetime_string(id + "T12:00:00"))
 	var d := Time.get_datetime_dict_from_unix_time(t)
-	return "week-end du %d %s" % [d["day"], FicheMatch.MOIS[d["month"] - 1]]
+	return Trad.t("week-end du %d %s") % [d["day"], FicheMatch.MOIS[d["month"] - 1]]

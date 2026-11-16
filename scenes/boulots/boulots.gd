@@ -64,7 +64,7 @@ func _carte(b: Dictionary) -> Control:
 	p.custom_minimum_size = Vector2(0, 330)
 	var v := Ui.vbox(14)
 	p.add_child(Ui.marge(v, 26, 22, 26, 22))
-	var bande := Ui.pastille(str(b["titre"]).to_upper(), c, 26)
+	var bande := Ui.pastille(tr(str(b["titre"])).to_upper(), c, 26)
 	bande.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
 	v.add_child(bande)
 	var t := Ui.label(str(b["texte"]), 24, Ui.BLANC)
@@ -73,9 +73,9 @@ func _carte(b: Dictionary) -> Control:
 	v.add_child(t)
 	var id := str(b["id"])
 	var n := Game.services_boulot_du_jour(id)
-	var info := "Record : %d Jetons" % Game.record_boulot(id)
+	var info := tr("Record : %d Jetons") % Game.record_boulot(id)
 	if n > 0:
-		info += "  ·  %d partie%s aujourd'hui" % [n, "s" if n > 1 else ""]
+		info += tr("  ·  %d partie%s aujourd'hui") % [n, "s" if n > 1 else ""]
 	v.add_child(Ui.label(info, 20, Ui.GRIS))
 	var jouer := Ui.bouton("Y aller", c, 30)
 	Ui.colorer_bouton(jouer, c)

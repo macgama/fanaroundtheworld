@@ -281,15 +281,15 @@ static func skins_de(etat: Dictionary, fanzzy_id: String) -> Array:
 static func resume(g: Dictionary) -> String:
 	var morceaux: Array = []
 	if g["fanzzy"].size() > 0:
-		morceaux.append("%d recrue%s FANZZY" % [g["fanzzy"].size(), "s" if g["fanzzy"].size() > 1 else ""])
+		morceaux.append(Trad.t("%d recrue%s FANZZY") % [g["fanzzy"].size(), "s" if g["fanzzy"].size() > 1 else ""])
 	if g["skins"].size() > 0:
-		morceaux.append("%d skin%s" % [g["skins"].size(), "s" if g["skins"].size() > 1 else ""])
+		morceaux.append(Trad.t("%d skin%s") % [g["skins"].size(), "s" if g["skins"].size() > 1 else ""])
 	if g["objets"].size() > 0:
-		morceaux.append("%d objet%s" % [g["objets"].size(), "s" if g["objets"].size() > 1 else ""])
+		morceaux.append(Trad.t("%d objet%s") % [g["objets"].size(), "s" if g["objets"].size() > 1 else ""])
 	if g["titres"].size() > 0:
-		morceaux.append("titre « %s »" % g["titres"][0])
+		morceaux.append(Trad.t("titre « %s »") % g["titres"][0])
 	if int(g["jetons"]) > 0:
-		morceaux.append("%d Jetons" % int(g["jetons"]))
+		morceaux.append(Trad.t("%d Jetons") % int(g["jetons"]))
 	return ", ".join(morceaux)
 
 

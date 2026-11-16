@@ -149,7 +149,7 @@ func _construire() -> void:
 	var ps := Ui.panneau(Ui.NUIT, 20, 5)
 	_lbl_serie = Ui.label("Série x0", 30, Ui.BLANC, true, 6)
 	ps.add_child(_lbl_serie)
-	ps.tooltip_text = "Clients bien servis d'affilée : +1 Jeton tous les %d" % EcharpesRegles.SERIE_BONUS
+	ps.tooltip_text = tr("Clients bien servis d'affilée : +1 Jeton tous les %d") % EcharpesRegles.SERIE_BONUS
 	haut.add_child(ps)
 	var pj := Ui.panneau(Ui.NUIT, 20, 5)
 	var hj := Ui.hbox(8)
@@ -203,7 +203,7 @@ func _bouton_crochet(i: int) -> Button:
 	var b := Ui.bouton("", Ui.NUIT_CLAIR, 26)
 	b.custom_minimum_size = Vector2(220, 204)
 	b.focus_mode = Control.FOCUS_NONE
-	b.tooltip_text = "Écharpe du crochet %d (touche %d)" % [i + 1, i + 1]
+	b.tooltip_text = tr("Écharpe du crochet %d (touche %d)") % [i + 1, i + 1]
 	b.pressed.connect(tendre.bind(i))
 	var e := Echarpe.new()
 	e.c1 = clubs[i]["c1"]
@@ -328,7 +328,7 @@ func _process(delta: float) -> void:
 	_lbl_temps.add_theme_color_override("font_color", Ui.ROUGE if reste < 10.0 else Ui.BLANC)
 	if reassort > 0.0:
 		reassort -= delta
-		_btn_carton.text = "Carton…\n%.1f s" % maxf(0.0, reassort)
+		_btn_carton.text = tr("Carton…\n%.1f s") % maxf(0.0, reassort)
 		if reassort <= 0.0:
 			_fin_du_carton()
 	if not commande.is_empty():
@@ -460,7 +460,7 @@ func _reussite() -> void:
 	if p["pourboire"] > 0:
 		_sons.jouer("clap", {"volume_db": -6})
 	if p["bonus"] > 0:
-		_gain_flottant("+%d  SÉRIE x%d !" % [p["total"], serie], Ui.JAUNE)
+		_gain_flottant(tr("+%d  SÉRIE x%d !") % [p["total"], serie], Ui.JAUNE)
 		_sons.jouer("ui_combo_%d" % clampi(serie / EcharpesRegles.SERIE_BONUS, 1, 4))
 	else:
 		_gain_flottant("+%d" % p["total"], Ui.JAUNE)
@@ -516,7 +516,7 @@ func _maj_sac() -> void:
 func _maj_hud() -> void:
 	_lbl_paye.text = str(salaire + pourboires + bonus)
 	Ui.pop(_lbl_paye, 1.25, 0.2)
-	_lbl_serie.text = "Série x%d" % serie
+	_lbl_serie.text = tr("Série x%d") % serie
 	_lbl_serie.add_theme_color_override("font_color", Ui.JAUNE if serie >= EcharpesRegles.SERIE_BONUS else Ui.BLANC)
 
 
@@ -598,7 +598,7 @@ func _finir() -> void:
 		["Bonus de série", "+%d" % bonus],
 	]
 	if paye < brut:
-		lignes.append(["Fatigue (%de service du jour)" % (deja + 1), "paye ÷ 2"])
+		lignes.append([tr("Fatigue (%de service du jour)") % (deja + 1), tr("paye ÷ 2")])
 	lignes.append(["Jetons gagnés", "+%d" % paye])
 	lignes.append(["XP du fan club", "+%d" % xp])
 	for l in lignes:

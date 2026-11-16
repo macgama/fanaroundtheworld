@@ -143,7 +143,7 @@ func _construire() -> void:
 	pb.add_child(_lbl_bache)
 	haut.add_child(pb)
 	var pr := Ui.panneau(Ui.NUIT, 20, 5)
-	pr.tooltip_text = "Ressemblance avec le modèle : le capo accepte à partir de %d %%" % int(TifoRegles.SEUIL_REFUS * 100)
+	pr.tooltip_text = tr("Ressemblance avec le modèle : le capo accepte à partir de %d %%") % int(TifoRegles.SEUIL_REFUS * 100)
 	_lbl_resse = Ui.label("", 30, Ui.BLANC, true, 6)
 	_lbl_resse.custom_minimum_size = Vector2(250, 0)
 	_lbl_resse.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
@@ -218,7 +218,7 @@ func _bouton_pot(i: int) -> Button:
 	b.custom_minimum_size = Vector2(170, 196)
 	b.pivot_offset = Vector2(85, 98)
 	b.focus_mode = Control.FOCUS_NONE
-	b.tooltip_text = "%s (touche %d)" % [TifoRegles.PEINTURES[i]["nom"], i + 1]
+	b.tooltip_text = tr("%s (touche %d)") % [TifoRegles.PEINTURES[i]["nom"], i + 1]
 	b.pressed.connect(choisir_peinture.bind(i))
 	var v := Ui.vbox(4)
 	v.set_anchors_preset(Control.PRESET_FULL_RECT)
@@ -271,8 +271,8 @@ func _nouvelle_bache() -> void:
 	curseur = Vector2i(modele["w"] / 2, modele["h"] / 2)
 	_mini.regler(modele["cases"], modele["w"], modele["h"])
 	_grille.regler(bache, modele["w"], modele["h"])
-	_lbl_bache.text = "Bâche n° %d · %s" % [numero, modele["nom"]]
-	_dire(["Peins-moi « %s » !", "Celle-là, c'est « %s ».", "Allez, « %s » maintenant !"][mini(numero - 1, 2) if numero <= 3 else randi() % 3] % modele["nom"].to_lower())
+	_lbl_bache.text = tr("Bâche n° %d · %s") % [numero, tr(modele["nom"])]
+	_dire(tr(["Peins-moi « %s » !", "Celle-là, c'est « %s ».", "Allez, « %s » maintenant !"][mini(numero - 1, 2) if numero <= 3 else randi() % 3]) % tr(modele["nom"]).to_lower())
 	_auto_erreurs = 0
 	_maj_resse()
 
@@ -420,7 +420,7 @@ func presenter() -> void:
 	if not p["accepte"]:
 		refus += 1
 		_sons.jouer("ui_rate")
-		_dire("Pas encore ! Il faut au moins %d %% de ressemblance." % int(TifoRegles.SEUIL_REFUS * 100))
+		_dire(tr("Pas encore ! Il faut au moins %d %% de ressemblance.") % int(TifoRegles.SEUIL_REFUS * 100))
 		_capo.jouer(&"huer", 0.8)
 		Ui.pop(_lbl_resse.get_parent(), 1.15, 0.25)
 		return
@@ -435,7 +435,7 @@ func presenter() -> void:
 	hissees.append({"cases": bache.duplicate(), "w": modele["w"], "h": modele["h"], "ressemblance": r})
 	_lbl_paye.text = str(salaire + bonus)
 	Ui.pop(_lbl_paye, 1.25, 0.2)
-	_dire(TifoRegles.appreciation(r) + (" Série de %d !" % serie if serie >= 2 else ""))
+	_dire(TifoRegles.appreciation(r) + (tr(" Série de %d !") % serie if serie >= 2 else ""))
 	_gain_flottant("+%d" % p["total"] if p["bonus"] == 0 else "+%d  %s" % [p["total"], TifoRegles.appreciation(r)], Ui.JAUNE)
 	_sons.jouer("ui_parfait" if parfaite else "ui_bien")
 	_sons.jouer("tifo", {"volume_db": -4})
@@ -477,7 +477,7 @@ func _hisser() -> void:
 
 func _maj_resse() -> void:
 	var r := TifoRegles.ressemblance(bache, modele["cases"])
-	_lbl_resse.text = "Ressemblance %d %%" % int(floor(r * 100.0 + 0.0001))
+	_lbl_resse.text = tr("Ressemblance %d %%") % int(floor(r * 100.0 + 0.0001))
 	_lbl_resse.add_theme_color_override("font_color", Ui.VERT if r >= 0.99999 else (Ui.JAUNE if r >= TifoRegles.SEUIL_REFUS else Ui.BLANC))
 
 
@@ -565,7 +565,7 @@ func _finir() -> void:
 		["Bonus", "+%d" % bonus],
 	]
 	if paye < brut:
-		lignes.append(["Fatigue (%de service du jour)" % (deja + 1), "paye ÷ 2"])
+		lignes.append([tr("Fatigue (%de service du jour)") % (deja + 1), tr("paye ÷ 2")])
 	lignes.append(["Jetons gagnés", "+%d" % paye])
 	lignes.append(["XP du fan club", "+%d" % xp])
 	for l in lignes:

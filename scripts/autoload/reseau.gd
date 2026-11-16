@@ -123,7 +123,7 @@ func _traiter(m: Variant) -> void:
 				return
 			var nouveau := adversaire.is_empty()
 			adversaire = p
-			statut = "%s est là !" % p["nom"]
+			statut = tr("%s est là !") % p["nom"]
 			if nouveau:
 				adversaire_arrive.emit(p)
 			etat_change.emit()
@@ -148,7 +148,7 @@ func choisir_match(m: Dictionary, camp: String) -> void:
 	if hote:
 		envoyer(Protocole.msg("match", {"m": m, "camp_hote": camp}))
 		if steam_ok and _lobby != 0:
-			_steam.call("setLobbyData", _lobby, "match", _texte_annonce)
+			_steam.call("setLobbyData", _lobby, "match", _texte_annonce)  # sans_traduction
 
 
 func mon_camp() -> String:
@@ -164,7 +164,7 @@ func _sur_pair_connecte(id: int) -> void:
 		_pair = id
 		_arreter_annonce()
 		if steam_ok and _lobby != 0:
-			_steam.call("setLobbyJoinable", _lobby, false)
+			_steam.call("setLobbyJoinable", _lobby, false)  # sans_traduction
 		if multiplayer.multiplayer_peer:
 			multiplayer.multiplayer_peer.refuse_new_connections = true
 		statut = "Un joueur arrive…"
@@ -190,15 +190,15 @@ func _sur_pair_deconnecte(id: int) -> void:
 	_pair = 0
 	adversaire = {}
 	if hote:
-		statut = "%s est parti. Le salon reste ouvert." % nom
+		statut = tr("%s est parti. Le salon reste ouvert.") % nom
 		if multiplayer.multiplayer_peer:
 			multiplayer.multiplayer_peer.refuse_new_connections = false
 		if transport == "lan":
 			_demarrer_annonce()
 		elif steam_ok and _lobby != 0:
-			_steam.call("setLobbyJoinable", _lobby, true)
+			_steam.call("setLobbyJoinable", _lobby, true)  # sans_traduction
 	else:
-		statut = "%s a fermé le salon." % nom
+		statut = tr("%s a fermé le salon.") % nom
 		_fermer_peer()
 	adversaire_parti.emit()
 	etat_change.emit()
@@ -214,7 +214,7 @@ func quitter() -> void:
 	_arreter_annonce()
 	arreter_recherche_lan()
 	if steam_ok and _lobby != 0:
-		_steam.call("leaveLobby", _lobby)
+		_steam.call("leaveLobby", _lobby)  # sans_traduction
 	_lobby = 0
 	_recherche_auto = false
 	_fermer_peer()
@@ -239,13 +239,13 @@ func creer_salon_lan() -> bool:
 	var peer := ENetMultiplayerPeer.new()
 	var err := peer.create_server(PORT, 1)
 	if err != OK:
-		statut = "Impossible d'ouvrir le salon (port %d déjà pris ?)." % PORT
+		statut = tr("Impossible d'ouvrir le salon (port %d déjà pris ?).") % PORT
 		etat_change.emit()
 		return false
 	multiplayer.multiplayer_peer = peer
 	hote = true
 	transport = "lan"
-	statut = "Salon ouvert. Ton adresse : %s" % ", ".join(adresses_locales())
+	statut = tr("Salon ouvert. Ton adresse : %s") % ", ".join(adresses_locales())
 	_demarrer_annonce()
 	etat_change.emit()
 	return true
@@ -267,7 +267,7 @@ func rejoindre_lan(ip: String, port := PORT) -> bool:
 	multiplayer.multiplayer_peer = peer
 	hote = false
 	transport = "lan"
-	statut = "Connexion à %s…" % ip
+	statut = tr("Connexion à %s…") % ip
 	etat_change.emit()
 	return true
 
@@ -323,7 +323,7 @@ func _initialiser_steam() -> void:
 	if not Plateforme.steam_ok:
 		return
 	if not ClassDB.class_exists("SteamMultiplayerPeer"):
-		print("Steam : extension trouvée mais pas SteamMultiplayerPeer")
+		print("Steam : extension trouvée mais pas SteamMultiplayerPeer")  # sans_traduction
 		return
 	_steam = Plateforme.steam
 	steam_ok = true
@@ -333,13 +333,13 @@ func _initialiser_steam() -> void:
 	_steam.connect("join_requested", func(lobby_id: int, _ami: int): rejoindre_steam(lobby_id))
 	# Lancé depuis une invitation Steam : « +connect_lobby <id> »
 	var args := OS.get_cmdline_args()
-	var i := args.find("+connect_lobby")
+	var i := args.find("+connect_lobby")  # sans_traduction
 	if i >= 0 and i + 1 < args.size() and args[i + 1].is_valid_int():
 		rejoindre_steam.call_deferred(int(args[i + 1]))
 
 
 func nom_steam() -> String:
-	return str(_steam.call("getPersonaName")) if steam_ok else ""
+	return str(_steam.call("getPersonaName")) if steam_ok else ""  # sans_traduction
 
 
 ## Salon Steam. `public` : visible par la recherche d'adversaire ; sinon amis seulement.
@@ -348,28 +348,28 @@ func creer_salon_steam(public: bool) -> void:
 	hote = true
 	transport = "steam"
 	statut = "Ouverture du salon Steam…"
-	_steam.call("createLobby", 2 if public else 1, 2)  # LOBBY_TYPE_PUBLIC / FRIENDS_ONLY, 2 places
+	_steam.call("createLobby", 2 if public else 1, 2)  # LOBBY_TYPE_PUBLIC / FRIENDS_ONLY, 2 places · sans_traduction
 	etat_change.emit()
 
 
 func inviter_amis_steam() -> void:
 	if steam_ok and _lobby != 0:
-		_steam.call("activateGameOverlayInviteDialog", _lobby)
+		_steam.call("activateGameOverlayInviteDialog", _lobby)  # sans_traduction
 
 
 func _sur_lobby_cree(resultat: int, lobby_id: int) -> void:
 	if resultat != 1:  # k_EResultOK
-		_echec("Steam n'a pas pu créer le salon (code %d)." % resultat)
+		_echec(tr("Steam n'a pas pu créer le salon (code %d).") % resultat)
 		return
 	_lobby = lobby_id
-	_steam.call("setLobbyData", lobby_id, "jeu", Protocole.JEU)
-	_steam.call("setLobbyData", lobby_id, "v", str(Protocole.VERSION))
-	_steam.call("setLobbyData", lobby_id, "nom", Game.fan_club_nom)
-	_steam.call("setLobbyData", lobby_id, "match", _texte_annonce)
-	var peer: Object = ClassDB.instantiate("SteamMultiplayerPeer")
+	_steam.call("setLobbyData", lobby_id, "jeu", Protocole.JEU)  # sans_traduction
+	_steam.call("setLobbyData", lobby_id, "v", str(Protocole.VERSION))  # sans_traduction
+	_steam.call("setLobbyData", lobby_id, "nom", Game.fan_club_nom)  # sans_traduction
+	_steam.call("setLobbyData", lobby_id, "match", _texte_annonce)  # sans_traduction
+	var peer: Object = ClassDB.instantiate("SteamMultiplayerPeer")  # sans_traduction
 	var err: Variant = peer.call("create_host", 0)
 	if err != OK:
-		_echec("Steam n'a pas pu ouvrir la connexion (%s)." % str(err))
+		_echec(tr("Steam n'a pas pu ouvrir la connexion (%s).") % str(err))
 		return
 	multiplayer.multiplayer_peer = peer
 	statut = "Salon Steam ouvert. Invite un ami ou attends un adversaire."
@@ -383,7 +383,7 @@ func rejoindre_steam(lobby_id: int) -> void:
 	hote = false
 	transport = "steam"
 	statut = "On rejoint le salon Steam…"
-	_steam.call("joinLobby", lobby_id)
+	_steam.call("joinLobby", lobby_id)  # sans_traduction
 	etat_change.emit()
 
 
@@ -397,11 +397,11 @@ func _sur_lobby_rejoint(lobby_id: int, _permissions: int, _verrouille: bool, rep
 			creer_salon_steam(true)
 		return
 	_lobby = lobby_id
-	var proprio: int = _steam.call("getLobbyOwner", lobby_id)
-	var peer: Object = ClassDB.instantiate("SteamMultiplayerPeer")
+	var proprio: int = _steam.call("getLobbyOwner", lobby_id)  # sans_traduction
+	var peer: Object = ClassDB.instantiate("SteamMultiplayerPeer")  # sans_traduction
 	var err: Variant = peer.call("create_client", proprio, 0)
 	if err != OK:
-		_echec("Connexion Steam impossible (%s)." % str(err))
+		_echec(tr("Connexion Steam impossible (%s).") % str(err))
 		return
 	multiplayer.multiplayer_peer = peer
 	statut = "Connexion à l'hôte…"
@@ -412,11 +412,11 @@ func _sur_lobby_rejoint(lobby_id: int, _permissions: int, _verrouille: bool, rep
 func chercher_steam() -> void:
 	if not steam_ok:
 		return
-	_steam.call("addRequestLobbyListStringFilter", "jeu", Protocole.JEU, 0)  # LOBBY_COMPARISON_EQUAL
-	_steam.call("addRequestLobbyListStringFilter", "v", str(Protocole.VERSION), 0)
-	_steam.call("addRequestLobbyListFilterSlotsAvailable", 1)
-	_steam.call("addRequestLobbyListDistanceFilter", 3)  # LOBBY_DISTANCE_FILTER_WORLDWIDE
-	_steam.call("requestLobbyList")
+	_steam.call("addRequestLobbyListStringFilter", "jeu", Protocole.JEU, 0)  # LOBBY_COMPARISON_EQUAL · sans_traduction
+	_steam.call("addRequestLobbyListStringFilter", "v", str(Protocole.VERSION), 0)  # sans_traduction
+	_steam.call("addRequestLobbyListFilterSlotsAvailable", 1)  # sans_traduction
+	_steam.call("addRequestLobbyListDistanceFilter", 3)  # LOBBY_DISTANCE_FILTER_WORLDWIDE · sans_traduction
+	_steam.call("requestLobbyList")  # sans_traduction
 
 
 ## Recherche d'adversaire : rejoint le premier salon public libre, sinon en ouvre un.
@@ -431,8 +431,8 @@ func trouver_adversaire_steam() -> void:
 func _sur_liste_lobbies(lobbies: Array) -> void:
 	var liste: Array = []
 	for id in lobbies:
-		liste.append({"id": int(id), "nom": str(_steam.call("getLobbyData", id, "nom")).substr(0, Protocole.NOM_MAX),
-			"match": str(_steam.call("getLobbyData", id, "match")).substr(0, 80)})
+		liste.append({"id": int(id), "nom": str(_steam.call("getLobbyData", id, "nom")).substr(0, Protocole.NOM_MAX),  # sans_traduction
+			"match": str(_steam.call("getLobbyData", id, "match")).substr(0, 80)})  # sans_traduction
 	if _recherche_auto:
 		_recherche_auto = false
 		if liste.is_empty():

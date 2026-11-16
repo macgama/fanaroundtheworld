@@ -20,7 +20,7 @@ func _ready() -> void:
 	_construire_foule()
 	_construire_titre()
 	_construire_menu()
-	var bas := Ui.label("v%s · prototype · noms de clubs fictifs · %s" % [Game.VERSION, Donnees.attribution], 18, Color(1, 1, 1, 0.8), false, 5)
+	var bas := Ui.label(tr("v%s · prototype · noms de clubs fictifs · %s") % [Game.VERSION, tr(Donnees.attribution)], 18, Color(1, 1, 1, 0.8), false, 5)
 	bas.set_anchors_preset(Control.PRESET_BOTTOM_WIDE)
 	bas.offset_top = -40
 	bas.offset_left = 24
@@ -39,13 +39,13 @@ func _construire_titre() -> void:
 	logo.rotation_degrees = -4.0
 	logo.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(logo)
-	var fan := Ui.label("FAN", 210, Ui.JAUNE, true, 30)
+	var fan := Ui.label("FAN", 210, Ui.JAUNE, true, 30)  # sans_traduction
 	fan.position = Vector2(0, -10)
 	logo.add_child(fan)
 	var ruban := Ui.panneau(Ui.ROSE, 18, 6)
 	ruban.position = Vector2(370, 70)
 	ruban.rotation_degrees = 3.0
-	var autour := Ui.label("AROUND THE", 82, Ui.BLANC, true, 16)
+	var autour := Ui.label("AROUND THE", 82, Ui.BLANC, true, 16)  # sans_traduction
 	ruban.add_child(autour)
 	logo.add_child(ruban)
 	var monde := Ui.hbox(4)
@@ -55,7 +55,7 @@ func _construire_titre() -> void:
 	globe.custom_minimum_size = Vector2(150, 150)
 	globe.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	monde.add_child(globe)
-	monde.add_child(Ui.label("RLD", 210, Ui.JAUNE, true, 30))
+	monde.add_child(Ui.label("RLD", 210, Ui.JAUNE, true, 30))  # sans_traduction
 	logo.add_child(monde)
 	var tourne := globe.create_tween().set_loops()
 	globe.pivot_offset = Vector2(75, 75)
@@ -157,7 +157,7 @@ func _construire_menu() -> void:
 		nom.custom_minimum_size.x = 380
 		vv.add_child(nom)
 		var infos := Ui.hbox(8)
-		infos.add_child(Ui.label("NIV. %d" % Game.niveau(), 22, Ui.JAUNE, true))
+		infos.add_child(Ui.label(tr("NIV. %d") % Game.niveau(), 22, Ui.JAUNE, true))
 		infos.add_child(Ui.icone("jeton", 26))
 		infos.add_child(Ui.label(str(Game.jetons), 22, Ui.JAUNE, true))
 		infos.add_child(Ui.icone("tampon", 26))
@@ -213,7 +213,7 @@ func _pulser(b: Control) -> void:
 func _maj() -> void:
 	var n := Donnees.matchs().size()
 	var d := Donnees.matchs().filter(func(m): return Donnees.en_direct(m)).size()
-	_etat.text = "%d vrais matchs cette semaine · %d en direct" % [n, d]
+	_etat.text = tr("%d vrais matchs cette semaine · %d en direct") % [n, d]
 
 
 func _jouer() -> void:
@@ -267,6 +267,21 @@ func _ouvrir_options() -> void:
 	pe.button_pressed = Reglages.plein_ecran()
 	pe.toggled.connect(Reglages.regler_plein_ecran)
 	v.add_child(pe)
+	# langue : un bouton par langue proposée (data/langues/<code>/)
+	var hl := Ui.hbox(14)
+	var ll := Ui.label("Langue", 24, Ui.BLANC, true)
+	ll.custom_minimum_size.x = 270
+	hl.add_child(ll)
+	var actuelle := TranslationServer.get_locale().left(2)
+	for code in Langue.disponibles():
+		var bl := Ui.bouton(Langue.nom(code), Ui.VIOLET if code == actuelle else Color("#55507f"), 22)
+		bl.auto_translate_mode = Node.AUTO_TRANSLATE_MODE_DISABLED  # chaque langue garde son nom
+		bl.pressed.connect(func():
+			if code != TranslationServer.get_locale().left(2):
+				Langue.changer(code)
+				get_tree().reload_current_scene())
+		hl.add_child(bl)
+	v.add_child(hl)
 	v.add_child(Ui.label("Partie", 26, Ui.JAUNE, true))
 	var sauv := Ui.label(Plateforme.texte_sauvegarde(), 18, Ui.GRIS)
 	sauv.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART

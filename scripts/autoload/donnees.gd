@@ -17,7 +17,7 @@ const URL_LIVE := "https://fanaroundtheworld-live.gael-manigley.workers.dev/live
 const DOSSIER_CACHE := "user://cache/"
 const PERIODE_LIVE := 60.0
 const PERIODE_CALENDRIER := 30.0 * 60.0
-const STATUTS_EN_JEU := ["LIVE", "HALFTIME"]
+const STATUTS_EN_JEU := ["LIVE", "HALFTIME"]  # sans_traduction
 ## Un match commencé depuis plus longtemps ne peut plus être en cours.
 const DUREE_MAX_MATCH := 3 * 3600
 ## Le live est jugé à jour s'il a été relu il y a moins de 5 minutes.
@@ -189,7 +189,7 @@ func _requete(url: String, rappel: Callable, discret := false) -> void:
 			if discret:
 				return  # fichier facultatif : ne change pas l'état « hors ligne »
 			hors_ligne = true
-			push_warning("Données : échec %s (résultat %d, code %d)" % [url, res, code])
+			push_warning("Données : échec %s (résultat %d, code %d)" % [url, res, code])  # sans_traduction
 			mis_a_jour.emit()
 			return
 		var d: Variant = JSON.parse_string(corps.get_string_from_utf8())
@@ -197,7 +197,7 @@ func _requete(url: String, rappel: Callable, discret := false) -> void:
 			hors_ligne = false
 			rappel.call(d)
 	)
-	var err := r.request(url, ["Accept: application/json"])
+	var err := r.request(url, ["Accept: application/json"])  # sans_traduction
 	if err != OK:
 		_requetes_en_cours -= 1
 		r.queue_free()
@@ -265,9 +265,9 @@ static func _corriger_statut(m: Dictionary, live_a_jour: bool, maintenant: int) 
 	var s := str(m.get("status", ""))
 	var t := heure_unix(m)
 	var trop_vieux := t > 0 and maintenant - t > DUREE_MAX_MATCH
-	if (s in STATUTS_EN_JEU and (live_a_jour or trop_vieux)) or (s == "SCHEDULED" and trop_vieux):
+	if (s in STATUTS_EN_JEU and (live_a_jour or trop_vieux)) or (s == "SCHEDULED" and trop_vieux):  # sans_traduction
 		var c := m.duplicate()
-		c["status"] = "UNKNOWN"
+		c["status"] = "UNKNOWN"  # sans_traduction
 		return c
 	return m
 

@@ -160,7 +160,7 @@ func _construire() -> void:
 	var ps := Ui.panneau(Ui.NUIT, 20, 5)
 	_lbl_serie = Ui.label("Série x0", 30, Ui.BLANC, true, 6)
 	ps.add_child(_lbl_serie)
-	ps.tooltip_text = "Commandes justes d'affilée : +1 Jeton toutes les %d" % BuvetteRegles.SERIE_BONUS
+	ps.tooltip_text = tr("Commandes justes d'affilée : +1 Jeton toutes les %d") % BuvetteRegles.SERIE_BONUS
 	haut.add_child(ps)
 	var pj := Ui.panneau(Ui.NUIT, 20, 5)
 	var hj := Ui.hbox(8)
@@ -223,7 +223,7 @@ func _bouton_produit(p: Dictionary) -> Button:
 	Ui.colorer_bouton(b, c)
 	b.custom_minimum_size = Vector2(250, 192)
 	b.focus_mode = Control.FOCUS_NONE
-	b.tooltip_text = "%s (touche %s)" % [p["nom"], p["touche"]]
+	b.tooltip_text = tr("%s (touche %s)") % [tr(p["nom"]), p["touche"]]
 	b.pressed.connect(poser.bind(p["id"]))
 	var v := Ui.vbox(0)
 	v.set_anchors_preset(Control.PRESET_FULL_RECT)
@@ -442,7 +442,7 @@ func servir() -> void:
 	if p["pourboire"] > 0:
 		_sons.jouer("clap", {"volume_db": -6})
 	if p["bonus"] > 0:
-		_gain_flottant("+%d  SÉRIE x%d !" % [p["total"], serie], Ui.JAUNE)
+		_gain_flottant(tr("+%d  SÉRIE x%d !") % [p["total"], serie], Ui.JAUNE)
 		_sons.jouer("ui_combo_%d" % clampi(serie / BuvetteRegles.SERIE_BONUS, 1, 4))
 	else:
 		_gain_flottant("+%d" % p["total"], Ui.JAUNE)
@@ -492,7 +492,7 @@ func _maj_plateau() -> void:
 func _maj_hud() -> void:
 	_lbl_paye.text = str(salaire + pourboires + bonus)
 	Ui.pop(_lbl_paye, 1.25, 0.2)
-	_lbl_serie.text = "Série x%d" % serie
+	_lbl_serie.text = tr("Série x%d") % serie
 	_lbl_serie.add_theme_color_override("font_color", Ui.JAUNE if serie >= BuvetteRegles.SERIE_BONUS else Ui.BLANC)
 
 
@@ -574,7 +574,7 @@ func _finir() -> void:
 		["Bonus de série", "+%d" % bonus],
 	]
 	if paye < brut:
-		lignes.append(["Fatigue (%de service du jour)" % (deja + 1), "paye ÷ 2"])
+		lignes.append([tr("Fatigue (%de service du jour)") % (deja + 1), tr("paye ÷ 2")])
 	lignes.append(["Jetons gagnés", "+%d" % paye])
 	lignes.append(["XP du fan club", "+%d" % xp])
 	for l in lignes:

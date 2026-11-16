@@ -86,14 +86,14 @@ static func series_album(c: Dictionary, catalogue: Array, familles: Dictionary, 
 	var res: Array = []
 	for f in familles:
 		if par_famille.has(f):
-			res.append(_serie(c, "famille:" + f, "Famille %s" % familles[f].get("nom", f),
+			res.append(_serie(c, "famille:" + f, Trad.t("Famille %s") % Trad.t(familles[f].get("nom", f)),
 				"Tous les FANZZY de la famille", par_famille[f], PRIME_FAMILLE, "famille", familles[f].get("couleur", "#888888")))
 	var cles_series := par_serie.keys()
 	cles_series.sort()
 	for s in cles_series:
 		var info: Dictionary = series.get(s, {})
-		res.append(_serie(c, "serie:" + s, str(info.get("nom", "Série " + s)),
-			str(info.get("ligne", "Toute la série")), par_serie[s], PRIME_SERIE, "serie", info.get("couleur", "#888888")))
+		res.append(_serie(c, "serie:" + s, Trad.t(str(info.get("nom", Trad.t("Série ") + s))),
+			Trad.t(str(info.get("ligne", "Toute la série"))), par_serie[s], PRIME_SERIE, "serie", info.get("couleur", "#888888")))
 	var tous: Array = catalogue.map(func(z): return z["id"])
 	res.append(_serie(c, "album", "Album complet", "Chaque FANZZY a joué au moins un duel avec toi", tous, PRIME_ALBUM, "album", "#ffd23f"))
 	return res
@@ -160,7 +160,7 @@ static func _paliers(c: Dictionary, groupe: String, titre: String, texte: String
 	var res: Array = []
 	for p in paliers:
 		var seuil: int = p[0]
-		var t := (titre % seuil).replace("1 stades", "1 stade")
+		var t := (titre % seuil).replace(Trad.t("1 stades"), Trad.t("1 stade"))
 		res.append(_ligne(c, "%s:%d" % [groupe, seuil], t, texte, mini(n, seuil), seuil, p[1], groupe, couleur))
 		if n < seuil:
 			break

@@ -36,7 +36,7 @@ func _ready() -> void:
 	# PASS : palier et progression
 	var pass_p := Ui.panneau(Ui.NUIT, 20, 5)
 	pass_p.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-	pass_p.tooltip_text = "XP du PASS saisonnier : %d paliers de %d XP" % [Missions.PALIERS, Missions.XP_PAR_PALIER]
+	pass_p.tooltip_text = tr("XP du PASS saisonnier : %d paliers de %d XP") % [Missions.PALIERS, Missions.XP_PAR_PALIER]
 	var vp := Ui.vbox(4)
 	pass_p.add_child(vp)
 	_palier = Ui.label("", 20, Ui.JAUNE, true)
@@ -61,7 +61,7 @@ func _ready() -> void:
 	_annonce.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	racine.add_child(_annonce)
 	if int(verse["jetons"]) > 0 or int(verse["xp_pass"]) > 0:
-		_annoncer("Missions terminées la dernière fois, versées pour toi : +%d Jetons · +%d XP PASS" % [verse["jetons"], verse["xp_pass"]])
+		_annoncer(tr("Missions terminées la dernière fois, versées pour toi : +%d Jetons · +%d XP PASS") % [verse["jetons"], verse["xp_pass"]])
 
 	var corps := Ui.hbox(24)
 	corps.size_flags_vertical = Control.SIZE_EXPAND_FILL
@@ -92,11 +92,11 @@ func _colonne(parent: Control) -> VBoxContainer:
 func _remplir() -> void:
 	_jetons.text = "%d" % Game.jetons
 	var pal := Missions.palier(Game.xp_pass)
-	_palier.text = "PASS · palier %d" % pal
+	_palier.text = tr("PASS · palier %d") % pal
 	_barre_pass.value = 100.0 * Missions.xp_dans_palier(Game.xp_pass) / Missions.XP_PAR_PALIER
 	var t := Game.heure_locale()
-	_remplir_colonne(_col_jour, "jour", "Du jour", "Nouvelles missions dans %s" % _duree(Missions.avant_renouvellement(t, "jour")))
-	_remplir_colonne(_col_semaine, "semaine", "De la semaine", "Nouvelles missions dans %s" % _duree(Missions.avant_renouvellement(t, "semaine")))
+	_remplir_colonne(_col_jour, "jour", "Du jour", tr("Nouvelles missions dans %s") % _duree(Missions.avant_renouvellement(t, "jour")))
+	_remplir_colonne(_col_semaine, "semaine", "De la semaine", tr("Nouvelles missions dans %s") % _duree(Missions.avant_renouvellement(t, "semaine")))
 
 
 func _remplir_colonne(v: VBoxContainer, periode: String, titre: String, sous_titre: String) -> void:
@@ -117,7 +117,7 @@ func _remplir_colonne(v: VBoxContainer, periode: String, titre: String, sous_tit
 	var pris := bool(Game.missions["bonus_" + periode])
 	var txt_bonus := "Bonus récupéré : bravo !"
 	if not pris:
-		txt_bonus = "Les %d récupérées : +%d Jetons · +%d XP PASS en bonus" % [liste.size(), bonus["jetons"], bonus["xp_pass"]]
+		txt_bonus = tr("Les %d récupérées : +%d Jetons · +%d XP PASS en bonus") % [liste.size(), bonus["jetons"], bonus["xp_pass"]]
 	var b := Ui.label(txt_bonus, 18, Ui.JAUNE if pris else Ui.GRIS)
 	b.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	v.add_child(b)
@@ -166,7 +166,7 @@ func _carte(periode: String, i: int, m: Dictionary) -> Control:
 	hr.alignment = BoxContainer.ALIGNMENT_END
 	hr.add_child(Ui.icone("jeton", 26))
 	hr.add_child(Ui.label("+%d" % int(m["jetons"]), 22, Ui.JAUNE, true, 5))
-	hr.add_child(Ui.label("· +%d XP PASS" % int(m["xp_pass"]), 18, Ui.BLANC, true))
+	hr.add_child(Ui.label(tr("· +%d XP PASS") % int(m["xp_pass"]), 18, Ui.BLANC, true))
 	d.add_child(hr)
 	if prise:
 		var ok := Ui.label("Récupérée", 20, Ui.GRIS, true)
@@ -191,9 +191,9 @@ func _recuperer(periode: String, i: int) -> void:
 	var g := Game.recuperer_mission(periode, i)
 	if g.is_empty():
 		return
-	var txt := "+%d Jetons · +%d XP PASS" % [g["jetons"], g["xp_pass"]]
+	var txt := tr("+%d Jetons · +%d XP PASS") % [g["jetons"], g["xp_pass"]]
 	if g["bonus"]:
-		txt += " (bonus compris !)"
+		txt += tr(" (bonus compris !)")
 	_annoncer(txt)
 	_remplir()
 
@@ -212,7 +212,7 @@ func _annoncer(txt: String) -> void:
 static func _duree(s: int) -> String:
 	if s >= 86400:
 		var j := s / 86400
-		return "%d jour%s" % [j, "s" if j > 1 else ""]
+		return Trad.t("%d jour%s") % [j, "s" if j > 1 else ""]
 	if s >= 3600:
 		return "%d h" % (s / 3600)
-	return "%d min" % maxi(1, s / 60)
+	return Trad.t("%d min") % maxi(1, s / 60)

@@ -80,8 +80,8 @@ func _ready() -> void:
 	_remplir()
 	# Tests : « -- --scene=favoris --choix=club:france » ouvre la fenêtre de choix.
 	for arg in OS.get_cmdline_user_args():
-		if arg.begins_with("--choix="):
-			var c := arg.trim_prefix("--choix=").split(":")
+		if arg.begins_with("--choix="):  # sans_traduction
+			var c := arg.trim_prefix("--choix=").split(":")  # sans_traduction
 			_ouvrir_choix(c[0], c[1] if c.size() > 1 else "")
 
 
@@ -179,7 +179,7 @@ func _remplir_gauche() -> void:
 		_gauche.add_child(_carte_favori(info(cle), _rang(cle, _nations()), Supporters.attente_nation(s, t),
 			func(): _ouvrir_choix("nation"), Callable()))
 
-	_gauche.add_child(Ui.label("Clubs favoris (%d)" % s["clubs"].size(), 32, Ui.BLANC, true, 6))
+	_gauche.add_child(Ui.label(tr("Clubs favoris (%d)") % s["clubs"].size(), 32, Ui.BLANC, true, 6))
 	var pays: Array = s["clubs"].keys()
 	pays.sort_custom(func(a, b): return Geo.nom_pays(a) < Geo.nom_pays(b))
 	for p in pays:
@@ -195,15 +195,15 @@ func _remplir_gauche() -> void:
 
 	_gauche.add_child(Ui.label("Comment gagner de la popularité", 26, Ui.BLANC, true))
 	for ligne in [
-		"Duel pour ton favori : +%d, +%d s'il est gagné (×1,5 au stade)." % [Supporters.POINTS_DUEL, Supporters.POINTS_DUEL_GAGNE],
-		"Suivre son match : stade +%d, écran géant +%d, pub +%d, maison +%d." % [
+		tr("Duel pour ton favori : +%d, +%d s'il est gagné (×1,5 au stade).") % [Supporters.POINTS_DUEL, Supporters.POINTS_DUEL_GAGNE],
+		tr("Suivre son match : stade +%d, écran géant +%d, pub +%d, maison +%d.") % [
 			Supporters.POINTS_SUIVI["stade"], Supporters.POINTS_SUIVI["ecran"], Supporters.POINTS_SUIVI["pub"], Supporters.POINTS_SUIVI["maison"]],
-		"Prono sur son match : +%d, +%d si le résultat est bon, +%d de plus pour le score exact." % [
+		tr("Prono sur son match : +%d, +%d si le résultat est bon, +%d de plus pour le score exact.") % [
 			Supporters.POINTS_PRONO, Supporters.POINTS_PRONO_RESULTAT, Supporters.POINTS_PRONO_SCORE],
-		"Récolte du fan club : tes membres en parlent, +1 par tranche de %d Jetons pour chaque favori." % Supporters.JETONS_PAR_POINT_CLUB,
-		"%d points au plus par équipe et par jour. Changer de favori : une fois par semaine, les points donnés restent." % Supporters.MAX_PAR_JOUR,
+		tr("Récolte du fan club : tes membres en parlent, +1 par tranche de %d Jetons pour chaque favori.") % Supporters.JETONS_PAR_POINT_CLUB,
+		tr("%d points au plus par équipe et par jour. Changer de favori : une fois par semaine, les points donnés restent.") % Supporters.MAX_PAR_JOUR,
 	]:
-		var l := Ui.label("• " + ligne, 18, Ui.GRIS)
+		var l := Ui.label("• " + tr(ligne), 18, Ui.GRIS)
 		l.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 		_gauche.add_child(l)
 
@@ -221,10 +221,10 @@ func _carte_favori(i: Dictionary, rang: int, attente: int, changer: Callable, re
 	nom.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
 	v.add_child(nom)
 	var lieu := "Sélection" if Supporters.est_nation(i["cle"]) else Geo.nom_pays(i["pays"])
-	v.add_child(Ui.label("%s · %de · tu lui as donné %d points" % [lieu, rang, int(Game.supporters["points"].get(i["cle"], 0))], 16, Ui.GRIS))
+	v.add_child(Ui.label(tr("%s · %de · tu lui as donné %d points") % [lieu, rang, int(Game.supporters["points"].get(i["cle"], 0))], 16, Ui.GRIS))
 	if attente > 0:
 		var j := ceili(attente / 86400.0)
-		h.add_child(Ui.pastille("Changement dans %d j" % j, Color("#6b6699"), 15))
+		h.add_child(Ui.pastille(tr("Changement dans %d j") % j, Color("#6b6699"), 15))
 		return cadre
 	var b := Ui.bouton("Changer", Ui.BLEU, 18)
 	b.size_flags_vertical = Control.SIZE_SHRINK_CENTER
@@ -333,7 +333,7 @@ func _ligne_classement(l: Dictionary, fav: bool) -> Control:
 	if not Supporters.est_nation(l["cle"]) and _onglet != "pays":
 		h.add_child(Ui.label(Geo.nom_pays(l["pays"]), 16, Ui.GRIS))
 	if int(l["a_toi"]) > 0:
-		h.add_child(Ui.pastille("dont toi : %d" % int(l["a_toi"]), Ui.ROSE, 14))
+		h.add_child(Ui.pastille(tr("dont toi : %d") % int(l["a_toi"]), Ui.ROSE, 14))
 	h.add_child(Ui.label(_milliers(int(l["points"])), 22, Ui.JAUNE, true))
 	return cadre
 
@@ -399,7 +399,7 @@ func _remplir_choix() -> void:
 	grille.add_theme_constant_override("h_separation", 10)
 	grille.add_theme_constant_override("v_separation", 10)
 	if _choix_mode == "club" and _choix_pays != "":
-		_choix_titre.text = "Ton club favori · " + Geo.nom_pays(_choix_pays)
+		_choix_titre.text = tr("Ton club favori · ") + Geo.nom_pays(_choix_pays)
 		var retour := Ui.bouton("← Autre pays", Ui.NUIT_CLAIR, 18)
 		retour.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
 		retour.pressed.connect(func():
@@ -474,7 +474,7 @@ func _bouton_club(i: Dictionary, actuel: bool) -> Control:
 	l.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	l.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	h.add_child(l)
-	for c in b.find_children("*", "Control", true, false):
+	for c in b.find_children("*", "Control", true, false):  # sans_traduction
 		(c as Control).mouse_filter = Control.MOUSE_FILTER_IGNORE
 	var cle: String = i["cle"]
 	b.pressed.connect(func():

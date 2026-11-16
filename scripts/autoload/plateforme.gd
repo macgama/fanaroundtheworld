@@ -33,13 +33,13 @@ func _initialiser_steam() -> void:
 	if "--sans-steam" in OS.get_cmdline_user_args() or not Engine.has_singleton("Steam"):
 		return
 	steam = Engine.get_singleton("Steam")
-	OS.set_environment("SteamAppId", str(APP_ID_STEAM))
-	OS.set_environment("SteamGameId", str(APP_ID_STEAM))
-	var r: Variant = steam.call("steamInitEx")
+	OS.set_environment("SteamAppId", str(APP_ID_STEAM))  # sans_traduction
+	OS.set_environment("SteamGameId", str(APP_ID_STEAM))  # sans_traduction
+	var r: Variant = steam.call("steamInitEx")  # sans_traduction
 	steam_ok = r is Dictionary and int(r.get("status", 1)) == 0
 	print("Steam : %s" % str(r))
 	if not steam_ok:
-		push_warning("Steam pas disponible : %s" % str(r))
+		push_warning("Steam pas disponible : %s" % str(r))  # sans_traduction
 
 
 func _process(delta: float) -> void:
@@ -52,7 +52,7 @@ func _process(delta: float) -> void:
 		_vider_cloud()
 		if _stats_a_envoyer:
 			_stats_a_envoyer = false
-			steam.call("storeStats")
+			steam.call("storeStats")  # sans_traduction
 
 
 func _notification(what: int) -> void:
@@ -60,11 +60,11 @@ func _notification(what: int) -> void:
 		_vider_cloud()
 		if steam_ok and _stats_a_envoyer:
 			_stats_a_envoyer = false
-			steam.call("storeStats")
+			steam.call("storeStats")  # sans_traduction
 
 
 func nom_joueur() -> String:
-	return str(steam.call("getPersonaName")) if steam_ok else ""
+	return str(steam.call("getPersonaName")) if steam_ok else ""  # sans_traduction
 
 
 # ---------------------------------------------------------------- succès
@@ -74,15 +74,15 @@ func nom_joueur() -> String:
 func debloquer(id: String, tout_de_suite := false) -> bool:
 	if not steam_ok:
 		return false
-	var deja: Variant = steam.call("getAchievement", id)
+	var deja: Variant = steam.call("getAchievement", id)  # sans_traduction
 	if deja is Dictionary and bool(deja.get("ret", false)) and bool(deja.get("achieved", false)):
 		return true
-	var ok := bool(steam.call("setAchievement", id))
+	var ok := bool(steam.call("setAchievement", id))  # sans_traduction
 	if ok:
 		_stats_a_envoyer = true
 		if tout_de_suite:
 			_stats_a_envoyer = false
-			steam.call("storeStats")
+			steam.call("storeStats")  # sans_traduction
 	return ok
 
 
@@ -96,7 +96,7 @@ func synchroniser_succes(ids: Array) -> int:
 			n += 1
 	if _stats_a_envoyer:
 		_stats_a_envoyer = false
-		steam.call("storeStats")
+		steam.call("storeStats")  # sans_traduction
 	return n
 
 
@@ -105,7 +105,7 @@ func synchroniser_succes(ids: Array) -> int:
 ## Vrai si Steam Cloud est utilisable : Steam lancé, et le Cloud activé pour le
 ## compte (réglage du joueur) et pour le jeu (réglage Steamworks).
 func cloud_actif() -> bool:
-	return steam_ok and bool(steam.call("isCloudEnabledForAccount")) and bool(steam.call("isCloudEnabledForApp"))
+	return steam_ok and bool(steam.call("isCloudEnabledForAccount")) and bool(steam.call("isCloudEnabledForApp"))  # sans_traduction
 
 
 ## Garde le texte pour Steam Cloud ; il part au plus tard dans DELAI_CLOUD secondes.
@@ -122,8 +122,8 @@ func _vider_cloud() -> void:
 		return
 	for nom in _cloud_en_attente:
 		var octets: PackedByteArray = str(_cloud_en_attente[nom]).to_utf8_buffer()
-		if not bool(steam.call("fileWrite", nom, octets, octets.size())):
-			push_warning("Steam Cloud : écriture de %s refusée (quota ?)" % nom)
+		if not bool(steam.call("fileWrite", nom, octets, octets.size())):  # sans_traduction
+			push_warning("Steam Cloud : écriture de %s refusée (quota ?)" % nom)  # sans_traduction
 	_cloud_en_attente.clear()
 
 
@@ -131,12 +131,12 @@ func _vider_cloud() -> void:
 func cloud_lire(nom: String) -> String:
 	if _cloud_en_attente.has(nom):
 		return str(_cloud_en_attente[nom])
-	if not cloud_actif() or not bool(steam.call("fileExists", nom)):
+	if not cloud_actif() or not bool(steam.call("fileExists", nom)):  # sans_traduction
 		return ""
-	var taille := int(steam.call("getFileSize", nom))
+	var taille := int(steam.call("getFileSize", nom))  # sans_traduction
 	if taille <= 0:
 		return ""
-	var r: Variant = steam.call("fileRead", nom, taille)
+	var r: Variant = steam.call("fileRead", nom, taille)  # sans_traduction
 	if not r is Dictionary or not bool(r.get("ret", false)):
 		return ""
 	var buf: Variant = r.get("buf", PackedByteArray())
@@ -146,8 +146,8 @@ func cloud_lire(nom: String) -> String:
 ## Efface le fichier de Steam Cloud (« Recommencer à zéro »).
 func cloud_effacer(nom: String) -> void:
 	_cloud_en_attente.erase(nom)
-	if cloud_actif() and bool(steam.call("fileExists", nom)):
-		steam.call("fileDelete", nom)
+	if cloud_actif() and bool(steam.call("fileExists", nom)):  # sans_traduction
+		steam.call("fileDelete", nom)  # sans_traduction
 
 
 ## Phrase pour les options.

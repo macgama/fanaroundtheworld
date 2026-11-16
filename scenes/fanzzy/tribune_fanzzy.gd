@@ -68,7 +68,7 @@ func construire() -> void:
 			n += 1
 			var f := FanzzyAnime.creer(id)
 			if f.texture == null:
-				push_warning("TribuneFanzzy : image introuvable pour %s" % id)
+				push_warning("TribuneFanzzy : image introuvable pour %s" % id)  # sans_traduction
 				continue
 			var decal := 0.5 if r % 2 == 1 else 0.0
 			var x := ((i + 0.5 + decal * 0.5) / places - 0.5) * largeur * echelle
@@ -105,7 +105,7 @@ func ola(action: StringName = &"celebrer", duree_par_fan := 0.9, traversee := 2.
 ## une partie de la tribune ne suit pas et reste au repos.
 func reagir(evenement: StringName) -> void:
 	if not REACTIONS.has(evenement):
-		push_warning("TribuneFanzzy : événement inconnu « %s »" % evenement)
+		push_warning("TribuneFanzzy : événement inconnu « %s »" % evenement)  # sans_traduction
 		return
 	var r: Dictionary = REACTIONS[evenement]
 	for f in fanzzy:

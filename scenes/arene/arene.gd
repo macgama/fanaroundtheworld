@@ -186,9 +186,9 @@ func _construire() -> void:
 	add_child(_hud_bas)
 	var aide := "ZQSD/flèches : bouger · clic : ballon · clic droit/E : super · TAB : changer"
 	if "roulade" in actions:
-		aide += " · ESPACE : roulade"
+		aide += tr(" · ESPACE : roulade")
 	if "tir_charge" in actions:
-		aide += " · maintenir le clic : tir chargé"
+		aide += tr(" · maintenir le clic : tir chargé")
 	_lbl_aide = Ui.label(aide, 18, Ui.BLANC, false, 6)
 	_lbl_aide.set_anchors_preset(Control.PRESET_BOTTOM_RIGHT)
 	_lbl_aide.offset_left = -1100
@@ -626,7 +626,7 @@ func _super_utile(j: Joueur, cible: Joueur, d: float) -> bool:
 func _preparer_en_ligne() -> void:
 	Reseau.message.connect(_sur_message)
 	Reseau.adversaire_parti.connect(_sur_adversaire_parti)
-	annoncer("En attente de %s…" % Reseau.adversaire.get("nom", "l'adversaire"), Ui.BLANC)
+	annoncer(tr("En attente de %s…") % Reseau.adversaire.get("nom", tr("l'adversaire")), Ui.BLANC)
 	Reseau.envoyer(Protocole.msg("pret"))
 
 
@@ -1249,11 +1249,11 @@ class HudBas extends Node2D:
 		var pret: bool = j.charge_super >= 1.0
 		draw_circle(Vector2(x + 20, 22), 22, Ui.CONTOUR)
 		draw_arc(Vector2(x + 20, 22), 17, -PI / 2, -PI / 2 + TAU * j.charge_super, 32, Ui.JAUNE, 7)
-		var t := "SUPER : %s" % sup.get("nom", "") if pret else "super %d %%" % int(j.charge_super * 100)
+		var t := tr("SUPER : %s") % sup.get("nom", "") if pret else tr("super %d %%") % int(j.charge_super * 100)
 		draw_string_outline(f, Vector2(x + 52, 32), t, HORIZONTAL_ALIGNMENT_LEFT, -1, 24, 8, Ui.CONTOUR)
 		draw_string(f, Vector2(x + 52, 32), t, HORIZONTAL_ALIGNMENT_LEFT, -1, 24, Ui.JAUNE if pret else Ui.BLANC)
 		if "roulade" in arene.actions:
-			var tr := "roulade prête" if j.recharge_roulade <= 0.0 else "roulade %.1f s" % j.recharge_roulade
+			var tr := "roulade prête" if j.recharge_roulade <= 0.0 else tr("roulade %.1f s") % j.recharge_roulade
 			# après le nom du FANZZY (les noms longs le chevauchaient)
 			var xr := maxf(x + 52, f.get_string_size(str(j.z.get("nom", "")).to_upper(), HORIZONTAL_ALIGNMENT_LEFT, -1, 26).x + 24)
 			draw_string_outline(f, Vector2(xr, -10), tr, HORIZONTAL_ALIGNMENT_LEFT, -1, 20, 6, Ui.CONTOUR)

@@ -15,7 +15,7 @@ static func catalogue() -> Dictionary:
 	if _cat.is_empty():
 		var f := FileAccess.open(CHEMIN, FileAccess.READ)
 		if f == null:
-			push_warning("BanqueSons : %s introuvable" % CHEMIN)
+			push_warning("BanqueSons : %s introuvable" % CHEMIN)  # sans_traduction
 			return {}
 		var d = JSON.parse_string(f.get_as_text())
 		if d is Dictionary:
@@ -70,7 +70,7 @@ static func flux(chemin: String, boucle := false) -> AudioStream:
 	if _flux.has(chemin):
 		return _flux[chemin]
 	if not ResourceLoader.exists(chemin):
-		push_warning("BanqueSons : fichier absent %s" % chemin)
+		push_warning("BanqueSons : fichier absent %s" % chemin)  # sans_traduction
 		return null
 	var s: AudioStream = load(chemin)
 	if boucle:

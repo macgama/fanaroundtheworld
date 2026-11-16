@@ -39,8 +39,8 @@ func _ready() -> void:
 	_charger()
 	desactive = OS.has_feature("hors_ligne") or "--hors-ligne" in OS.get_cmdline_user_args()
 	for a in OS.get_cmdline_user_args():
-		if a.begins_with("--classement-url="):
-			url = a.trim_prefix("--classement-url=")
+		if a.begins_with("--classement-url="):  # sans_traduction
+			url = a.trim_prefix("--classement-url=")  # sans_traduction
 			desactive = false
 	if desactive:
 		return
@@ -118,7 +118,7 @@ func envoyer(meme_vide := false) -> void:
 			ClassementFans.appliquer_reponse(Game.supporters, int(env["n"]), {})
 			Game.sauver()
 		elif code == 403:
-			push_warning("Classement : clé refusée, nouvelle identité")
+			push_warning("Classement : clé refusée, nouvelle identité")  # sans_traduction
 			var p: Array = identite["pseudo"]
 			identite = ClassementFans.identite_neuve(_rng())
 			identite["pseudo"] = p
@@ -139,12 +139,12 @@ func rafraichir_equipes() -> void:
 func rafraichir_fans(periode: String) -> void:
 	if desactive:
 		return
-	_requete("fans.json?periode=" + periode, func(code: int, d: Variant):
+	_requete(tr("fans.json?periode=") + periode, func(code: int, d: Variant):  # sans_traduction
 		if code == 200 and d is Dictionary and d.get("fans") is Array:
 			fans[periode] = d["fans"]
 			mis_a_jour.emit())
 	if moi.is_empty() and identite_connue():
-		_requete("fan?id=" + str(identite["id"]), func(code: int, d: Variant):
+		_requete(tr("fan?id=") + str(identite["id"]), func(code: int, d: Variant):  # sans_traduction
 			if code == 200 and d is Dictionary:
 				moi = d
 				mis_a_jour.emit())
@@ -179,9 +179,9 @@ func _requete(chemin: String, rappel: Callable, corps: Variant = null, base := "
 		rappel.call(code, JSON.parse_string(octets.get_string_from_utf8())))
 	var err: int
 	if corps == null:
-		err = r.request(base + chemin, ["Accept: application/json"])
+		err = r.request(base + chemin, ["Accept: application/json"])  # sans_traduction
 	else:
-		err = r.request(base + chemin, ["Content-Type: application/json"], HTTPClient.METHOD_POST, JSON.stringify(corps))
+		err = r.request(base + chemin, ["Content-Type: application/json"], HTTPClient.METHOD_POST, JSON.stringify(corps))  # sans_traduction
 	if err != OK:
 		r.queue_free()
 		rappel.call(0, null)
@@ -216,7 +216,7 @@ func synchroniser_tournoi() -> void:
 	var ar: Dictionary = t["a_reclamer"]
 	if not ar.is_empty() and not bool(ar.get("verifie", false)):
 		_tournoi_en_cours = true
-		_requete_tournoi("club?id=%s&tournoi=%s" % [identite["id"], ar["id"]], func(code: int, d: Variant):
+		_requete_tournoi(tr("club?id=%s&tournoi=%s") % [identite["id"], ar["id"]], func(code: int, d: Variant):  # sans_traduction
 			_tournoi_en_cours = false
 			if code == 200 and d is Dictionary:
 				ar["rang"] = int(d.get("rang", 0))
@@ -274,7 +274,7 @@ func synchroniser_tournoi() -> void:
 				mis_a_jour.emit()
 		, _corps_tournoi({"niveau": Game.niveau()}))
 		return
-	_requete_tournoi("club?id=%s&tournoi=%s" % [identite["id"], t["id"]], func(code: int, d: Variant):
+	_requete_tournoi(tr("club?id=%s&tournoi=%s") % [identite["id"], t["id"]], func(code: int, d: Variant):  # sans_traduction
 		_tournoi_en_cours = false
 		if code == 200:
 			_lire_club(d)
@@ -295,7 +295,7 @@ func rafraichir_tournoi() -> void:
 	if desactive:
 		return
 	synchroniser_tournoi()
-	_requete_tournoi("classement.json?tournoi=" + str(Tournoi.fenetre(Game.maintenant())["id"]), func(code: int, d: Variant):
+	_requete_tournoi(tr("classement.json?tournoi=") + str(Tournoi.fenetre(Game.maintenant())["id"]), func(code: int, d: Variant):  # sans_traduction
 		if code == 200 and d is Dictionary and d.get("clubs") is Array:
 			tournoi_classement = d
 			mis_a_jour.emit())

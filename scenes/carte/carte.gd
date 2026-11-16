@@ -142,7 +142,7 @@ func _construire_interface() -> void:
 	ht.add_child(Ui.label("%d" % Game.tampons.size(), 28, Ui.BLANC, true, 6))
 	var primes := Game.primes_pretes()
 	if primes > 0:
-		ht.add_child(Ui.pastille("%d prime%s !" % [primes, "" if primes == 1 else "s"], Ui.JAUNE, 18, true))
+		ht.add_child(Ui.pastille(tr("%d prime%s !") % [primes, "" if primes == 1 else "s"], Ui.JAUNE, 18, true))
 	tamp.add_child(ht)
 	# Clic : la collection (carnet de voyage et album des FANZZY).
 	tamp.tooltip_text = "Collection : stades tamponnés, album des FANZZY et primes"
@@ -257,7 +257,7 @@ func _construire_interface() -> void:
 func _bouton_missions() -> Control:
 	Game.actualiser_missions()
 	var n := Missions.a_recuperer(Game.missions)
-	var b := Ui.bouton("Missions" if n == 0 else "Missions · %d" % n, Ui.VERT if n > 0 else Ui.NUIT, 24)
+	var b := Ui.bouton("Missions" if n == 0 else tr("Missions · %d") % n, Ui.VERT if n > 0 else Ui.NUIT, 24)
 	if n > 0:
 		Ui.colorer_bouton(b, Ui.VERT, true)
 	b.custom_minimum_size = Vector2(0, 64)
@@ -270,7 +270,7 @@ func _bouton_missions() -> Control:
 ## Bouton « Classement » (fans et équipes, en ligne), avec ton rang de la semaine.
 func _bouton_classement() -> Control:
 	var rang: Variant = EnLigne.moi.get("rang_semaine")
-	var b := Ui.bouton("Classement" if rang == null or int(rang) <= 0 else "Classement · n° %d" % int(rang), Ui.BLEU, 24)
+	var b := Ui.bouton("Classement" if rang == null or int(rang) <= 0 else tr("Classement · n° %d") % int(rang), Ui.BLEU, 24)
 	b.custom_minimum_size = Vector2(0, 64)
 	b.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	b.tooltip_text = "Les meilleurs fans et les équipes les plus soutenues, en ligne"
@@ -288,7 +288,7 @@ func _bouton_tournoi() -> Control:
 		texte = "Tournoi · récompense !"
 		couleur = Ui.JAUNE
 	elif f["etat"] == "actif":
-		texte = "Tournoi · %d pts" % Tournoi.points(t) if bool(t["inscrit"]) else "Tournoi · en cours"
+		texte = tr("Tournoi · %d pts") % Tournoi.points(t) if bool(t["inscrit"]) else tr("Tournoi · en cours")
 		couleur = Ui.ROSE
 	var b := Ui.bouton(texte, couleur, 24)
 	if couleur == Ui.JAUNE:
@@ -396,14 +396,14 @@ func _filtrer_jour(fiches: Array) -> Array:
 
 
 func _rafraichir(anime := true) -> void:
-	_niveau_lbl.text = "NIV. %d" % Game.niveau()
+	_niveau_lbl.text = tr("NIV. %d") % Game.niveau()
 	_barre_xp.value = Game.xp_dans_niveau() * 100.0
 	_jetons.text = "%d" % Game.jetons
-	var src := Donnees.source
-	if Donnees.hors_ligne and src != "en ligne":
-		src += " · hors ligne"
+	var src := tr(Donnees.source)
+	if Donnees.hors_ligne and Donnees.source != "en ligne":
+		src += tr(" · hors ligne")
 	var nb_direct := Donnees.matchs().filter(func(m): return Donnees.en_direct(m)).size()
-	_etat_donnees.text = "%d matchs · %d en direct · %s" % [Donnees.matchs().size(), nb_direct, src]
+	_etat_donnees.text = tr("%d matchs · %d en direct · %s") % [Donnees.matchs().size(), nb_direct, src]
 	_construire_fil()
 	_construire_epingles()
 	_construire_liste()
@@ -452,8 +452,8 @@ func _construire_epingles() -> void:
 					par_continent[c]["direct"] = true
 			for c in Geo.CONTINENTS:
 				var d: Dictionary = par_continent.get(c, {"n": 0, "direct": false})
-				ep.append({"type": "continent", "cle": c, "pos": Geo.CENTRES_CONTINENTS[c], "titre": NOMS_CONTINENTS[c],
-					"sous_titre": "%d matchs" % d["n"], "nombre": str(d["n"]), "couleur": Ui.VIOLET, "direct": d["direct"]})
+				ep.append({"type": "continent", "cle": c, "pos": Geo.CENTRES_CONTINENTS[c], "titre": tr(NOMS_CONTINENTS[c]),
+					"sous_titre": tr("%d matchs") % d["n"], "nombre": str(d["n"]), "couleur": Ui.VIOLET, "direct": d["direct"]})
 			_ajouter_stades(ep, toutes.filter(func(f): return f["lieu"]["niveau"] == "monde"))
 		"continent":
 			var cles: Array = []
@@ -522,7 +522,7 @@ func _construire_liste() -> void:
 			_titre_liste.text = "Matchs du monde"
 			_sous_titre_liste.text = "Sélections et compétitions mondiales. Choisis un continent pour les coupes continentales, puis un pays pour son championnat."
 		"continent":
-			_titre_liste.text = "Coupes · " + NOMS_CONTINENTS.get(continent, continent)
+			_titre_liste.text = tr("Coupes · ") + tr(NOMS_CONTINENTS.get(continent, continent))
 			_sous_titre_liste.text = "Compétitions continentales. Clique sur un pays pour voir son championnat."
 		"pays":
 			_titre_liste.text = Geo.nom_pays(pays)
@@ -544,16 +544,16 @@ func _construire_liste() -> void:
 	var aujourdhui := FicheMatch.jour_local(int(Time.get_unix_time_from_system()))
 	_onglet_jour("Tous", "")
 	if nb_direct > 0:
-		_onglet_jour("Direct %d" % nb_direct, "direct", Ui.ROUGE)
+		_onglet_jour(tr("Direct %d") % nb_direct, "direct", Ui.ROUGE)
 	if nb_fetes > 0 or jour_filtre == "fetes":
-		_onglet_jour("Fêtes %d" % nb_fetes, "fetes", Ui.VIOLET)
+		_onglet_jour(tr("Fêtes %d") % nb_fetes, "fetes", Ui.VIOLET)
 	var liste_jours := jours.keys()
 	liste_jours.sort()
 	for j in liste_jours:
 		if j < aujourdhui:
 			continue
 		var t := int(Time.get_unix_time_from_datetime_string(j + "T12:00:00"))
-		var txt: String = "Auj." if j == aujourdhui else FicheMatch.JOURS[Time.get_datetime_dict_from_unix_time(t)["weekday"]] + " " + str(int(j.right(2)))
+		var txt: String = tr("Auj.") if j == aujourdhui else tr(FicheMatch.JOURS[Time.get_datetime_dict_from_unix_time(t)["weekday"]]) + " " + str(int(j.right(2)))
 		_onglet_jour(txt, j)
 
 	fiches = _filtrer_jour(fiches)
@@ -571,13 +571,13 @@ func _construire_liste() -> void:
 	for i in mini(fiches.size(), MAX_LIGNES):
 		_liste.add_child(_carte_match(fiches[i]))
 	if fiches.size() > MAX_LIGNES:
-		_liste.add_child(Ui.label("… et %d autres matchs : filtre par jour ou zoome sur un pays." % (fiches.size() - MAX_LIGNES), 17, Ui.GRIS))
+		_liste.add_child(Ui.label(tr("… et %d autres matchs : filtre par jour ou zoome sur un pays.") % (fiches.size() - MAX_LIGNES), 17, Ui.GRIS))
 
 
 static func _rang(f: Dictionary, maintenant: int) -> int:
 	if Donnees.en_direct(f["m"]):
 		return 0
-	if str(f["m"].get("status", "")) == "SCHEDULED" and int(f["t"]) > maintenant - 3 * 3600:
+	if str(f["m"].get("status", "")) == "SCHEDULED" and int(f["t"]) > maintenant - 3 * 3600:  # sans_traduction
 		return 1
 	return 2
 
@@ -630,11 +630,11 @@ func _carte_match(f: Dictionary) -> Control:
 	droite.alignment = BoxContainer.ALIGNMENT_CENTER
 	droite.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	h.add_child(droite)
-	if direct or statut == "FINISHED":
+	if direct or statut == "FINISHED":  # sans_traduction
 		var sc := Ui.label(Donnees.score_texte(f["m"]), 24, Ui.BLANC, true, 5)
 		sc.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		droite.add_child(sc)
-	var pas := Ui.pastille(FicheMatch.statut_court(f), Ui.ROUGE if direct else (Ui.VERT if statut == "SCHEDULED" else Color("#6b6699")), 15)
+	var pas := Ui.pastille(FicheMatch.statut_court(f), Ui.ROUGE if direct else (Ui.VERT if statut == "SCHEDULED" else Color("#6b6699")), 15)  # sans_traduction
 	pas.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	droite.add_child(pas)
 	var ev := Game.evenement_de(f["m"])
@@ -648,10 +648,10 @@ func _carte_match(f: Dictionary) -> Control:
 		droite.add_child(fav)
 	if Game.pronos.has(str(f["id"])):
 		var pr: Dictionary = Game.pronos[str(f["id"])]
-		var tag := Ui.pastille("Prono %d-%d" % [int(pr["dom"]), int(pr["ext"])], Ui.ROSE, 14)
+		var tag := Ui.pastille(tr("Prono %d-%d") % [int(pr["dom"]), int(pr["ext"])], Ui.ROSE, 14)
 		tag.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		droite.add_child(tag)
-	for c in b.find_children("*", "Control", true, false):
+	for c in b.find_children("*", "Control", true, false):  # sans_traduction
 		(c as Control).mouse_filter = Control.MOUSE_FILTER_IGNORE
 	var id: String = f["id"]
 	b.pressed.connect(func(): _choisir_match(id))
@@ -728,7 +728,7 @@ func _afficher_fiche() -> void:
 	if bloc_ev:
 		v.add_child(bloc_ev)
 
-	v.add_child(_ligne("stade", f["stade"]["nom"], "%s places" % _milliers(f["stade"]["places"])))
+	v.add_child(_ligne("stade", f["stade"]["nom"], tr("%s places") % _milliers(f["stade"]["places"])))
 	v.add_child(_ligne("calendrier", "Match réel", "%s · %s" % [FicheMatch.date_texte(f["t"]), FicheMatch.heure_texte(f["t"])]))
 	v.add_child(_ligne("feu", "Ambiance prévue", "%d / 5" % FicheMatch.ambiance_prevue(f)))
 	var tamp := Game.a_tampon(f["stade"]["cle"])
@@ -784,7 +784,7 @@ func _afficher_fiche() -> void:
 			hp.add_child(Ui.icone("jeton", 22))
 		hp.add_child(Ui.label(str(cout) if cout > 0 else "Gratuit", 18, Ui.JAUNE if cout <= Game.jetons else Ui.ROUGE, true))
 		vb.add_child(hp)
-		for c in vb.find_children("*", "Control", true, false):
+		for c in vb.find_children("*", "Control", true, false):  # sans_traduction
 			(c as Control).mouse_filter = Control.MOUSE_FILTER_IGNORE
 		b.add_child(vb)
 		b.disabled = cout > Game.jetons
@@ -795,10 +795,10 @@ func _afficher_fiche() -> void:
 		grille.add_child(b)
 	v.add_child(grille)
 	if mode_suivi == "stade":
-		var trajet := "Trajet : %s km" % _milliers(int(dist)) if dist >= 30 else "Tu es déjà sur place"
-		v.add_child(Ui.label(trajet + " · gains ×%s" % str(Game.MODES_SUIVI[mode_suivi]["gain"]), 17, Ui.GRIS))
+		var trajet := tr("Trajet : %s km") % _milliers(int(dist)) if dist >= 30 else tr("Tu es déjà sur place")
+		v.add_child(Ui.label(trajet + tr(" · gains ×%s") % str(Game.MODES_SUIVI[mode_suivi]["gain"]), 17, Ui.GRIS))
 	else:
-		v.add_child(Ui.label("Pas de trajet · gains ×%s · pas de tampon" % str(Game.MODES_SUIVI[mode_suivi]["gain"]), 17, Ui.GRIS))
+		v.add_child(Ui.label(tr("Pas de trajet · gains ×%s · pas de tampon") % str(Game.MODES_SUIVI[mode_suivi]["gain"]), 17, Ui.GRIS))
 
 	var cout_final := Game.cout_suivi(mode_suivi, dist)
 	var go := Ui.bouton("C'EST PARTI !", Ui.JAUNE, 40)
@@ -825,7 +825,7 @@ func _bloc_evenement(f: Dictionary) -> Control:
 	var v := Ui.vbox(4)
 	pan.add_child(v)
 	var h := Ui.hbox(10)
-	h.add_child(Ui.pastille(str(ev["court"]).to_upper(), couleur, 16, bool(ev["sombre"])))
+	h.add_child(Ui.pastille(tr(str(ev["court"])).to_upper(), couleur, 16, bool(ev["sombre"])))
 	var titre := Ui.label(str(ev["titre"]), 24, Ui.BLANC, true, 5)
 	titre.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	titre.clip_text = true
@@ -834,19 +834,19 @@ func _bloc_evenement(f: Dictionary) -> Control:
 	v.add_child(h)
 	var texte := str(ev["texte"])
 	if not ev["aussi"].is_empty():
-		texte += " Et aussi : %s." % ", ".join(ev["aussi"])
+		texte += tr(" Et aussi : %s.") % ", ".join(ev["aussi"])
 	var l := Ui.label(texte, 16, Ui.BLANC)
 	l.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	v.add_child(l)
-	var gains := "Jetons des duels %s" % Evenements.texte_mult(ev)
+	var gains := tr("Jetons des duels %s") % Evenements.texte_mult(ev)
 	if Game.prime_evenement_gagnee(str(f["id"])):
-		gains += " · prime de la soirée déjà gagnée"
+		gains += tr(" · prime de la soirée déjà gagnée")
 	else:
-		gains += " · 1er duel : +%d XP PASS, +%d Jetons" % [int(ev["xp_pass"]), int(ev["jetons"])]
+		gains += tr(" · 1er duel : +%d XP PASS, +%d Jetons") % [int(ev["xp_pass"]), int(ev["jetons"])]
 	var quand := ""
 	match etat:
 		"a_venir":
-			quand = "La fête commence dans %s" % _duree(int(f["t"]) - Evenements.AVANT - Game.maintenant())
+			quand = tr("La fête commence dans %s") % _duree(int(f["t"]) - Evenements.AVANT - Game.maintenant())
 		"actif":
 			quand = "C'est la fête : bonus en cours !"
 		_:
@@ -920,17 +920,17 @@ func _bloc_prono(f: Dictionary) -> Control:
 			hp.add_child(b)
 		v.add_child(hp)
 	else:
-		var txt := "Aucun but" if impose == "aucun" else "%s marque en premier" % (f["dom"]["nom"] if impose == "home" else f["ext"]["nom"])
-		v.add_child(Ui.label("Premier but : " + txt, 16, Ui.GRIS))
+		var txt := "Aucun but" if impose == "aucun" else tr("%s marque en premier") % (f["dom"]["nom"] if impose == "home" else f["ext"]["nom"])
+		v.add_child(Ui.label(tr("Premier but : ") + txt, 16, Ui.GRIS))
 
 	var multi := Pronostics.multiplicateur(Game.serie_pronos)
-	var gains := "Résultat +%d · score exact +%d · premier but +%d" % [
+	var gains := tr("Résultat +%d · score exact +%d · premier but +%d") % [
 		Pronostics.RECOMPENSE_RESULTAT, Pronostics.RECOMPENSE_SCORE, Pronostics.RECOMPENSE_PREMIER_BUT]
 	var lg := Ui.label(gains, 15, Ui.GRIS)
 	lg.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	v.add_child(lg)
 	if Game.serie_pronos > 0:
-		v.add_child(Ui.label("Série de %d · gains ×%s" % [Game.serie_pronos, str(multi)], 16, Ui.JAUNE, true))
+		v.add_child(Ui.label(tr("Série de %d · gains ×%s") % [Game.serie_pronos, str(multi)], 16, Ui.JAUNE, true))
 
 	var hb := Ui.hbox(8)
 	var deja := Game.pronos.has(id)
@@ -951,7 +951,7 @@ func _bloc_prono(f: Dictionary) -> Control:
 	v.add_child(hb)
 	if deja:
 		var pd: Dictionary = Game.pronos[id]
-		v.add_child(Ui.label("Enregistré : " + PronoTexte.resume(pd, f["dom"]["nom"], f["ext"]["nom"]), 15, Ui.VERT))
+		v.add_child(Ui.label(tr("Enregistré : ") + PronoTexte.resume(pd, f["dom"]["nom"], f["ext"]["nom"]), 15, Ui.VERT))
 	return cadre
 
 
@@ -984,8 +984,8 @@ func _sur_pronos_resolus(liste: Array) -> void:
 	var total := 0
 	for p in liste:
 		total += int(p.get("jetons", 0))
-	var txt := "%d pronostic%s terminé%s" % [liste.size(), "s" if liste.size() > 1 else "", "s" if liste.size() > 1 else ""]
-	txt += " · +%d Jetons" % total if total > 0 else " · pas de Jetons cette fois"
+	var txt := (tr("%d pronostics terminés") if liste.size() > 1 else tr("%d pronostic terminé")) % liste.size()
+	txt += tr(" · +%d Jetons") % total if total > 0 else tr(" · pas de Jetons cette fois")
 	var toast := Ui.panneau(Ui.ROSE if total > 0 else Ui.NUIT, 20, 5)
 	toast.add_child(Ui.label(txt, 24, Ui.BLANC, true, 6))
 	toast.set_anchors_preset(Control.PRESET_CENTER_TOP)
@@ -1031,8 +1031,8 @@ func _bloc_favori(f: Dictionary) -> Control:
 	if cle == "":
 		return Ui.label("Équipe de jeunes : pas de favori possible ici.", 16, Ui.GRIS)
 	if Supporters.est_favori(s, cle):
-		var pts := "+%d (stade) · " % Supporters.POINTS_SUIVI["stade"] if mode_suivi == "stade" else ""
-		var l := Ui.label("★ Ton équipe favorite : %sduel gagné +%d de popularité" % [pts, Supporters.points_duel(true, Game.gain_suivi(mode_suivi))], 16, Ui.JAUNE)
+		var pts := tr("+%d (stade) · ") % Supporters.POINTS_SUIVI["stade"] if mode_suivi == "stade" else ""
+		var l := Ui.label(tr("★ Ton équipe favorite : %sduel gagné +%d de popularité") % [pts, Supporters.points_duel(true, Game.gain_suivi(mode_suivi))], 16, Ui.JAUNE)
 		l.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 		return l
 	var pays := Geo.cle_pays(str(e.get("name", ""))) if sel else str(Geo.pays_des_equipes.get(str(e.get("id", "")), ""))
@@ -1045,12 +1045,12 @@ func _bloc_favori(f: Dictionary) -> Control:
 		actuel = Geo.nom_pays(str(s["nation"]["pays"]))
 	elif not sel and Supporters.club_du_pays(s, pays) != "":
 		actuel = Fiction.equipe({"id": Supporters.club_du_pays(s, pays)})["nom"]
-	var texte := "★ En faire mon équipe nationale" if sel else "★ En faire mon club favori (%s)" % Geo.nom_pays(pays)
+	var texte := "★ En faire mon équipe nationale" if sel else tr("★ En faire mon club favori (%s)") % Geo.nom_pays(pays)
 	var b := Ui.bouton(texte, Ui.VIOLET, 18)
-	b.tooltip_text = ("Remplace %s. " % actuel if actuel != "" else "") + "Tes duels, pronos et déplacements lui rapporteront de la popularité."
+	b.tooltip_text = (tr("Remplace %s. ") % actuel if actuel != "" else "") + tr("Tes duels, pronos et déplacements lui rapporteront de la popularité.")
 	if attente > 0:
 		b.disabled = true
-		b.text = "Changement de favori possible dans %s" % _duree(attente)
+		b.text = tr("Changement de favori possible dans %s") % _duree(attente)
 	b.pressed.connect(func():
 		var ok := Game.choisir_nation_favorite(pays) if sel else Game.choisir_club_favori(pays, str(e.get("id", "")))
 		if ok:

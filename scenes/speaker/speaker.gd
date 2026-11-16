@@ -130,7 +130,7 @@ func _construire() -> void:
 	quitter.pressed.connect(_retour)
 	haut.add_child(quitter)
 	var pb := Ui.panneau(Ui.NUIT, 20, 5)
-	_lbl_but = Ui.label("But 0/%d" % SpeakerRegles.NB_BUTS, 30, Ui.BLANC, true, 6)
+	_lbl_but = Ui.label(tr("But 0/%d") % SpeakerRegles.NB_BUTS, 30, Ui.BLANC, true, 6)
 	pb.add_child(_lbl_but)
 	haut.add_child(pb)
 	haut.add_child(Ui.espace())
@@ -205,7 +205,7 @@ func _bouton_joueur(place: int) -> Button:
 	b.custom_minimum_size = Vector2(335, 220)
 	b.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	b.focus_mode = Control.FOCUS_NONE
-	b.tooltip_text = "Annoncer ce joueur (touche %d)" % (place + 1)
+	b.tooltip_text = tr("Annoncer ce joueur (touche %d)") % (place + 1)
 	b.pressed.connect(annoncer.bind(place))
 	var v := Ui.vbox(0)
 	v.set_anchors_preset(Control.PRESET_FULL_RECT)
@@ -213,12 +213,12 @@ func _bouton_joueur(place: int) -> Button:
 	v.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	b.add_child(v)
 	var num := Ui.label("", 84, Ui.BLANC, true, 12)
-	num.name = "Numero"
+	num.name = "Numero"  # sans_traduction
 	num.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	num.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	v.add_child(num)
 	var nom := Ui.label("", 28, Ui.BLANC, true, 6)
-	nom.name = "Nom"
+	nom.name = "Nom"  # sans_traduction
 	nom.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	nom.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	v.add_child(nom)
@@ -234,8 +234,8 @@ func _maj_boutons() -> void:
 	for place in _boutons.size():
 		var j: Dictionary = feuille[_ordre[place]]
 		var b: Button = _boutons[place]
-		var num: Label = b.find_child("Numero", true, false)
-		var nom: Label = b.find_child("Nom", true, false)
+		var num: Label = b.find_child("Numero", true, false)  # sans_traduction
+		var nom: Label = b.find_child("Nom", true, false)  # sans_traduction
 		num.text = str(j["numero"])
 		nom.text = "%s %s" % [j["prenom"], String(j["nom"]).to_upper()]
 		Ui.colorer_bouton(b, Color(c[0]).darkened(0.15))
@@ -347,7 +347,7 @@ func _process(_delta: float) -> void:
 func _debut_but(i: int) -> void:
 	but_courant = i
 	var b: Dictionary = buts[i]
-	_lbl_but.text = "But %d/%d" % [i + 1, buts.size()]
+	_lbl_but.text = tr("But %d/%d") % [i + 1, buts.size()]
 	_bulle_tribune.visible = false
 	_bulle_speaker.visible = false
 	if is_instance_valid(_buteur):
@@ -365,7 +365,7 @@ func _debut_but(i: int) -> void:
 		_buteur.jouer(&"celebrer", 0.0)
 		_speaker.jouer(&"encourager", 0.0)
 		_sons.ambiance("stade", 2)
-		_lbl_info.text = "Le numéro %d a marqué : trouve-le sur la feuille, annonce-le sur le temps du micro !" % j["numero"]
+		_lbl_info.text = tr("Le numéro %d a marqué : trouve-le sur la feuille, annonce-le sur le temps du micro !") % j["numero"]
 	else:
 		score[1] += 1
 		_faute_visiteurs = false
@@ -395,7 +395,7 @@ func _fin_but(i: int) -> void:
 			buts_annonces += 1
 		if p["bonus"] > 0:
 			bonus += p["bonus"]
-			_gain_flottant("TRIPLÉ PARFAIT !  +%d" % p["bonus"], Ui.JAUNE, Vector2(760, 420))
+			_gain_flottant(tr("TRIPLÉ PARFAIT !  +%d") % p["bonus"], Ui.JAUNE, Vector2(760, 420))
 			_sons.jouer("ui_combo_%d" % clampi(buts_annonces, 1, 4))
 			_sons.jouer("applaudissements", {"volume_db": -8})
 		if is_instance_valid(_buteur):
@@ -403,7 +403,7 @@ func _fin_but(i: int) -> void:
 	else:
 		if not _faute_visiteurs:
 			silences += 1
-			_gain_flottant("Sobre et fair-play  +%d" % SpeakerRegles.PAYE_SILENCE, Ui.VERT, Vector2(760, 420))
+			_gain_flottant(tr("Sobre et fair-play  +%d") % SpeakerRegles.PAYE_SILENCE, Ui.VERT, Vector2(760, 420))
 			_sons.jouer("ui_bien")
 	_speaker.jouer(&"repos")
 	_sons.ambiance("stade", 1)
@@ -468,7 +468,7 @@ func _retour_appel(note: String, _idx: int) -> void:
 		serie += 1
 		serie_max = maxi(serie_max, serie)
 		_sons.jouer("ui_parfait" if note == "parfait" else "ui_bien")
-		_gain_flottant("%s  +%d" % ["PARFAIT" if note == "parfait" else "BIEN", gain], Ui.JAUNE if note == "parfait" else Ui.VERT, Vector2(PISTE_X0 - 60, PISTE_Y - 140))
+		_gain_flottant("%s  +%d" % [tr("PARFAIT") if note == "parfait" else tr("BIEN"), gain], Ui.JAUNE if note == "parfait" else Ui.VERT, Vector2(PISTE_X0 - 60, PISTE_Y - 140))
 	else:
 		serie = 0
 		var textes := {"faux": "Pas le bon joueur !", "rate": "À côté du tempo", "manque": "Raté !"}
@@ -518,12 +518,12 @@ func brut() -> int:
 func _maj_hud() -> void:
 	_lbl_paye.text = str(brut())
 	Ui.pop(_lbl_paye, 1.25, 0.2)
-	_lbl_serie.text = "Série x%d" % serie
+	_lbl_serie.text = tr("Série x%d") % serie
 	_lbl_serie.add_theme_color_override("font_color", Ui.JAUNE if serie >= SpeakerRegles.APPELS_PAR_BUT else Ui.BLANC)
 
 
 func _maj_score() -> void:
-	_lbl_score.text = "LOCAUX  %d - %d  VISITEURS" % [score[0], score[1]]
+	_lbl_score.text = tr("LOCAUX  %d - %d  VISITEURS") % [score[0], score[1]]
 
 
 func _gain_flottant(texte: String, couleur: Color, pos: Vector2, taille := 48) -> void:
@@ -570,7 +570,7 @@ func _finir() -> void:
 	var t := Ui.label("FIN DU MATCH !", 56, Ui.JAUNE, true, 10)
 	t.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	v.add_child(t)
-	var sc := Ui.label("Locaux %d - %d Visiteurs" % [score[0], score[1]], 28, Ui.BLANC, true)
+	var sc := Ui.label(tr("Locaux %d - %d Visiteurs") % [score[0], score[1]], 28, Ui.BLANC, true)
 	sc.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	v.add_child(sc)
 	if record:
@@ -585,7 +585,7 @@ func _finir() -> void:
 		["Buts des visiteurs sans annonce", "+%d" % (silences * SpeakerRegles.PAYE_SILENCE)],
 	]
 	if paye < b:
-		lignes.append(["Fatigue (%de match du jour)" % (deja + 1), "paye ÷ 2"])
+		lignes.append([tr("Fatigue (%de match du jour)") % (deja + 1), tr("paye ÷ 2")])
 	lignes.append(["Jetons gagnés", "+%d" % paye])
 	lignes.append(["XP du fan club", "+%d" % xp])
 	for l in lignes:
@@ -659,7 +659,7 @@ class Decor extends Control:
 		draw_style_box(Ui.boite(Color("#3a3290"), 30, 6), cab)
 		draw_rect(Rect2(cab.position.x + 20, cab.position.y + 22, cab.size.x - 40, 30), Ui.ROSE)
 		var f := Ui.police_titre()
-		draw_string(f, Vector2(cab.position.x + 30, cab.position.y + 46), "CABINE DU SPEAKER", HORIZONTAL_ALIGNMENT_LEFT, -1, 22, Ui.BLANC)
+		draw_string(f, Vector2(cab.position.x + 30, cab.position.y + 46), tr("CABINE DU SPEAKER"), HORIZONTAL_ALIGNMENT_LEFT, -1, 22, Ui.BLANC)
 
 
 ## Par-dessus les personnages : la piste du tempo, le micro, le numéro du buteur.

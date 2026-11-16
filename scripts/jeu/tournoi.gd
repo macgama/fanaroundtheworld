@@ -56,10 +56,10 @@ const TYPES := [
 	"Virage", "Meute", "Tempête", "Armada", "Cohorte", "Escouade", "Caravane", "Tornade",
 ]
 const COMPLEMENTS := [
-	"du Canal", "des Volcans", "du Tonnerre", "de la Lune", "des Sommets", "du Port",
-	"des Étoiles", "du Grand Nord", "de la Vallée", "des Remparts", "du Phare", "des Comètes",
-	"de l'Océan", "du Désert", "de la Forêt", "des Collines", "du Soleil", "des Marais",
-	"du Métro", "des Dunes",
+	"du Canal", "des Volcans", "du Tonnerre", "de la Lune", "des Sommets", "du Port",  # sans_traduction
+	"des Étoiles", "du Grand Nord", "de la Vallée", "des Remparts", "du Phare", "des Comètes",  # sans_traduction
+	"de l'Océan", "du Désert", "de la Forêt", "des Collines", "du Soleil", "des Marais",  # sans_traduction
+	"du Métro", "des Dunes",  # sans_traduction
 ]
 const NB_BOTS := 15
 
@@ -109,8 +109,8 @@ static func nom_texte(n: Variant) -> String:
 		return "Club mystère"
 	var a := int(n[0])
 	var b := int(n[1])
-	var t: String = TYPES[a] if a >= 0 and a < TYPES.size() else "Club"
-	var c: String = COMPLEMENTS[b] if b >= 0 and b < COMPLEMENTS.size() else "mystère"
+	var t: String = TYPES[a] if a >= 0 and a < TYPES.size() else "Club"  # sans_traduction
+	var c: String = COMPLEMENTS[b] if b >= 0 and b < COMPLEMENTS.size() else "mystère"  # sans_traduction
 	return "%s %s" % [t, c]
 
 
@@ -218,7 +218,7 @@ static func raison_refus(s: Dictionary, match_id: String, kickoff: int, t: int) 
 	if match_deja_joue(s, match_id):
 		return "Match déjà joué pour le tournoi"
 	if (s["duels"] as Array).size() >= DUELS_MAX:
-		return "Les %d duels du tournoi sont joués" % DUELS_MAX
+		return Trad.t("Les %d duels du tournoi sont joués") % DUELS_MAX
 	return ""
 
 

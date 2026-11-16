@@ -37,7 +37,7 @@ func _ready() -> void:
 	var existant := Game.chant_club()
 	compo = existant.duplicate(true) if not existant.is_empty() else ChantClub.par_defaut()
 	if existant.is_empty():
-		compo["nom"] = "Le chant de %s" % ChantClub.nom_crie(Game.fan_club_nom)
+		compo["nom"] = tr("Le chant de %s") % ChantClub.nom_crie(Game.fan_club_nom)
 		compo["nom"] = String(compo["nom"]).left(ChantClub.NOM_MAX)
 		modifie = true
 	_lecteur = ChantLecteur.new()
@@ -108,14 +108,14 @@ func _construire() -> void:
 	l_tempo.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	lt.add_child(l_tempo)
 	for t in ChantClub.tempos():
-		var b := Ui.bouton("%s · %d" % [t["nom"], int(t["bpm"])], Ui.NUIT_CLAIR, 22)
+		var b := Ui.bouton("%s · %d" % [tr(t["nom"]), int(t["bpm"])], Ui.NUIT_CLAIR, 22)
 		b.custom_minimum_size = Vector2(0, 60)
 		var id := String(t["id"])
 		b.pressed.connect(func(): _choisir_tempo(id))
 		if not ChantClub.debloque(t, Game.niveau()):
 			b.disabled = true
-			b.text = "%s · niv. %d" % [t["nom"], int(t["niveau"])]
-			b.tooltip_text = "S'ouvre au niveau %d" % int(t["niveau"])
+			b.text = tr("%s · niv. %d") % [tr(t["nom"]), int(t["niveau"])]
+			b.tooltip_text = tr("S'ouvre au niveau %d") % int(t["niveau"])
 		lt.add_child(b)
 		_boutons_tempo[id] = b
 	lt.add_child(Ui.espace())
@@ -263,7 +263,7 @@ func _rafraichir() -> void:
 	_btn_plus.disabled = mesures.size() >= ChantClub.mesures_max()
 	var e := ChantClub.etoiles(compo)
 	_etoiles.text = "★".repeat(e) + "☆".repeat(5 - e)
-	_infos.text = "%d mesures · %d claps · %.1f s par couplet" % [mesures.size(), ChantClub.nb_appuis(compo), ChantClub.duree(compo)]
+	_infos.text = tr("%d mesures · %d claps · %.1f s par couplet") % [mesures.size(), ChantClub.nb_appuis(compo), ChantClub.duree(compo)]
 	_construire_briques()
 	_afficher_karaoke(choisie, -1)
 	_btn_enregistrer.text = "Enregistrer" if modifie else "Enregistré ✓"
@@ -271,8 +271,8 @@ func _rafraichir() -> void:
 
 func _construire_briques() -> void:
 	var m: Dictionary = compo["mesures"][choisie]
-	_titre_morceaux.text = "MORCEAUX · mesure %d" % (choisie + 1)
-	_titre_paroles.text = "PAROLES · mesure %d" % (choisie + 1)
+	_titre_morceaux.text = tr("MORCEAUX · mesure %d") % (choisie + 1)
+	_titre_paroles.text = tr("PAROLES · mesure %d") % (choisie + 1)
 	for c in _grille_morceaux.get_children():
 		c.queue_free()
 	for mo in ChantClub.morceaux():
@@ -284,7 +284,7 @@ func _construire_briques() -> void:
 			Ui.colorer_bouton(b, Ui.JAUNE, true)
 		b.custom_minimum_size = Vector2(0, 74)
 		b.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		b.text = "%s\n%s" % [mo["nom"], "★".repeat(int(mo["difficulte"]))] if ouvert else "%s\nniveau %d" % [mo["nom"], int(mo["niveau"])]
+		b.text = "%s\n%s" % [tr(mo["nom"]), "★".repeat(int(mo["difficulte"]))] if ouvert else tr("%s\nniveau %d") % [tr(mo["nom"]), int(mo["niveau"])]
 		b.tooltip_text = String(mo["description"])
 		b.disabled = not ouvert
 		b.pressed.connect(func(): _choisir_morceau(id))
@@ -308,7 +308,7 @@ func _construire_briques() -> void:
 		b.custom_minimum_size = Vector2(0, 56)
 		b.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		b.clip_text = true
-		b.text = ChantClub.texte_parole(id, Game.fan_club_nom) if ouvert else "niveau %d" % int(pa["niveau"])
+		b.text = ChantClub.texte_parole(id, Game.fan_club_nom) if ouvert else tr("niveau %d") % int(pa["niveau"])
 		b.disabled = not ouvert
 		b.pressed.connect(func(): _choisir_parole(id))
 		_grille_paroles.add_child(b)
@@ -325,9 +325,9 @@ func _afficher_karaoke(i: int, mot: int) -> void:
 		if String(mots[k]) == "":
 			continue
 		var c := "#ffd23f" if k == mot else ("#ffffff" if k < mot or mot < 0 else "#b9b5e0")
-		parts.append("[color=%s]%s[/color]" % [c, mots[k]])
+		parts.append(tr("[color=%s]%s[/color]") % [c, mots[k]])  # sans_traduction
 	var ligne := " ".join(parts) if not parts.is_empty() else "[color=#b9b5e0](on frappe sans paroles)[/color]"
-	_karaoke.text = "[center]♪  %s  ♪[/center]" % ligne
+	_karaoke.text = tr("[center]♪  %s  ♪[/center]") % ligne  # sans_traduction
 
 
 # ------------------------------------------------------------------ actions
@@ -419,7 +419,7 @@ func _enregistrer() -> void:
 	compo = Game.chant_club().duplicate(true)
 	modifie = false
 	_rafraichir()
-	_annoncer("« %s » est le chant du club ! Ta tribune le chantera en duel." % compo["nom"], Ui.VERT)
+	_annoncer(tr("« %s » est le chant du club ! Ta tribune le chantera en duel.") % compo["nom"], Ui.VERT)
 
 
 func _retour() -> void:
