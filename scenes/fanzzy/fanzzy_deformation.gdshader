@@ -12,6 +12,8 @@ uniform float onde_phase = 0.0;    // phase de l'ondulation, avancée par le scr
 uniform float onde_freq = 2.5;     // nombre de vagues sur la hauteur
 uniform float eclat = 0.0;         // 0..1 éclaircit (célébration)
 uniform float terne = 0.0;         // 0..1 désature et assombrit (dépit)
+uniform float flash = 0.0;         // 0..1 éclair de couleur quand le FANZZY est touché
+uniform vec3 flash_couleur = vec3(1.0);
 
 // Bras levés (poses joie / pousse), repérés par tools/fanzzy/analyser_bras.py.
 // Chaque bras est plié autour de son épaule : rien ne bouge sous l'épaule ni
@@ -163,5 +165,6 @@ void fragment() {
 	float gris = dot(c.rgb, vec3(0.299, 0.587, 0.114));
 	c.rgb = mix(c.rgb, vec3(gris) * 0.8, terne * 0.6);
 	c.rgb = mix(c.rgb, vec3(1.0, 0.97, 0.85), eclat * 0.35);
+	c.rgb = mix(c.rgb, flash_couleur, clamp(flash, 0.0, 1.0));
 	COLOR = c;
 }
