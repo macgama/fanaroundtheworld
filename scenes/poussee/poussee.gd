@@ -879,7 +879,11 @@ class Unite extends Node2D:
 		var haut := HAUTEUR_UNITE * (1.8 if cle == "mascotte" else 1.0)
 		corps.scale = Vector2.ONE * (haut / h)
 		corps.cap = 1.0 if equipe == 0 else -1.0
+		corps.couleur_trainee = couleur
 		corps.jouer(&"lever_bras", 0.5)
+		# arrivée sur le terrain : petit bond, poussière
+		corps.rebondir(0.8)
+		corps.trainee = 0.15
 
 	func avancer(v: Vector2, bouge: bool) -> void:
 		position += v
@@ -910,6 +914,8 @@ class Unite extends Node2D:
 	func secouer() -> void:
 		coups += 1
 		_secousse = 0.2
+		if corps:
+			corps.impact(Vector2.INF, 0.7)
 
 	func s_asseoir() -> void:
 		if not actif:
@@ -917,7 +923,9 @@ class Unite extends Node2D:
 		actif = false
 		jeu.texte(position + Vector2(0, -110), "va s'asseoir", Ui.GRIS)
 		if corps:
+			corps.impact(Vector2.INF, 1.3)
 			corps.jouer(&"depit")
+			corps.etourdir(0.9)
 		var tw := create_tween()
 		tw.tween_interval(0.5)
 		tw.tween_property(self, "modulate:a", 0.0, 0.5)

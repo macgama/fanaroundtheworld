@@ -84,6 +84,48 @@ bout de chapeau avec lui. Les bras baissés de la pose `neutre` ne bougent pas
 | `depit` | depit | 3 s | s'affaisse, se ternit, nuage de pluie |
 | `huer` | colere | 2,5 s | tremble de rage, symboles de colère |
 
+## Le « jus » : élastique, impacts, traînées
+
+Par-dessus chaque action, une couche de réactions physiques façon jeu
+d'action cartoon rend les FANZZY plus vivants. Elle marche sur toutes les
+images, avec ou sans expressions.
+
+| Appel | Effet |
+|---|---|
+| `pop(force)` | coup d'élastique (squash & stretch) qui rebondit 2 ou 3 fois ; `force` < 0 étire d'abord |
+| `impact(depuis, force, couleur)` | éclair de couleur, écrasé, recul à l'opposé du coup, onde et étoiles d'impact |
+| `rebondir(force, delai)` | un bond par-dessus l'action en cours, poussière à l'atterrissage |
+| `etourdir(duree)` | étoiles qui tournent au-dessus de la tête |
+| `poussiere(n, force, cote)` | bouffée de poussière aux pieds, posée dans la scène |
+| `trainee = 0.3` | silhouettes fantômes (teinte `couleur_trainee`) pendant 0,3 s |
+
+Automatique : chaque changement d'action démarre d'un coup d'élastique
+(célébrer étire et lance des étoiles, dépit écrase, huer fait trembler),
+la course soulève un peu de poussière à chaque pas, et tout atterrissage
+(sauter, célébrer, bond) fait un nuage. `poussiere_auto = false` coupe la
+poussière.
+
+Où c'est branché :
+
+- **Accueil** : la foule est faite de vrais FANZZY animés (tes FANZZY
+  d'abord), qui chantent, agitent l'écharpe ou applaudissent sur le même
+  tempo, sautent à leur place à l'arrivée, font un bond de temps en temps
+  et célèbrent quand on clique dessus.
+- **Duel d'ambiance** : les trois FANZZY du premier plan sont maintenant
+  des FanzzyAnime (expressions et bras) ; élastique sur chaque temps du
+  tambour, bond sur chaque note réussie, applaudissements au combo 10,
+  écharpes au tifo, bras levés à la ola, célébration ou dépit au but et à
+  la fin, éclair rouge et colère sur un raté.
+- **Arène** : impact au coup reçu (recul à l'opposé du tireur), secousse
+  d'écran quand ton FANZZY touche ou est touché, plus forte au KO et au
+  super, étoiles quand il est étourdi ou mis au banc, traînée pendant la
+  roulade et le sprint, bond au retour du banc.
+- **Poussée** : impact au coup reçu, étourdi quand une unité va s'asseoir,
+  bond et traînée à l'entrée sur le terrain.
+
+Démo : `scenes/fanzzy/demo_jus.tscn` (séquence en boucle). Test :
+`godot --headless --path . --script tests/test_jus.gd`.
+
 ## Utilisation
 
 Un FANZZY seul :

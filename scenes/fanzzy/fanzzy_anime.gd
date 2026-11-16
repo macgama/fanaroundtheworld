@@ -53,6 +53,8 @@ const SHADER := preload("res://scenes/fanzzy/fanzzy_deformation.gdshader")
 const TRANSITION := 0.22 # secondes de fondu entre deux actions
 const LEVER_BRAS := 0.8 # angle (radians, vers l'extérieur) des bras qui se lèvent ou retombent
 const DESCENTE := 0.16 # secondes pour baisser les bras avant de changer de pose
+const RAIDEUR := 380.0 # ressort du « jus » (écrasement, recul) : ~3 rebonds visibles
+const AMORTI := 12.0
 
 ## Identifiant de catalogue : si `texture` est vide, les images sont chargées
 ## au lancement (pratique pour poser un FANZZY dans une scène à la main).
@@ -110,6 +112,31 @@ var _bras := {} # repères des bras de la pose affichée (vide = bras immobiles)
 var _pieds_y := 0.0
 var _descente := 0.0 # > 0 : les bras retombent avant de passer à _etat_suivant
 var _etat_suivant: StringName
+
+# --- « Jus » : réactions physiques ajoutées par-dessus l'animation
+# (voir pop(), impact(), rebondir(), etourdir(), poussiere(), trainee)
+## Secondes de traînée restantes : des silhouettes fantômes suivent le FANZZY.
+var trainee := 0.0
+## Teinte des silhouettes de la traînée.
+var couleur_trainee := Color(1.0, 1.0, 1.0)
+## Poussière automatique sous les pieds (pas de course, atterrissages).
+var poussiere_auto := true
+var _ressort := 0.0 # écrasement élastique (+ = aplati, - = étiré)
+var _ressort_v := 0.0
+var _recul := 0.0 # penche ajoutée par un coup (fraction de la hauteur)
+var _recul_v := 0.0
+var _flash := 0.0
+var _tremble := 0.0
+var _bond := -1.0 # avancement du bond en cours (0..1), < 0 : aucun
+var _bond_force := 1.0
+var _etourdi := 0.0
+var _saut_avant := 0.0
+var _pas := 0.0
+var _fantome_dans := 0.0
+var _source := Rect2() # zone utile de l'image, en pixels de l'image
+var _monde: Node2D # traînée et poussière, posées dans la scène (elles ne suivent pas le FANZZY)
+var _fantomes: Array[Dictionary] = []
+var _nuages_poussiere: Array[Dictionary] = []
 
 static var _grilles := {}
 static var _rects := {}
@@ -213,6 +240,8 @@ func jouer(nouvelle: StringName, duree := -1.0, delai := 0.0) -> void:
 		get_tree().create_timer(delai).timeout.connect(jouer.bind(nouvelle, duree, 0.0))
 		return
 	var avant := expression()
+	if nouvelle != action:
+		_jus_de_depart(nouvelle)
 	_p_depart = _p.duplicate()
 	_fondu = 0.0
 	action = nouvelle
@@ -274,6 +303,12 @@ func _preparer() -> void:
 		add_child(_derriere)
 		move_child(_derriere, 0) # derrière le corps
 		_derriere.draw.connect(_dessiner_derriere)
+		_monde = Node2D.new()
+		_monde.name = "Monde"
+		_monde.top_level = true
+		add_child(_monde)
+		move_child(_monde, 0) # derrière tout le reste
+		_monde.draw.connect(_dessiner_monde)
 		_mat = ShaderMaterial.new()
 		_mat.shader = SHADER
 		_corps.material = _mat
@@ -297,6 +332,7 @@ func _preparer() -> void:
 			_morceaux.append(m)
 			_mats.append(mat)
 	var brut := _zone_utile(texture)
+	_source = brut
 	# origine entre les pieds : bas de la zone utile, milieu de l'image
 	_rect = Rect2(brut.position.x - texture.get_size().x * 0.5, -brut.size.y, brut.size.x, brut.size.y)
 	_pieds_y = brut.end.y
@@ -443,6 +479,7 @@ func _process(delta: float) -> void:
 			_changer_pose(_etat_suivant, true)
 			cible = _p_depart.duplicate()
 	_p = cible
+	_jus(delta)
 	_corps.position = Vector2(_p.x, -_p.saut)
 	_corps.modulate = _p.teinte
 	_param(&"penche", _p.penche)
@@ -451,6 +488,7 @@ func _process(delta: float) -> void:
 	_param(&"onde_phase", _p.onde_phase)
 	_param(&"eclat", _p.eclat)
 	_param(&"terne", _p.terne)
+	_param(&"flash", _flash)
 	_param(&"bras_angle", Vector2(_p.bg, _p.bd))
 	_param(&"bras_coude", Vector2(_p.cg, _p.cd))
 	_param(&"jambe_angle", Vector2(_p.jg, _p.jd))
@@ -462,6 +500,7 @@ func _process(delta: float) -> void:
 	queue_redraw()
 	_effets.queue_redraw()
 	_derriere.queue_redraw()
+	_monde.queue_redraw()
 
 
 func _clignement(delta: float) -> void:
@@ -727,6 +766,192 @@ func _saut(p: Dictionary, c: float, hauteur: float, h: float) -> void:
 		p.sx *= 1.0 + 0.06 * k
 
 
+# --- Jus : squash & stretch, impacts, traînées, poussière -----------------
+
+## Coup d'élastique (squash & stretch) qui rebondit quelques fois avant de se
+## calmer : force > 0 écrase d'abord, force < 0 étire d'abord. Sur un temps
+## fort, un clic, une réponse du joueur...
+func pop(force := 1.0) -> void:
+	_ressort_v += 2.2 * force
+
+
+## Le FANZZY est touché : éclair de couleur, écrasé, il recule (penche à
+## l'opposé de `depuis`, position du coup dans la scène) et des étoiles
+## d'impact jaillissent. Sans `depuis`, il recule à l'opposé de `cap`.
+func impact(depuis := Vector2.INF, force := 1.0, couleur := Color.WHITE) -> void:
+	if _corps == null:
+		return
+	var h := _rect.size.y
+	var cote := -signf(cap)
+	if depuis != Vector2.INF:
+		var d := to_local(depuis).x
+		cote = signf(d) if absf(d) > 0.5 else cote
+	if cote == 0.0:
+		cote = 1.0
+	_flash = 1.0
+	_param(&"flash_couleur", Vector3(couleur.r, couleur.g, couleur.b))
+	_ressort_v += 3.6 * force
+	_recul_v -= cote * 2.4 * force
+	_tremble = maxf(_tremble, 0.22 * force)
+	var centre := Vector2(_p.get("x", 0.0), -h * 0.55 - _p.get("saut", 0.0))
+	_ajouter(&"onde", centre)
+	for i in int(4 + 3 * force):
+		_ajouter(&"choc", centre + Vector2(cote * h * 0.08, 0))
+
+
+## Un bond, par-dessus l'action en cours : on s'écrase, on décolle en
+## s'étirant, on retombe en s'écrasant, avec un peu de poussière.
+func rebondir(force := 1.0, delai := 0.0) -> void:
+	if delai > 0.0:
+		get_tree().create_timer(delai).timeout.connect(rebondir.bind(force, 0.0))
+		return
+	_bond = 0.0
+	_bond_force = force
+
+
+## Étoiles qui tournent autour de la tête pendant `duree` secondes.
+func etourdir(duree := 1.5) -> void:
+	_etourdi = maxf(_etourdi, duree)
+
+
+## Bouffée de poussière aux pieds. Elle reste posée dans la scène, même si
+## le FANZZY repart en courant. `cote` : -1/+1 pour la souffler d'un côté.
+func poussiere(n := 5, force := 1.0, cote := 0.0) -> void:
+	if _monde == null:
+		return
+	var h := _rect.size.y
+	var echelle := absf(global_transform.get_scale().y)
+	var pieds := global_transform * Vector2(_p.get("x", 0.0), 0.0)
+	for i in n:
+		var dir := cote if cote != 0.0 else (-1.0 if i % 2 == 0 else 1.0)
+		_nuages_poussiere.append({
+			"pos": pieds + Vector2(_rng.randf_range(-0.12, 0.12) * h * echelle, _rng.randf_range(-0.02, 0.01) * h * echelle),
+			"vel": Vector2(dir * _rng.randf_range(0.15, 0.5), -_rng.randf_range(0.05, 0.2)) * h * echelle * force,
+			"vie": 0.0, "duree": _rng.randf_range(0.35, 0.6),
+			"taille": h * echelle * _rng.randf_range(0.03, 0.055) * (0.7 + 0.3 * force)})
+
+
+## Réaction d'entrée dans une action (anticipation) : chaque changement se voit.
+func _jus_de_depart(a: StringName) -> void:
+	if _corps == null or _p.is_empty():
+		return
+	match a:
+		&"celebrer":
+			pop(-1.6)
+			var h := _rect.size.y
+			for i in 8:
+				_ajouter(&"etoile", _haut_tete() + Vector2(0, h * 0.1))
+		&"depit":
+			pop(1.8)
+		&"huer":
+			pop(0.8)
+			_tremble = maxf(_tremble, 0.5)
+		&"lancer":
+			pop(1.0)
+		&"repos", &"marcher", &"courir":
+			pop(0.4)
+		_:
+			pop(-0.8)
+
+
+## Applique le jus à la pose calculée (_p) : ressorts, bond, tremblement.
+func _jus(delta: float) -> void:
+	var h := _rect.size.y
+	var dt := minf(delta, 1.0 / 30.0)
+	_ressort_v += (-RAIDEUR * _ressort - AMORTI * _ressort_v) * dt
+	_ressort = clampf(_ressort + _ressort_v * dt, -0.3, 0.35)
+	_recul_v += (-RAIDEUR * 0.8 * _recul - AMORTI * _recul_v) * dt
+	_recul = clampf(_recul + _recul_v * dt, -0.2, 0.2)
+	_flash = maxf(_flash - delta * 7.0, 0.0)
+	_tremble = maxf(_tremble - delta, 0.0)
+	_etourdi = maxf(_etourdi - delta, 0.0)
+	_p.sy *= 1.0 - _ressort
+	_p.sx *= 1.0 + _ressort * 0.7
+	_p.penche += _recul
+	if _tremble > 0.0:
+		_p.x += sin(Time.get_ticks_msec() * 0.07) * h * 0.03 * minf(_tremble * 3.0, 1.0)
+	if _bond >= 0.0:
+		var s0: float = _p.saut
+		_saut(_p, _bond, 0.13 * _bond_force, h)
+		_p.saut += s0
+		_bond += delta / (0.42 + 0.12 * _bond_force)
+		if _bond >= 1.0:
+			_bond = -1.0
+	# atterrissage (saut, célébration, bond) : poussière et écrasement
+	var saut: float = _p.saut
+	if poussiere_auto and _saut_avant > h * 0.03 and saut < h * 0.008:
+		poussiere(4, 0.7)
+		pop(0.7)
+	_saut_avant = saut
+	# pas de course : une petite bouffée derrière chaque pas
+	if poussiere_auto and action == &"courir":
+		var avant := _pas
+		_pas += delta * vitesse_course * 3.0
+		if floor(_pas) != floor(avant):
+			poussiere(1, 0.6, -signf(cap))
+	# traînée : une silhouette fantôme toutes les 45 ms
+	if trainee > 0.0:
+		trainee -= delta
+		_fantome_dans -= delta
+		if _fantome_dans <= 0.0:
+			_fantome_dans = 0.045
+			_fantomes.append({"xf": global_transform * Transform2D(0.0, Vector2(_p.x, -_p.saut)) * Transform2D(0.0, Vector2(_p.sx, _p.sy), 0.0, Vector2.ZERO),
+				"tex": _corps.texture, "vie": 0.0})
+	for i in range(_fantomes.size() - 1, -1, -1):
+		_fantomes[i].vie += delta
+		if _fantomes[i].vie >= 0.24:
+			_fantomes.remove_at(i)
+	for i in range(_nuages_poussiere.size() - 1, -1, -1):
+		var q: Dictionary = _nuages_poussiere[i]
+		q.vie += delta
+		q.pos += q.vel * delta
+		q.vel *= exp(-delta * 4.0)
+		if q.vie >= q.duree:
+			_nuages_poussiere.remove_at(i)
+
+
+## Traînée et poussière, dans l'espace de la scène.
+func _dessiner_monde() -> void:
+	var inv := _monde.get_global_transform().affine_inverse()
+	for f in _fantomes:
+		var u: float = f.vie / 0.24
+		var c := couleur_trainee
+		c.a = 0.32 * (1.0 - u)
+		_monde.draw_set_transform_matrix(inv * (f.xf as Transform2D))
+		_monde.draw_texture_rect_region(f.tex, _rect, _source, c)
+	_monde.draw_set_transform_matrix(inv)
+	for q in _nuages_poussiere:
+		var u: float = q.vie / q.duree
+		var r: float = q.taille * (0.6 + 0.8 * u)
+		var a := 0.55 * (1.0 - u * u)
+		_monde.draw_circle(q.pos, r, Color(0.86, 0.8, 0.7, a))
+		_monde.draw_circle(q.pos + Vector2(-r * 0.25, -r * 0.25), r * 0.55, Color(1.0, 0.97, 0.9, a * 0.8))
+	_monde.draw_set_transform_matrix(Transform2D.IDENTITY)
+
+
+## Étoiles qui tournent au-dessus de la tête (étourdi).
+func _dessiner_tourni() -> void:
+	var h := _rect.size.y
+	var tete := _haut_tete() + Vector2(0, h * 0.04)
+	var t := Time.get_ticks_msec() / 1000.0
+	var a := minf(_etourdi * 3.0, 1.0)
+	for i in 3:
+		var ang := t * 5.0 + i * TAU / 3.0
+		var p := tete + Vector2(cos(ang) * h * 0.16, sin(ang) * h * 0.045)
+		_etoile(_effets, p, h * 0.035 * (0.8 + 0.2 * sin(ang)), t * 4.0, Color(1.0, 0.85, 0.25, a))
+
+
+func _etoile(n: CanvasItem, centre: Vector2, r: float, rot: float, c: Color, branches := 5) -> void:
+	var pts := PackedVector2Array()
+	for i in branches * 2:
+		var rr := r if i % 2 == 0 else r * 0.45
+		pts.append(centre + Vector2.from_angle(rot + i * PI / branches) * rr)
+	var contour := pts.duplicate()
+	contour.append(pts[0])
+	n.draw_colored_polygon(pts, c)
+	n.draw_polyline(contour, Color(0.08, 0.06, 0.12, c.a), maxf(r * 0.18, 1.0))
+
+
 # --- Dessin : ombre, écharpe, effets -------------------------------------
 
 func _draw() -> void:
@@ -748,6 +973,8 @@ func _dessiner_effets() -> void:
 		_dessiner_echarpe()
 	if action == &"depit":
 		_dessiner_nuage(smoothstep(0.2, 0.8, _t_action))
+	if _etourdi > 0.0:
+		_dessiner_tourni()
 	for q in _particules:
 		_dessiner_particule(q)
 
@@ -951,6 +1178,19 @@ func _ajouter(genre: StringName, pos: Vector2) -> void:
 			q.duree = 0.25
 			q.couleur = Color("ffd23f")
 			q.taille = h * 0.06
+		&"choc", &"etoile":
+			var dir := Vector2.from_angle(_rng.randf_range(-PI, 0.0) if genre == &"etoile" else _rng.randf() * TAU)
+			q.vel = dir * h * _rng.randf_range(0.5, 0.9)
+			q.grav = Vector2(0, 0.8 * h)
+			q.duree = _rng.randf_range(0.35, 0.55) if genre == &"choc" else 0.9
+			q.vrot = _rng.randf_range(-8.0, 8.0)
+			q.taille = h * _rng.randf_range(0.03, 0.05)
+			q.couleur = [Color.WHITE, Color("ffd23f"), Color("ffd23f")][_rng.randi() % 3] if genre == &"choc" \
+				else [Color("ffd23f"), Color("ff3d7f"), Color("3ddc84"), Color("1e6bff")][_rng.randi() % 4]
+		&"onde":
+			q.duree = 0.28
+			q.couleur = Color.WHITE
+			q.taille = h * 0.08
 	_particules.append(q)
 
 
@@ -988,6 +1228,10 @@ func _dessiner_particule(q: Dictionary) -> void:
 				var a3 := r * Vector2(s * 0.8, -s * 0.2)
 				n.draw_polyline(PackedVector2Array([a2, a1, a3]), c, s * 0.2)
 			n.draw_set_transform_matrix(Transform2D.IDENTITY)
+		&"choc", &"etoile":
+			_etoile(n, q.pos, s * (1.0 - 0.5 * u), q.rot, c, 4 if q.genre == &"choc" else 5)
+		&"onde":
+			n.draw_arc(q.pos, s * (1.0 + 3.5 * u), 0.0, TAU, 32, c, maxf(s * 0.35 * (1.0 - u), 1.0))
 		&"etincelle":
 			for i in 6:
 				var dir := Vector2.from_angle(i * TAU / 6.0 + 0.3)
