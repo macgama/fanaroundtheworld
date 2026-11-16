@@ -130,6 +130,8 @@ func _outils_de_test() -> void:
 			"arene": SCENE_ARENE, "poussee": SCENE_POUSSEE,
 			"pronos": SCENE_PRONOS, "missions": SCENE_MISSIONS, "favoris": SCENE_FAVORIS, "club": SCENE_CLUB, "creation": SCENE_CREATION_CLUB, "buvette": SCENE_BUVETTE, "boulots": SCENE_BOULOTS, "speaker": SCENE_SPEAKER,
 			"salon": SCENE_SALON, "collection": SCENE_COLLECTION, "classement": SCENE_CLASSEMENT}
+		for b in ListeBoulots.LISTE:
+			scenes[b["id"]] = b["scene"]  # chaque petit boulot : --scene=<id>
 		if args.has("onglet"):
 			p["onglet"] = args["onglet"]  # collection : « carnet » ou « album »
 		if args.has("salon"):

@@ -44,6 +44,7 @@ var _ecrans := {
 	"buvette": [Game.SCENE_BUVETTE, {}, [KEY_1, KEY_2, KEY_3, KEY_4, KEY_ENTER, KEY_SPACE, KEY_BACKSPACE, KEY_ESCAPE]],
 	"boulots": [Game.SCENE_BOULOTS, {}, []],
 	"speaker": [Game.SCENE_SPEAKER, {}, [KEY_1, KEY_2, KEY_3, KEY_4, KEY_ESCAPE]],
+	"echarpes": ["res://scenes/echarpes/echarpes.tscn", {}, [KEY_1, KEY_2, KEY_3, KEY_4, KEY_5, KEY_6, KEY_R, KEY_ESCAPE]],
 	"pronos": [Game.SCENE_PRONOS, {}, []],
 	"missions": [Game.SCENE_MISSIONS, {}, []],
 	"favoris": [Game.SCENE_FAVORIS, {}, []],

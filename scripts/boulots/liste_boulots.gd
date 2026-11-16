@@ -15,6 +15,8 @@ const LISTE := [
 		"scene": "res://scenes/buvette/buvette.tscn", "couleur": "#ff3d7f"},
 	{"id": "speaker", "titre": "Speaker du stade", "texte": "Annonce les buteurs au micro, dans le tempo, et fais répondre toute la tribune.",
 		"scene": "res://scenes/speaker/speaker.tscn", "couleur": "#8b5cff"},
+	{"id": "echarpes", "titre": "Stand d'écharpes", "texte": "Tends à chaque supporter l'écharpe aux couleurs de son club.",
+		"scene": "res://scenes/echarpes/echarpes.tscn", "couleur": "#3ddc84"},
 ]
 
 

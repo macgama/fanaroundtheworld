@@ -62,6 +62,11 @@ et, plus tard, sur mobile.
    match (**1 à 4** ou clic) et annonce-le quand la note touche le micro. Tu cries le prénom,
    la tribune répond le nom, trois fois ; le tempo monte à chaque but. But des visiteurs :
    pas d'annonce (bonus fair-play). Paye ÷ 2 après 3 matchs dans la journée.
+   **Stand d'écharpes** (écran *Boulots*, 60 s) : chaque FANZZY montre l'écusson de son club et
+   tu lui tends l'écharpe aux mêmes couleurs (les écharpes n'ont pas de nom) :
+   - **1 à 6** (ou clic) : tendre l'écharpe de ce crochet · **R** : aller au carton (réassort) ;
+   - à 30 s, les portes ouvrent : 2 clubs de plus sur le portant, commandes doubles plus fréquentes.
+     Même plafond que la buvette (paye ÷ 2 après 3 services dans la journée).
 
 **Missions** (bouton en haut de la carte) : 3 missions du jour et 3 de la semaine
 (« suis 3 matchs », « visite un nouveau stade », « gagne un duel »…) qui rapportent des Jetons
@@ -101,7 +106,7 @@ Supprime ce fichier pour recommencer à zéro.
 
 | Dossier | Contenu |
 | --- | --- |
-| `scenes/` | Scènes Godot (`.tscn`) et leurs scripts, un sous-dossier par écran (`main/`, `carte/`, `voyage/`, `tribune/`, `duel/`, `pronostics/`, `favoris/`, `classement/`, `club/`, `buvette/`) |
+| `scenes/` | Scènes Godot (`.tscn`) et leurs scripts, un sous-dossier par écran (`main/`, `carte/`, `voyage/`, `tribune/`, `duel/`, `pronostics/`, `favoris/`, `classement/`, `club/`, `buvette/`, `echarpes/`) |
 | `scripts/autoload/` | Scripts globaux chargés au démarrage (`Game` : état du jeu et sauvegarde, `Donnees` : vrais matchs) |
 | `scripts/donnees/` | Noms fictifs (`fiction.gd`), placement sur la carte (`geo.gd`), fiche d'un match |
 | `scripts/jeu/` | Règles du jeu sans écran (pronostics, équipes favorites et popularité, missions, collection, événements des vrais matchs) |
@@ -109,6 +114,7 @@ Supprime ce fichier pour recommencer à zéro.
 | `scripts/carte/` | La carte du monde dessinée |
 | `scripts/buvette/` | Règles du petit boulot de buvette (commandes, paye), sans affichage |
 | `scripts/speaker/` | Règles du petit boulot de speaker du stade (feuille de match, tempo des annonces, paye), sans affichage |
+| `scripts/echarpes/` | Règles du stand d'écharpes (portant, commandes, paye), sans affichage |
 | `scripts/reseau/` | Règles du jeu en ligne (messages, jauge partagée) ; le transport est l'autoload `Reseau` |
 | `scripts/ui/` | Style commun de l'interface (couleurs, boutons, icônes) |
 | `assets/fanzzy/` | Les FANZZY (personnages jouables, avec leurs skins cosmétiques), importés depuis thebestfan.online |
@@ -120,7 +126,7 @@ Supprime ce fichier pour recommencer à zéro.
 | `tools/` | Scripts de préparation des données (carte du monde, repérage des bras des FANZZY) |
 | `mods/` | Format des mods Steam Workshop (noms et couleurs de clubs) |
 | `docs/` | Game design et maquettes |
-| `tests/` | Tests automatiques (`godot --headless --path . --script tests/test_logique.gd`, `tests/test_pronostics.gd`, `tests/test_club.gd`, `tests/test_supporters.gd`, `tests/test_classement.gd`, `tests/test_buvette.gd`, `tests/test_speaker.gd`, `tests/test_collection.gd`, `tests/test_evenements.gd`, `tests/test_audio.gd`, et le parcours complet : `godot --headless --path . res://tests/test_pronostics_jeu.tscn -- --hors-ligne`, le tutoriel : `res://tests/test_tutoriel.tscn -- --hors-ligne`, le classement en ligne : `res://tests/test_classement_jeu.tscn -- --hors-ligne`, le tour de tous les écrans (chaque bouton pressé, parties au clavier, pause) : `res://tests/test_ecrans.tscn -- --hors-ligne`) |
+| `tests/` | Tests automatiques (`godot --headless --path . --script tests/test_logique.gd`, `tests/test_pronostics.gd`, `tests/test_club.gd`, `tests/test_supporters.gd`, `tests/test_classement.gd`, `tests/test_buvette.gd`, `tests/test_echarpes.gd`, `tests/test_speaker.gd`, `tests/test_collection.gd`, `tests/test_evenements.gd`, `tests/test_audio.gd`, et le parcours complet : `godot --headless --path . res://tests/test_pronostics_jeu.tscn -- --hors-ligne`, le tutoriel : `res://tests/test_tutoriel.tscn -- --hors-ligne`, le classement en ligne : `res://tests/test_classement_jeu.tscn -- --hors-ligne`, le tour de tous les écrans (chaque bouton pressé, parties au clavier, pause) : `res://tests/test_ecrans.tscn -- --hors-ligne`) |
 
 ## Règles du projet
 
