@@ -48,13 +48,13 @@ static func enregistrer(gagne: bool, perf: float, fiche: Dictionary, camp: Strin
 static func ligne_tournoi(d: Variant) -> Array:
 	if not d is Dictionary or d.is_empty():
 		return []
-	return [[Langue.t("Tournoi · %s contre %s") % ["victoire" if d["gagne"] else Langue.t("défaite"), Tournoi.nom_texte(d["nom_adv"])], Langue.t("+%d pt%s") % [int(d["pts"]), "" if int(d["pts"]) == 1 else "s"]]]
+	return [[Trad.t("Tournoi · %s contre %s") % ["victoire" if d["gagne"] else Trad.t("défaite"), Tournoi.nom_texte(d["nom_adv"])], Trad.t("+%d pt%s") % [int(d["pts"]), "" if int(d["pts"]) == 1 else "s"]]]
 
 
 ## Nom affiché pour la tribune d'en face : le club adverse du tournoi, sinon celle de l'équipe.
 static func nom_adverse(m: Dictionary, equipe: String) -> String:
 	var adv := Game.adversaire_tournoi(m)
-	return Tournoi.nom_texte(adv["nom"]) if not adv.is_empty() else Langue.t("Tribune ") + equipe
+	return Tournoi.nom_texte(adv["nom"]) if not adv.is_empty() else Trad.t("Tribune ") + equipe
 
 
 ## Lignes « Bonus Derby » et « Prime de la soirée » du panneau de fin, ou [].

@@ -210,9 +210,9 @@ func _stats(t: Dictionary) -> void:
 	hs.add_child(_case("Tribune solide", "+%d" % clampi(int(t["defense"]), 0, Tournoi.DEFENSE_MAX), tr("max %d") % Tournoi.DEFENSE_MAX))
 	var suivant := Tournoi.prochain_palier(pts)
 	var p := Tournoi.palier(pts)
-	var txt := tr("Palier atteint : %s (%d Jetons, %d XP PASS).") % [p["titre"], p["jetons"], p["xp_pass"]] if not p.is_empty() else tr("Pas encore de palier.")
+	var txt := tr("Palier atteint : %s (%d Jetons, %d XP PASS).") % [tr(p["titre"]), p["jetons"], p["xp_pass"]] if not p.is_empty() else tr("Pas encore de palier.")
 	if not suivant.is_empty():
-		txt += tr(" Prochain : %s à %d points.") % [suivant["titre"], suivant["points"]]
+		txt += tr(" Prochain : %s à %d points.") % [tr(suivant["titre"]), suivant["points"]]
 	_texte(_gauche, txt, 18, Ui.BLANC)
 	var barre := ProgressBar.new()
 	barre.custom_minimum_size = Vector2(0, 18)
@@ -240,7 +240,7 @@ func _adversaire(t: Dictionary) -> void:
 	v.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	h.add_child(v)
 	v.add_child(Ui.label(nom, 26, Ui.JAUNE, true, 5))
-	v.add_child(Ui.label(("Club du jeu" if bool(a.get("bot", false)) else "Fan club d'un joueur") + tr(" · niv. %d") % int(a.get("niveau", 1)), 17, Ui.GRIS))
+	v.add_child(Ui.label(tr("Club du jeu" if bool(a.get("bot", false)) else "Fan club d'un joueur") + tr(" · niv. %d") % int(a.get("niveau", 1)), 17, Ui.GRIS))
 	var b := Ui.bouton("Choisir un match", Ui.VERT, 22)
 	Ui.colorer_bouton(b, Ui.VERT, true)
 	b.size_flags_vertical = Control.SIZE_SHRINK_CENTER
@@ -525,4 +525,4 @@ func _choix(mots: Array, choisi: int) -> OptionButton:
 static func _date_id(id: String) -> String:
 	var t := int(Time.get_unix_time_from_datetime_string(id + "T12:00:00"))
 	var d := Time.get_datetime_dict_from_unix_time(t)
-	return Langue.t("week-end du %d %s") % [d["day"], FicheMatch.MOIS[d["month"] - 1]]
+	return Trad.t("week-end du %d %s") % [d["day"], FicheMatch.MOIS[d["month"] - 1]]

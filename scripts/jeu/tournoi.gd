@@ -218,7 +218,7 @@ static func raison_refus(s: Dictionary, match_id: String, kickoff: int, t: int) 
 	if match_deja_joue(s, match_id):
 		return "Match déjà joué pour le tournoi"
 	if (s["duels"] as Array).size() >= DUELS_MAX:
-		return Langue.t("Les %d duels du tournoi sont joués") % DUELS_MAX
+		return Trad.t("Les %d duels du tournoi sont joués") % DUELS_MAX
 	return ""
 
 

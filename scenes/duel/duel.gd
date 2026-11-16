@@ -985,7 +985,7 @@ func _preparer_chant() -> void:
 	if c.is_empty():
 		return
 	_chant_club = ChantClub.programme(c, Game.fan_club_nom)
-	_chant_nom = String(c.get("nom", ""))
+	_chant_nom = tr(String(c.get("nom", "")))
 	_beat = 60.0 / ChantClub.bpm(c)
 	_sons_chant = SonsScript.new()
 	_sons_chant.name = "SonsChant"  # sans_traduction

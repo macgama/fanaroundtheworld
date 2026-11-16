@@ -108,13 +108,13 @@ func _construire() -> void:
 	l_tempo.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	lt.add_child(l_tempo)
 	for t in ChantClub.tempos():
-		var b := Ui.bouton("%s · %d" % [t["nom"], int(t["bpm"])], Ui.NUIT_CLAIR, 22)
+		var b := Ui.bouton("%s · %d" % [tr(t["nom"]), int(t["bpm"])], Ui.NUIT_CLAIR, 22)
 		b.custom_minimum_size = Vector2(0, 60)
 		var id := String(t["id"])
 		b.pressed.connect(func(): _choisir_tempo(id))
 		if not ChantClub.debloque(t, Game.niveau()):
 			b.disabled = true
-			b.text = tr("%s · niv. %d") % [t["nom"], int(t["niveau"])]
+			b.text = tr("%s · niv. %d") % [tr(t["nom"]), int(t["niveau"])]
 			b.tooltip_text = tr("S'ouvre au niveau %d") % int(t["niveau"])
 		lt.add_child(b)
 		_boutons_tempo[id] = b
@@ -284,7 +284,7 @@ func _construire_briques() -> void:
 			Ui.colorer_bouton(b, Ui.JAUNE, true)
 		b.custom_minimum_size = Vector2(0, 74)
 		b.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		b.text = "%s\n%s" % [mo["nom"], "★".repeat(int(mo["difficulte"]))] if ouvert else tr("%s\nniveau %d") % [mo["nom"], int(mo["niveau"])]
+		b.text = "%s\n%s" % [tr(mo["nom"]), "★".repeat(int(mo["difficulte"]))] if ouvert else tr("%s\nniveau %d") % [tr(mo["nom"]), int(mo["niveau"])]
 		b.tooltip_text = String(mo["description"])
 		b.disabled = not ouvert
 		b.pressed.connect(func(): _choisir_morceau(id))

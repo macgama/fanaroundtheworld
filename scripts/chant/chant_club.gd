@@ -139,31 +139,31 @@ static func erreurs(c: Dictionary, niveau: int) -> Array:
 	if nom.is_empty():
 		res.append("Donne un nom à ton chant.")
 	elif nom.length() > NOM_MAX:
-		res.append(Langue.t("Le nom est trop long (%d lettres au plus).") % NOM_MAX)
+		res.append(Trad.t("Le nom est trop long (%d lettres au plus).") % NOM_MAX)
 	var t := tempo(String(c.get("tempo", "")))
 	if t.is_empty():
 		res.append("Choisis un tempo.")
 	elif not debloque(t, niveau):
-		res.append(Langue.t("Le tempo « %s » s'ouvre au niveau %d.") % [t["nom"], int(t["niveau"])])
+		res.append(Trad.t("Le tempo « %s » s'ouvre au niveau %d.") % [Trad.t(t["nom"]), int(t["niveau"])])
 	var mesures: Array = c.get("mesures", [])
 	if mesures.size() < mesures_min():
-		res.append(Langue.t("Il faut au moins %d mesures.") % mesures_min())
+		res.append(Trad.t("Il faut au moins %d mesures.") % mesures_min())
 	elif mesures.size() > mesures_max():
-		res.append(Langue.t("Pas plus de %d mesures.") % mesures_max())
+		res.append(Trad.t("Pas plus de %d mesures.") % mesures_max())
 	for i in mesures.size():
 		var m: Dictionary = mesures[i]
 		var mo := morceau(String(m.get("morceau", "")))
 		if mo.is_empty():
-			res.append(Langue.t("Mesure %d : choisis un morceau.") % (i + 1))
+			res.append(Trad.t("Mesure %d : choisis un morceau.") % (i + 1))
 		elif not debloque(mo, niveau):
-			res.append(Langue.t("Mesure %d : « %s » s'ouvre au niveau %d.") % [i + 1, mo["nom"], int(mo["niveau"])])
+			res.append(Trad.t("Mesure %d : « %s » s'ouvre au niveau %d.") % [i + 1, Trad.t(mo["nom"]), int(mo["niveau"])])
 		var pid := String(m.get("parole", ""))
 		if pid != "":
 			var pa := parole(pid)
 			if pa.is_empty():
-				res.append(Langue.t("Mesure %d : parole inconnue.") % (i + 1))
+				res.append(Trad.t("Mesure %d : parole inconnue.") % (i + 1))
 			elif not debloque(pa, niveau):
-				res.append(Langue.t("Mesure %d : cette parole s'ouvre au niveau %d.") % [i + 1, int(pa["niveau"])])
+				res.append(Trad.t("Mesure %d : cette parole s'ouvre au niveau %d.") % [i + 1, int(pa["niveau"])])
 	if not mesures.is_empty() and nb_appuis(c) == 0:
 		res.append("Ton chant n'a aucun clap pour la tribune.")
 	return res
@@ -224,7 +224,7 @@ static func texte_parole(id: String, nom_club: String) -> String:
 	var p := parole(id)
 	if p.is_empty():
 		return ""
-	return String(p["texte"]).replace("{club}", nom_crie(nom_club))  # sans_traduction
+	return Trad.t(String(p["texte"])).replace("{club}", nom_crie(nom_club))  # sans_traduction
 
 
 ## Répartit les mots d'une ligne sur `n` claps : un mot par clap, et quand
@@ -298,6 +298,6 @@ static func programme(c: Dictionary, nom_club: String) -> Array:
 			for i in mini(motif.length(), PAS):
 				if Rythme.FORCES.has(motif[i]):
 					frappes.append({"pas": i, "voix": String(v), "force": float(Rythme.FORCES[motif[i]])})
-		res.append({"morceau": id, "nom": String(mo.get("nom", id)), "texte": texte, "appuis": ap,
+		res.append({"morceau": id, "nom": Trad.t(String(mo.get("nom", id))), "texte": texte, "appuis": ap,
 			"mots": mots_sur_appuis(texte, ap.size()), "frappes": frappes})
 	return res
