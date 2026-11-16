@@ -57,7 +57,7 @@ et, plus tard, sur mobile.
    - **1 à 4** (ou clic) : poser une boisson, un hot-dog, des frites, une gaufre ;
    - **ENTRÉE** ou **ESPACE** : servir · **RETOUR ARRIÈRE** : vider le plateau ;
    - à 30 s, c'est la mi-temps : le rush. Après 3 services dans la journée, la paye est divisée par deux.
-   **Stand d'écharpes** (petit boulot, 60 s) : chaque FANZZY montre l'écusson de son club et
+   **Stand d'écharpes** (écran *Boulots*, 60 s) : chaque FANZZY montre l'écusson de son club et
    tu lui tends l'écharpe aux mêmes couleurs (les écharpes n'ont pas de nom) :
    - **1 à 6** (ou clic) : tendre l'écharpe de ce crochet · **R** : aller au carton (réassort) ;
    - à 30 s, les portes ouvrent : 2 clubs de plus sur le portant, commandes doubles plus fréquentes.

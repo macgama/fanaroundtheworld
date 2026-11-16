@@ -557,11 +557,11 @@ func _finir() -> void:
 	_sons.jouer("sifflet_fin")
 	_sons.ambiance("stade", 1)
 	var brut := salaire + pourboires + bonus
-	var deja := Game.services_echarpes_du_jour()
+	var deja := Game.services_boulot_du_jour("echarpes")
 	var paye := EcharpesRegles.paye_finale(brut, deja)
-	var record := paye > Game.echarpes_record and paye > 0
+	var record := paye > Game.record_boulot("echarpes") and paye > 0
 	var xp := servis * EcharpesRegles.XP_PAR_CLIENT
-	Game.finir_service_echarpes(paye)
+	Game.finir_boulot("echarpes", paye)
 	Game.ajouter_xp(xp)
 	if paye > 0:
 		_sons.jouer("applaudissements", {"volume_db": -4})
@@ -618,7 +618,7 @@ func _finir() -> void:
 	Ui.colorer_bouton(rejouer, Ui.VERT, true)
 	rejouer.custom_minimum_size = Vector2(330, 90)
 	var p: Dictionary = Game.params
-	rejouer.pressed.connect(func(): Game.aller(Game.SCENE_ECHARPES, p))
+	rejouer.pressed.connect(func(): Game.aller(ListeBoulots.par_id("echarpes")["scene"], p))
 	hb.add_child(rejouer)
 	v.add_child(hb)
 	pan.pivot_offset = Vector2(460, 360)
@@ -627,8 +627,7 @@ func _finir() -> void:
 
 
 func _retour() -> void:
-	var p: Dictionary = Game.params
-	Game.aller(Game.SCENE_CARTE, {"niveau": p.get("niveau", "monde"), "continent": p.get("continent", ""), "pays": p.get("pays", "")})
+	Game.aller(Game.SCENE_BOULOTS, Game.params)  # retour à la liste des petits boulots
 
 
 # ================================================================== éléments dessinés

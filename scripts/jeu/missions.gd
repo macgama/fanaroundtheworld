@@ -21,6 +21,7 @@ extends RefCounted
 ##   prono          nouveau pronostic
 ##   prono_bon      pronostic résolu avec le bon résultat
 ##   buvette        service à la buvette terminé
+##   boulot         partie d'un petit boulot terminée (clé = id du boulot)
 ##   recolte        caisse du fan club récoltée
 ##   favori         une équipe favorite a gagné des points (duel ou match suivi)
 ##   evenement      duel joué pendant un événement   clé = finale|derby|demi|choc|nations|quart
