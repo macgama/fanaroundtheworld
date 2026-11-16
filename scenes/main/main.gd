@@ -6,6 +6,9 @@ extends Control
 var _etat: Label
 var _options: Control
 var _confirmation: Control
+var _foule: Array[FanzzyAnime] = []
+
+const GESTES_FOULE: Array[StringName] = [&"chanter", &"agiter_echarpe", &"sauter", &"applaudir", &"encourager", &"lever_bras"]
 
 
 func _ready() -> void:
@@ -69,30 +72,70 @@ func _construire_titre() -> void:
 	t.tween_property(logo, "modulate:a", 1.0, 0.3)
 
 
+## La foule de l'accueil : tes FANZZY d'abord, puis d'autres du catalogue.
+## Chacun chante ou s'agite en rythme, saute à sa place à l'arrivée, et
+## fait la fête quand on clique dessus.
 func _construire_foule() -> void:
 	var liste: Array = []
+	for id in Game.equipe:
+		if not str(id) in liste:
+			liste.append(str(id))
 	for z in Game.fanzzy:
-		liste.append(z["id"])
-	liste = liste.slice(0, 9)
+		if liste.size() >= 9:
+			break
+		if not str(z["id"]) in liste:
+			liste.append(str(z["id"]))
+	var cc: Array = Game.couleurs_club() if Game.club_cree() else [Ui.BLEU, Ui.BLANC]
 	for i in liste.size():
-		var tr := TextureRect.new()
-		tr.texture = Game.texture_fanzzy(liste[i])
-		tr.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-		tr.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-		tr.size = Vector2(170, 300)
-		tr.position = Vector2(20 + i * 212, 730 + (i % 2) * 26)
-		tr.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		add_child(tr)
-		_sautiller(tr, randf() * 0.6)
+		var id: String = liste[i]
+		var f := FanzzyAnime.creer(Game.skin_de(id))
+		if f.texture == null:
+			f.texture = Game.texture_fanzzy(id)
+		if f.texture == null:
+			continue
+		# pieds au même endroit que l'ancienne vignette (170 x 300)
+		var pieds := Vector2(20 + i * 212 + 85, 730 + (i % 2) * 26 + 300)
+		var geste: StringName = GESTES_FOULE[i % GESTES_FOULE.size()]
+		f.position = pieds
+		f.couleurs_echarpe = PackedColorArray([Color(cc[0]), Color(cc[1])])
+		f.couleur_trainee = Color(cc[0])
+		f.bpm = 124.0
+		f.energie = 0.8
+		f.decalage = i * 0.05
+		add_child(f)
+		f.scale = Vector2.ONE * 290.0 / maxf(f._rect.size.y, 1.0)
+		f.jouer(geste)
+		f.action_terminee.connect(func(_a: StringName) -> void:
+			if f.action == &"repos":
+				f.jouer(geste))
+		# entrée en scène : chacun saute à sa place, l'un après l'autre
+		f.rebondir(1.2, 0.15 + i * 0.08)
+		# clic sur un FANZZY : il saute de joie
+		var zone := Control.new()
+		zone.position = pieds - Vector2(85, 290)
+		zone.size = Vector2(170, 290)
+		zone.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
+		zone.gui_input.connect(func(e: InputEvent) -> void:
+			if e is InputEventMouseButton and e.pressed and e.button_index == MOUSE_BUTTON_LEFT:
+				f.rebondir(1.4)
+				f.jouer(&"celebrer", 1.6))
+		add_child(zone)
+		_foule.append(f)
+	_relancer_foule()
 
 
-func _sautiller(n: Control, delai: float) -> void:
-	await get_tree().create_timer(delai).timeout
-	if not is_instance_valid(n):
-		return
-	var t := n.create_tween().set_loops()
-	t.tween_property(n, "position:y", -22.0, 0.32).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT).as_relative()
-	t.tween_property(n, "position:y", 22.0, 0.32).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN).as_relative()
+## De temps en temps, un FANZZY de la foule fait un bond ou un coup d'élastique.
+func _relancer_foule() -> void:
+	while is_inside_tree():
+		await get_tree().create_timer(randf_range(1.2, 2.6)).timeout
+		if _foule.is_empty() or not is_inside_tree():
+			return
+		var f: FanzzyAnime = _foule[randi() % _foule.size()]
+		if is_instance_valid(f) and f.action != &"celebrer":
+			if randf() < 0.6:
+				f.rebondir(randf_range(0.7, 1.1))
+			else:
+				f.pop(-1.2)
 
 
 # ---------------------------------------------------------------- menu
