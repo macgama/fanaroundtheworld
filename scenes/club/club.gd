@@ -122,6 +122,11 @@ func _ready() -> void:
 	b_tribune.tooltip_text = "Choisir les FANZZY de ta tribune et leurs skins"
 	b_tribune.pressed.connect(func(): Game.aller(Game.SCENE_TRIBUNE, {"retour": "club"}))
 	bas.add_child(b_tribune)
+	var b_tournoi := Ui.bouton("Tournoi", Ui.ROSE, 30)
+	b_tournoi.custom_minimum_size = Vector2(210, 88)
+	b_tournoi.tooltip_text = "Tournoi des fan clubs du week-end"
+	b_tournoi.pressed.connect(func(): Game.aller(Game.SCENE_TOURNOI))
+	bas.add_child(b_tournoi)
 	var b_pass := Ui.bouton("PASS", Ui.NUIT_CLAIR, 30)
 	b_pass.custom_minimum_size = Vector2(210, 88)
 	b_pass.disabled = true
