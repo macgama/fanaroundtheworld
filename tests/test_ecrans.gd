@@ -57,6 +57,7 @@ var _ecrans := {
 	"chant": [Game.SCENE_CHANT, {}, [KEY_E, KEY_SPACE, KEY_SPACE, KEY_RIGHT, KEY_LEFT, KEY_E, KEY_ESCAPE]],
 	"collection": [Game.SCENE_COLLECTION, {}, []],
 	"album": [Game.SCENE_COLLECTION, {"onglet": "album"}, []],
+	"succes": [Game.SCENE_COLLECTION, {"onglet": "succes"}, []],
 	"salon": [Game.SCENE_SALON, {}, []],
 	"classement": [Game.SCENE_CLASSEMENT, {}, []],
 	"tournoi": [Game.SCENE_TOURNOI, {}, []],

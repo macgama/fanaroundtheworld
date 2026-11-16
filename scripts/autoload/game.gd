@@ -8,9 +8,13 @@ signal pronostics_resolus(liste: Array)
 signal popularite_gagnee(cle: String, points: int, raison: String)
 ## Des missions du jour ou de la semaine viennent d'être terminées.
 signal missions_terminees(liste: Array)
+## Nouveaux succès gagnés (voir Succes.LISTE).
+signal succes_gagnes(liste: Array)
 
 const VERSION := "0.3.0"
 const CHEMIN_SAUVEGARDE := "user://sauvegarde.json"
+## Nom du fichier dans Steam Cloud (même contenu que la sauvegarde locale).
+const FICHIER_CLOUD := "sauvegarde.json"
 
 const SCENE_TITRE := "res://scenes/main/main.tscn"
 const SCENE_CARTE := "res://scenes/carte/carte.tscn"
@@ -76,6 +80,12 @@ var duels_par_match: Dictionary = {}
 const RENDEMENT_REJEU := [1.0, 0.5, 0.25]
 ## Événements autour des vrais matchs (voir Evenements) : primes déjà gagnées, par match.
 var evenements: Dictionary = {"primes": {}}
+## Succès gagnés : id -> date unix (gardés ici même hors Steam, voir Plateforme).
+var succes: Dictionary = {}
+## Compteurs d'événements pour les succès (voir Succes.compter).
+var stats: Dictionary = {}
+## Moment de la dernière sauvegarde (unix) : départage ce PC et Steam Cloud.
+var sauve_le := 0
 ## Matchs du calendrier avec un événement en cours ou à venir (recalculé à chaque mise à jour).
 var nb_evenements := 0
 ## Tournoi des fan clubs du week-end (règles dans Tournoi, réseau dans EnLigne).
@@ -112,6 +122,9 @@ func _ready() -> void:
 	if equipe.size() != 3:
 		equipe = equipe_par_defaut()
 	_brancher_pronostics.call_deferred()
+	# Succès déjà mérités (ancienne sauvegarde) et succès gagnés hors Steam : envoyés à Steam.
+	Succes.noter(succes, etat_succes(), maintenant())
+	Plateforme.synchroniser_succes(succes.keys())
 	_outils_de_test()
 
 
@@ -459,6 +472,8 @@ func resoudre_pronostics() -> void:
 		_annoncer(pop, "prono")
 		if bool(r.get("resultat_ok", false)):
 			noter_mission("prono_bon")
+		if bool(r.get("score_ok", false)):
+			Succes.compter(stats, "prono_exact", "", 1)
 		pronos.erase(id)
 		pronos_finis.push_front(p)
 		resolus.append(p)
@@ -505,6 +520,8 @@ func noter_duel_favori(m: Dictionary, camp: String, gagne: bool, mode_suivi: Str
 	_annoncer(n, "duel", Supporters.cle_equipe(m.get(camp, {}), Fiction.est_selection(m)))
 	# Appelée à la fin de chaque partie, dans les trois modes : on en profite pour les missions.
 	var jeu := _jeu_en_cours()
+	if gagne and Reseau.connecte():
+		Succes.compter(stats, "duel_gagne_en_ligne", "", 1)
 	noter_mission("duel_joue", jeu)
 	if gagne:
 		noter_mission("duel_gagne", jeu)
@@ -567,9 +584,12 @@ func actualiser_missions() -> Dictionary:
 
 
 func noter_mission(evt: String, cle := "", n := 1) -> void:
+	Succes.compter(stats, evt, cle, n)  # toutes les actions passent ici : compteurs des succès
 	actualiser_missions()
 	var finies := Missions.noter(missions, evt, cle, n)
 	if finies.is_empty():
+		if not Succes.nouveaux(succes, etat_succes()).is_empty():
+			sauver()  # un succès tout juste mérité : gagné et sauvegardé tout de suite
 		return
 	sauver()
 	missions_terminees.emit(finies)
@@ -580,6 +600,7 @@ func recuperer_mission(periode: String, index: int) -> Dictionary:
 	actualiser_missions()
 	var g := Missions.recuperer(missions, periode, index)
 	if not g.is_empty():
+		Succes.compter(stats, "missions_recuperees", "", 1)
 		jetons += int(g["jetons"])
 		xp_pass += int(g["xp_pass"])
 		sauver()
@@ -825,9 +846,70 @@ func nom_famille(fam: String) -> String:
 	return familles.get(fam, {}).get("nom", fam)
 
 
+# ---------------------------------------------------------------- succès
+
+## Ce que les succès regardent (clés de Succes.LISTE).
+func etat_succes() -> Dictionary:
+	var lieux := lieux_visites()
+	var modes := 0
+	for m in ORDRE_MODES:
+		if int(stats.get("suivre:" + m, 0)) > 0:
+			modes += 1
+	var boulots_faits := 0
+	for b in ListeBoulots.LISTE:
+		if record_boulot(b["id"]) > 0 or int(stats.get("boulot:" + b["id"], 0)) > 0:
+			boulots_faits += 1
+	var e := stats.duplicate()
+	e.merge({
+		"duels_joues": duels_joues, "duels_gagnes": duels_gagnes,
+		"club_cree": 1 if club_cree() else 0, "membres": FanClub.nb_membres(club) if club_cree() else 0,
+		"favoris": Supporters.cles_favorites(supporters).size(), "niveau": niveau(),
+		"stades": tampons.size(), "pays": lieux["pays"].size(), "continents": lieux["continents"].size(),
+		"modes_suivi": modes, "meilleure_serie": meilleure_serie,
+		"boulots_differents": boulots_faits, "boulots": int(stats.get("boulot", 0)),
+		"album": collection["fanzzy"].size(), "primes": collection["primes"].size(),
+	}, true)
+	return e
+
+
+## Petite annonce par-dessus n'importe quel écran quand un succès est gagné.
+func _annonce_succes(liste: Array) -> void:
+	if DisplayServer.get_name() == "headless" or not is_inside_tree() or liste.is_empty():
+		return
+	var couche := CanvasLayer.new()
+	couche.layer = 51
+	add_child(couche)
+	var toast := Ui.panneau(Color(Ui.NUIT, 0.96), 20, 5)
+	var h := Ui.hbox(14)
+	h.add_child(Ui.icone(str(liste[0]["icone"]), 44))
+	var v := Ui.vbox(0)
+	v.add_child(Ui.label("SUCCÈS DÉBLOQUÉ" if liste.size() == 1 else "%d SUCCÈS DÉBLOQUÉS" % liste.size(), 18, Ui.JAUNE, true))
+	var noms := ", ".join(liste.map(func(s): return str(s["titre"])))
+	v.add_child(Ui.label(noms, 24, Ui.BLANC, true))
+	h.add_child(v)
+	toast.add_child(h)
+	toast.set_anchors_preset(Control.PRESET_CENTER_TOP)
+	toast.grow_horizontal = Control.GROW_DIRECTION_BOTH
+	toast.offset_top = 24
+	toast.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	couche.add_child(toast)
+	Ui.pop(toast, 1.1)
+	var tw := toast.create_tween()
+	tw.tween_interval(4.0)
+	tw.tween_property(toast, "modulate:a", 0.0, 0.5)
+	tw.tween_callback(couche.queue_free)
+
+
 # ---------------------------------------------------------------- sauvegarde
 
 func sauver() -> void:
+	sauve_le = maintenant()
+	var gagnes := Succes.noter(succes, etat_succes(), sauve_le)
+	if not gagnes.is_empty():
+		for s in gagnes:
+			Plateforme.debloquer(str(s["id"]))
+		succes_gagnes.emit(gagnes)
+		_annonce_succes.call_deferred(gagnes)
 	var d := {
 		"version": VERSION,
 		"fan_club_nom": fan_club_nom,
@@ -852,20 +934,40 @@ func sauver() -> void:
 		"collection": collection,
 		"duels_par_match": duels_par_match,
 		"evenements": evenements,
+		"succes": succes,
+		"stats": stats,
+		"sauve_le": sauve_le,
 		"tournoi": tournoi,
 	}
+	var texte := JSON.stringify(d, "\t")
 	var f := FileAccess.open(CHEMIN_SAUVEGARDE, FileAccess.WRITE)
 	if f:
-		f.store_string(JSON.stringify(d, "\t"))
+		f.store_string(texte)
+		f.close()
+	Plateforme.cloud_ecrire(FICHIER_CLOUD, texte)
 
 
+## Lit la sauvegarde la plus récente entre ce PC (user://) et Steam Cloud.
+## Si celle du Cloud gagne (partie jouée sur un autre PC), elle remplace la locale.
 func charger() -> void:
-	if not FileAccess.file_exists(CHEMIN_SAUVEGARDE):
-		return
-	var f := FileAccess.open(CHEMIN_SAUVEGARDE, FileAccess.READ)
-	var d: Variant = JSON.parse_string(f.get_as_text())
+	var locale: Variant = null
+	if FileAccess.file_exists(CHEMIN_SAUVEGARDE):
+		locale = JSON.parse_string(FileAccess.get_file_as_string(CHEMIN_SAUVEGARDE))
+	var texte_cloud := Plateforme.cloud_lire(FICHIER_CLOUD)
+	var cloud: Variant = JSON.parse_string(texte_cloud) if texte_cloud != "" else null
+	var d: Variant = SauvegardeCloud.choisir(locale, cloud)
 	if not d is Dictionary:
 		return
+	if d == cloud and cloud != locale:
+		print("Sauvegarde : version Steam Cloud plus récente, reprise sur ce PC")
+		var f := FileAccess.open(CHEMIN_SAUVEGARDE, FileAccess.WRITE)
+		if f:
+			f.store_string(texte_cloud)
+			f.close()
+	_appliquer(d)
+
+
+func _appliquer(d: Dictionary) -> void:
 	fan_club_nom = d.get("fan_club_nom", fan_club_nom)
 	xp = int(d.get("xp", 0))
 	position_club = d.get("position", position_club)
@@ -896,6 +998,9 @@ func charger() -> void:
 	duels_par_match = dm if dm is Dictionary else {}
 	var ev: Variant = d.get("evenements", null)
 	evenements = ev if ev is Dictionary and ev.get("primes") is Dictionary else {"primes": {}}
+	succes = Succes.reparer(d.get("succes", null))
+	stats = Succes.reparer_stats(d.get("stats", null))
+	sauve_le = int(d.get("sauve_le", 0))
 	tournoi = Tournoi.reparer(d.get("tournoi", null))
 	# Un FANZZY retiré du catalogue ne doit pas casser la tribune.
 	for i in equipe.size():
@@ -906,6 +1011,7 @@ func charger() -> void:
 
 func reinitialiser() -> void:
 	DirAccess.remove_absolute(ProjectSettings.globalize_path(CHEMIN_SAUVEGARDE))
+	Plateforme.cloud_effacer(FICHIER_CLOUD)
 	fan_club_nom = "Ultras du Canal"
 	xp = 0
 	position_club = {"nom": "Paris", "lat": 48.86, "lon": 2.35}
@@ -929,5 +1035,9 @@ func reinitialiser() -> void:
 	collection = Collection.vide()
 	duels_par_match = {}
 	evenements = {"primes": {}}
+	# Les succès déjà envoyés à Steam y restent ; ici on repart de zéro.
+	succes = {}
+	stats = {}
+	sauve_le = 0
 	tournoi = Tournoi.vide()
 	equipe = equipe_par_defaut()
