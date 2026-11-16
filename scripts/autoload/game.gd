@@ -62,9 +62,10 @@ var missions: Dictionary = Missions.vide()
 var xp_pass := 0
 ## Carnet de voyage et album des FANZZY : primes réclamées, FANZZY et skins vus en duel (voir Collection).
 var collection: Dictionary = Collection.vide()
-## Duels joués par match (id -> nombre) : rejouer le même match en boucle rapporte moins.
+## Duels joués par match aujourd'hui (id -> {jour, n}) : rejouer le même match rapporte de moins en moins.
 var duels_par_match: Dictionary = {}
-const DUELS_PLEIN_TARIF := 3
+## Part des Jetons selon le rang du duel sur ce match dans la journée : 100 %, 50 %, 25 %, puis rien.
+const RENDEMENT_REJEU := [1.0, 0.5, 0.25]
 ## Événements autour des vrais matchs (voir Evenements) : primes déjà gagnées, par match.
 var evenements: Dictionary = {"primes": {}}
 ## Matchs du calendrier avec un événement en cours ou à venir (recalculé à chaque mise à jour).
@@ -190,17 +191,30 @@ func depenser(n: int) -> bool:
 	return true
 
 
-## Note un duel joué sur ce match et renvoie le multiplicateur de Jetons :
-## plein tarif pour les 3 premiers, puis la moitié (l'XP ne change pas).
+## Note un duel joué sur ce match et renvoie la part des Jetons à verser :
+## 100 % la 1re fois du jour, 50 % la 2e, 25 % la 3e, puis 0 (l'XP ne change pas).
 func noter_duel_match(match_id: String) -> float:
 	if match_id == "":
 		return 1.0
-	var n := int(duels_par_match.get(match_id, 0)) + 1
+	var jour := Time.get_date_string_from_system()
+	var e: Variant = duels_par_match.get(match_id, {})
+	var n := 1
+	if e is Dictionary and str(e.get("jour", "")) == jour:
+		n = int(e.get("n", 0)) + 1
 	duels_par_match.erase(match_id)
-	duels_par_match[match_id] = n  # en dernier : les plus anciens partent d'abord
+	duels_par_match[match_id] = {"jour": jour, "n": n}  # en dernier : les plus anciens partent d'abord
 	while duels_par_match.size() > 60:
 		duels_par_match.erase(duels_par_match.keys()[0])
-	return 1.0 if n <= DUELS_PLEIN_TARIF else 0.5
+	return RENDEMENT_REJEU[n - 1] if n <= RENDEMENT_REJEU.size() else 0.0
+
+
+## Libellé de la ligne « Jetons gagnés » quand le match a déjà été joué aujourd'hui.
+static func libelle_rejeu(part: float) -> String:
+	if part >= 1.0:
+		return "Jetons gagnés"
+	if part <= 0.0:
+		return "Jetons gagnés (match déjà joué 3 fois aujourd'hui)"
+	return "Jetons gagnés (match rejoué : %d %%)" % int(round(part * 100.0))
 
 
 func gagner_jetons(n: int) -> void:

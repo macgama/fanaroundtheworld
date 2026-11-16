@@ -883,7 +883,7 @@ func _finir() -> void:
 		["Ballons qui ont touché", str(touches[0])],
 		["Alliés nettoyés", str(nettoyes[0])],
 		["Bonus « ton équipe gagne vraiment »", "x1,3" if g["equipe_gagne"] else "non"],
-		["Jetons gagnés" + (" (match rejoué : ÷2)" if g["rejoue"] else ""), "+%d" % g["jetons"]],
+		[Game.libelle_rejeu(g["part"]), "+%d" % g["jetons"]],
 		["XP du fan club", "+%d" % g["xp"]],
 	] + FinDuel.ligne_popularite(g) + FinDuel.lignes_evenement(g["evenement"]), Game.SCENE_SALON if en_ligne and Reseau.connecte() else Game.SCENE_ARENE)
 

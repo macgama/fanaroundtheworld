@@ -65,15 +65,19 @@ func _ready() -> void:
 	_verifier(Game.xp_pass == 50 and Game.missions["du_jour"][0]["recuperee"], "sauvegardé")
 	_verifier(Missions.a_recuperer(Game.missions) == 2, "encore 2 récompenses à récupérer")
 
-	# Rejouer le même match : plein tarif 3 fois, puis la moitié des Jetons.
+	# Rejouer le même match le même jour : 100 %, 50 %, 25 %, puis rien.
 	var facteurs := []
 	for i in 5:
 		facteurs.append(Game.noter_duel_match("test:rejeu"))
-	_verifier(facteurs == [1.0, 1.0, 1.0, 0.5, 0.5], "rejouer le même match (%s)" % str(facteurs))
+	_verifier(facteurs == [1.0, 0.5, 0.25, 0.0, 0.0], "rejouer le même match (%s)" % str(facteurs))
 	_verifier(Game.noter_duel_match("test:autre") == 1.0, "un autre match repart à plein tarif")
-	var g0 := FinDuel.gains(true, 1.0, "pub")
+	Game.duels_par_match["test:rejeu"]["jour"] = "2000-01-01"
+	_verifier(Game.noter_duel_match("test:rejeu") == 1.0, "le lendemain, plein tarif")
+	Game.duels_par_match["test:vieux"] = 4  # ancienne sauvegarde (nombre seul)
+	_verifier(Game.noter_duel_match("test:vieux") == 1.0, "ancienne sauvegarde lue")
 	var g1 := FinDuel.enregistrer(true, 1.0, {"id": "test:rejeu", "m": m}, "home", "pub")
-	_verifier(g1["rejoue"] and g1["jetons"] == int(round(g0["jetons"] * 0.5)), "Arène/Poussée : gains réduits (%s)" % str(g1))
+	_verifier(g1["part"] == 0.5 and g1["jetons"] == int(round(FinDuel.gains(true, 1.0, "pub", g1["equipe_gagne"])["jetons"] * 0.5)), "Arène/Poussée : gains réduits (%s)" % str(g1))
+	_verifier(Game.libelle_rejeu(0.25).contains("25 %") and Game.libelle_rejeu(0.0).contains("3 fois"), "libellés")
 
 	if sauvegarde != "":
 		var f := FileAccess.open(Game.CHEMIN_SAUVEGARDE, FileAccess.WRITE)
