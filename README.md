@@ -73,6 +73,12 @@ et, plus tard, sur mobile.
    - **1 à 5** : la peinture · **P** / **S** / **TAB** : l'outil · **flèches + ESPACE** : peindre au clavier ;
    - **ENTRÉE** : présenter la bâche. Le capo l'accepte dès 75 % de ressemblance ;
      payée selon la ressemblance, bonus si elle est parfaite. Après 3 services dans la journée, paye ÷ 2.
+   **Ramasseur de balles** (écran *Petits boulots*, 60 s) : les ballons sortent du terrain,
+   leur ombre montre où ils tombent ; attrape-les puis relance-les au joueur qui attend :
+   - **← →** (ou **Q D**, **A D**, ou souris) : courir le long de la touche ;
+   - **ESPACE**, **ENTRÉE** ou clic : relancer (bonus si en moins de 1,2 s) · **ÉCHAP** : pause ;
+   - ballon du match doré (+2), +1 toutes les 5 prises d'affilée ; à 30 s, le match s'emballe.
+     Après 3 parties dans la journée, paye ÷ 2.
 
 **Missions** (bouton en haut de la carte) : 3 missions du jour et 3 de la semaine
 (« suis 3 matchs », « visite un nouveau stade », « gagne un duel »…) qui rapportent des Jetons
@@ -112,7 +118,7 @@ Supprime ce fichier pour recommencer à zéro.
 
 | Dossier | Contenu |
 | --- | --- |
-| `scenes/` | Scènes Godot (`.tscn`) et leurs scripts, un sous-dossier par écran (`main/`, `carte/`, `voyage/`, `tribune/`, `duel/`, `pronostics/`, `favoris/`, `classement/`, `club/`, `buvette/`, `tifo/`, `echarpes/`) |
+| `scenes/` | Scènes Godot (`.tscn`) et leurs scripts, un sous-dossier par écran (`main/`, `carte/`, `voyage/`, `tribune/`, `duel/`, `pronostics/`, `favoris/`, `classement/`, `club/`, `buvette/`, `tifo/`, `echarpes/`, `ramasseur/`, `boulots/`) |
 | `scripts/autoload/` | Scripts globaux chargés au démarrage (`Game` : état du jeu et sauvegarde, `Donnees` : vrais matchs) |
 | `scripts/donnees/` | Noms fictifs (`fiction.gd`), placement sur la carte (`geo.gd`), fiche d'un match |
 | `scripts/jeu/` | Règles du jeu sans écran (pronostics, équipes favorites et popularité, missions, collection, événements des vrais matchs) |
@@ -122,6 +128,7 @@ Supprime ce fichier pour recommencer à zéro.
 | `scripts/speaker/` | Règles du petit boulot de speaker du stade (feuille de match, tempo des annonces, paye), sans affichage |
 | `scripts/tifo/` | Règles du petit boulot de peintre de tifo (modèles, seau, ressemblance, paye), sans affichage |
 | `scripts/echarpes/` | Règles du stand d'écharpes (portant, commandes, paye), sans affichage |
+| `scripts/ramasseur/` | Règles du ramasseur de balles (tirs, prise, paye), sans affichage |
 | `scripts/reseau/` | Règles du jeu en ligne (messages, jauge partagée) ; le transport est l'autoload `Reseau` |
 | `scripts/ui/` | Style commun de l'interface (couleurs, boutons, icônes) |
 | `assets/fanzzy/` | Les FANZZY (personnages jouables, avec leurs skins cosmétiques), importés depuis thebestfan.online |
@@ -133,7 +140,7 @@ Supprime ce fichier pour recommencer à zéro.
 | `tools/` | Scripts de préparation des données (carte du monde, repérage des bras des FANZZY) |
 | `mods/` | Format des mods Steam Workshop (noms et couleurs de clubs) |
 | `docs/` | Game design et maquettes |
-| `tests/` | Tests automatiques (`godot --headless --path . --script tests/test_logique.gd`, `tests/test_pronostics.gd`, `tests/test_club.gd`, `tests/test_supporters.gd`, `tests/test_classement.gd`, `tests/test_buvette.gd`, `tests/test_tifo.gd`, `tests/test_echarpes.gd`, `tests/test_speaker.gd`, `tests/test_collection.gd`, `tests/test_evenements.gd`, `tests/test_audio.gd`, et le parcours complet : `godot --headless --path . res://tests/test_pronostics_jeu.tscn -- --hors-ligne`, le tutoriel : `res://tests/test_tutoriel.tscn -- --hors-ligne`, le classement en ligne : `res://tests/test_classement_jeu.tscn -- --hors-ligne`, le tour de tous les écrans (chaque bouton pressé, parties au clavier, pause) : `res://tests/test_ecrans.tscn -- --hors-ligne`) |
+| `tests/` | Tests automatiques (`godot --headless --path . --script tests/test_logique.gd`, `tests/test_pronostics.gd`, `tests/test_club.gd`, `tests/test_supporters.gd`, `tests/test_classement.gd`, `tests/test_buvette.gd`, `tests/test_tifo.gd`, `tests/test_echarpes.gd`, `tests/test_speaker.gd`, `tests/test_ramasseur.gd`, `tests/test_collection.gd`, `tests/test_evenements.gd`, `tests/test_audio.gd`, et le parcours complet : `godot --headless --path . res://tests/test_pronostics_jeu.tscn -- --hors-ligne`, le tutoriel : `res://tests/test_tutoriel.tscn -- --hors-ligne`, le classement en ligne : `res://tests/test_classement_jeu.tscn -- --hors-ligne`, le tour de tous les écrans (chaque bouton pressé, parties au clavier, pause) : `res://tests/test_ecrans.tscn -- --hors-ligne`) |
 
 ## Règles du projet
 

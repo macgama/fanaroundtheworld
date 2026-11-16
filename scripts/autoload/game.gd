@@ -21,6 +21,7 @@ const SCENE_ARENE := "res://scenes/arene/arene.tscn"
 const SCENE_POUSSEE := "res://scenes/poussee/poussee.tscn"
 const SCENE_BUVETTE := "res://scenes/buvette/buvette.tscn"
 const SCENE_BOULOTS := "res://scenes/boulots/boulots.tscn"
+const SCENE_RAMASSEUR := "res://scenes/ramasseur/ramasseur.tscn"
 const SCENE_SPEAKER := "res://scenes/speaker/speaker.tscn"
 const SCENE_TIFO := "res://scenes/tifo/tifo.tscn"
 const SCENE_CLUB := "res://scenes/club/club.tscn"
@@ -111,7 +112,7 @@ func _ready() -> void:
 
 
 ## Options de ligne de commande pour les tests automatiques (après « -- ») :
-##   --scene=carte|voyage|tribune|duel|arene|poussee|buvette|boulots|tifo   ouvre directement un écran
+##   --scene=carte|voyage|tribune|duel|arene|poussee|buvette|boulots|tifo|ramasseur   ouvre directement un écran
 ##   --capture=chemin.png --apres=3      enregistre une capture puis quitte
 func _outils_de_test() -> void:
 	var args := {}
