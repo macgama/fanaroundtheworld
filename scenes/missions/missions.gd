@@ -193,7 +193,7 @@ func _recuperer(periode: String, i: int) -> void:
 		return
 	var txt := tr("+%d Jetons · +%d XP PASS") % [g["jetons"], g["xp_pass"]]
 	if g["bonus"]:
-		txt += " (bonus compris !)"
+		txt += tr(" (bonus compris !)")
 	_annoncer(txt)
 	_remplir()
 

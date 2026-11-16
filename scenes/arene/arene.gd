@@ -186,9 +186,9 @@ func _construire() -> void:
 	add_child(_hud_bas)
 	var aide := "ZQSD/flèches : bouger · clic : ballon · clic droit/E : super · TAB : changer"
 	if "roulade" in actions:
-		aide += " · ESPACE : roulade"
+		aide += tr(" · ESPACE : roulade")
 	if "tir_charge" in actions:
-		aide += " · maintenir le clic : tir chargé"
+		aide += tr(" · maintenir le clic : tir chargé")
 	_lbl_aide = Ui.label(aide, 18, Ui.BLANC, false, 6)
 	_lbl_aide.set_anchors_preset(Control.PRESET_BOTTOM_RIGHT)
 	_lbl_aide.offset_left = -1100

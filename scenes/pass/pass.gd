@@ -495,11 +495,11 @@ func _info(r: Dictionary, p: int, piste: String, dispo: bool, recue: bool, bloqu
 		var type:
 			t += tr("%s : %s.\nObjet d'apparence, à retrouver bientôt dans ton local et ta tribune.") % [PassSaison.TYPES_OBJETS.get(type, tr("Objet")), r["nom"]]
 	if recue:
-		t += "\nDéjà récupéré."
+		t += tr("\nDéjà récupéré.")
 	elif bloque:
-		t += "\nAvec le PASS Premium."
+		t += tr("\nAvec le PASS Premium.")
 	elif dispo:
-		t += "\nClique pour récupérer."
+		t += tr("\nClique pour récupérer.")
 	else:
 		t += tr("\nEncore %d XP.") % maxi(0, (p - 1) * PassSaison.XP_PAR_PALIER - Game.xp_pass)
 	return t
@@ -533,9 +533,9 @@ func _annoncer_gain(g: Dictionary) -> void:
 		return
 	var txt := tr("Récupéré : ") + PassSaison.resume(g)
 	if g["skins"].size() > 0:
-		txt += " · à choisir dans « FANZZY »"
+		txt += tr(" · à choisir dans « FANZZY »")
 	elif g["fanzzy"].size() > 0:
-		txt += " · rejoint ta tribune possible"
+		txt += tr(" · rejoint ta tribune possible")
 	_annoncer(txt)
 
 

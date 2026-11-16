@@ -840,7 +840,7 @@ func _bloc_evenement(f: Dictionary) -> Control:
 	v.add_child(l)
 	var gains := tr("Jetons des duels %s") % Evenements.texte_mult(ev)
 	if Game.prime_evenement_gagnee(str(f["id"])):
-		gains += " · prime de la soirée déjà gagnée"
+		gains += tr(" · prime de la soirée déjà gagnée")
 	else:
 		gains += tr(" · 1er duel : +%d XP PASS, +%d Jetons") % [int(ev["xp_pass"]), int(ev["jetons"])]
 	var quand := ""
