@@ -52,6 +52,12 @@ et, plus tard, sur mobile.
    **Contre un vrai joueur** : bouton **CONTRE UN JOUEUR** dans *Ta tribune*, ou **En ligne**
    sur la carte. Un ami sur le même réseau trouve ton salon tout seul (ou tape ton adresse IP) ;
    avec Steam, invitation d'amis et recherche d'adversaire (voir `docs/multijoueur.md`).
+   **Soir de match** : quand le vrai match est en direct (ou commence dans moins de 30 min),
+   *Ta tribune* propose **SOIR DE MATCH**. Tu vis le match à l'endroit choisi (stade, écran
+   géant, pub, maison) ; à chaque vrai but, lance une mini-ambiance : **ESPACE** le chant du
+   club, **T** le tifo (relâche dans la zone dorée), **O** l'ola. **1 à 3** entre les buts pour
+   entretenir la ferveur. Un but d'une équipe favorite affiche aussi une alerte n'importe où
+   dans le jeu (voir `docs/soir-de-match.md`).
 7. **Buvette** (bouton en bas de la carte) : petit boulot de vendeur, 60 s pour gagner
    des Jetons. Les FANZZY font la queue avec leur commande :
    - **1 à 4** (ou clic) : poser une boisson, un hot-dog, des frites, une gaufre ;

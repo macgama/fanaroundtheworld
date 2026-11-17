@@ -63,6 +63,8 @@ var _ecrans := {
 	"pass": [Game.SCENE_PASS, {}, [KEY_RIGHT, KEY_LEFT, KEY_ESCAPE]],
 	"tournoi": [Game.SCENE_TOURNOI, {}, []],
 	"ligue": [Game.SCENE_LIGUE, {}, []],
+	"soiree": [Game.SCENE_SOIREE, {"match_id": "ex:1", "camp": "home", "mode": "ecran", "cout": 0, "simuler": true},
+		[KEY_1, KEY_2, KEY_3, KEY_B, KEY_SPACE, KEY_T, KEY_O, KEY_UP, KEY_N, KEY_ESCAPE]],
 }
 
 var _compteur := Compteur.new()

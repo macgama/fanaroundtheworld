@@ -1169,7 +1169,8 @@ class Marionnette extends Node2D:
 
 ## Le décor : ciel, tribune adverse, terrain (ou écran), notre tribune, confettis.
 class Decor extends Control:
-	var duel: Duel
+	## Le duel, ou tout écran qui expose `jauge` (-100…100) et `fiche` (soir de match).
+	var duel  # Duel ou SoireeEcran (pas de type : les deux conviennent)
 	var mode := "stade"
 	var c_nous := Ui.BLEU
 	var c_nous2 := Ui.BLANC

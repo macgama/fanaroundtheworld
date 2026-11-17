@@ -75,6 +75,7 @@ const SEMAINE := [
 	{"id": "s_recolte5", "evt": "recolte", "n": 5, "titre": "Trésorier du club", "texte": "Récolte 5 fois la caisse du fan club.", "jetons": 50, "xp_pass": 400, "si": "club"},
 	{"id": "s_tournoi3", "evt": "tournoi", "n": 3, "titre": "Esprit de compétition", "texte": "Joue 3 duels du tournoi des fan clubs, le week-end.", "jetons": 60, "xp_pass": 300, "si": "tournoi"},
 	{"id": "s_fete2", "evt": "evenement", "n": 2, "titre": "Soirs de fête", "texte": "Joue 2 duels sur des matchs spéciaux : derby, finale, Grand Choc…", "jetons": 70, "xp_pass": 250, "si": "evenements"},
+	{"id": "s_soiree3", "evt": "soiree_but", "n": 3, "titre": "Soirs de match", "texte": "Vis 3 vrais buts en direct et lance une mini-ambiance à chaque fois.", "jetons": 70, "xp_pass": 250},
 	{"id": "s_favori5", "evt": "favori", "n": 5, "titre": "Fidèle au poste", "texte": "Soutiens 5 fois une de tes équipes favorites.", "jetons": 80, "xp_pass": 500, "si": "favoris"},
 ]
 
