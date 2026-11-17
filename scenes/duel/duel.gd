@@ -166,6 +166,7 @@ func _construire() -> void:
 	_decor.duel = self
 	_decor.set_anchors_preset(Control.PRESET_FULL_RECT)
 	_decor.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_decor.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR_WITH_MIPMAPS  # supporters réduits proprement
 	add_child(_decor)
 	var dom: Dictionary = fiche["dom"]
 	var ext: Dictionary = fiche["ext"]
@@ -1286,7 +1287,8 @@ class Decor extends Control:
 		var rng := RandomNumberGenerator.new()
 		rng.seed = _graine + int(r.position.y)
 		var peaux := [Color("#f2c9a0"), Color("#d9a273"), Color("#a86b3c"), Color("#6b4226"), Color("#ffe0bd")]
-		var pas := rayon * 2.3
+		var sprites := FouleSprites.disponible()
+		var pas := rayon * (2.6 if sprites else 2.3)
 		var rangs := int(r.size.y / (rayon * 2.6))
 		for j in rangs:
 			var y := r.position.y + j * rayon * 2.6 + rayon * 1.2
@@ -1294,6 +1296,21 @@ class Decor extends Control:
 			var x := r.position.x + (pas / 2.0 if j % 2 == 1 else 0.0)
 			while x < r.end.x:
 				var ph := rng.randf() * TAU
+				if sprites:
+					# supporters Quaternius : geste d'ambiance, ola quand la vague passe
+					var corps2: Color = c1 if rng.randf() < 0.75 else c2
+					var peau2: Color = FouleSprites.PEAUX[rng.randi() % FouleSprites.PEAUX.size()]
+					var variante := rng.randi() % 3
+					var rr2 := rayon * echelle
+					var ga := FouleSprites.geste_ambiance(ferveur, ph / TAU, _t)
+					if devant and _t - _ola_t < 3.0:
+						var dans := _t - _ola_t - x / (size.x * 0.8) + 0.3
+						if dans >= 0.0 and dans < FouleSprites.duree(&"ola"):
+							ga = [&"ola", dans]
+					var autre: Color = c2 if corps2 == c1 else c1
+					FouleSprites.dessiner(self, Vector2(x, y + rr2 * 4.2), rr2 * 5.2, ga[0], ga[1], corps2, autre, peau2, variante)
+					x += pas * echelle
+					continue
 				var actif := rng.randf() < ferveur
 				var saut := 0.0
 				if actif:
@@ -1311,6 +1328,12 @@ class Decor extends Control:
 					draw_line(p + Vector2(-rr * 0.8, rr * 0.6), p + Vector2(-rr * 1.3, -rr * 0.6), corps, rr * 0.4)
 					draw_line(p + Vector2(rr * 0.8, rr * 0.6), p + Vector2(rr * 1.3, -rr * 0.6), corps, rr * 0.4)
 				x += pas * echelle
+			if sprites:
+				# la marche de tribune devant ce rang cache le bas des jambes
+				var rr3 := rayon * echelle
+				var marche := Rect2(r.position.x, y + rr3 * 1.9, r.size.x, rr3 * 2.8)
+				draw_rect(marche, Color("#2a2357", 0.92))
+				draw_rect(Rect2(marche.position, Vector2(marche.size.x, rr3 * 0.35)), Color("#8b7dff", 0.9))
 
 
 ## La piste de rythme : les notes glissent vers le cercle de gauche.

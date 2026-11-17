@@ -1,0 +1,63 @@
+{
+ "taille": [
+  96,
+  128
+ ],
+ "calques": [
+  "base",
+  "peau",
+  "maillot",
+  "echarpe"
+ ],
+ "gestes": {
+  "repos": {
+   "ligne": 0,
+   "n": 8,
+   "fps": 4,
+   "boucle": true
+  },
+  "sauter": {
+   "ligne": 4,
+   "n": 8,
+   "fps": 12,
+   "boucle": true
+  },
+  "applaudir": {
+   "ligne": 8,
+   "n": 6,
+   "fps": 12,
+   "boucle": true
+  },
+  "ola": {
+   "ligne": 12,
+   "n": 10,
+   "fps": 12,
+   "boucle": false
+  },
+  "echarpe": {
+   "ligne": 16,
+   "n": 8,
+   "fps": 7,
+   "boucle": true
+  },
+  "depit": {
+   "ligne": 20,
+   "n": 6,
+   "fps": 6,
+   "boucle": true
+  },
+  "danser": {
+   "ligne": 24,
+   "n": 8,
+   "fps": 10,
+   "boucle": true
+  }
+ },
+ "variantes": [
+  "supporters_a.png",
+  "supporters_b.png",
+  "supporters_c.png"
+ ],
+ "tete": 29,
+ "pied": 124
+}

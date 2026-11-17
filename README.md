@@ -194,5 +194,6 @@ Les noms fictifs (clubs, stades, ligues comme « Ligue Hexagone », joueurs, pse
 ## Crédits
 
 - Carte du monde : Natural Earth (domaine public), via world-atlas. Capitales : paquet countryinfo.
+- Supporters des tribunes : mannequin animé de la *Universal Animation Library* de Quaternius (CC0), voir `assets/foule/` et `docs/foule.md`.
 - Polices : Lilita One et Nunito (SIL Open Font License, voir `assets/fonts/`).
 - Données de match : voir le champ `attribution` affiché sur l'écran titre.

@@ -12,6 +12,7 @@ var _confettis: Array = []  # [pos, vitesse, couleur, angle, tourne]
 
 func _ready() -> void:
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
+	texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR_WITH_MIPMAPS
 	var rng := RandomNumberGenerator.new()
 	rng.seed = 7
 	for rang in 4:
@@ -61,6 +62,7 @@ func _draw() -> void:
 		_mat(pied)
 	# tribunes : 4 rangs courbés, du fond vers l'avant
 	var tribunes := [Color("#5a2fa8"), Color("#6a35c0"), Color("#7b3dd6"), Color("#8b5cff")]
+	var sprites := FouleSprites.disponible()
 	for rang in 4:
 		var y0 := h * (0.47 + rang * 0.075)
 		var pts := PackedVector2Array()
@@ -78,6 +80,13 @@ func _draw() -> void:
 			var saut := maxf(0.0, sin(_t * 5.0 + f[3])) * (6.0 + rang * 2.0)
 			var y := y0 - sin(PI * f[0]) * h * 0.05 + h * 0.035 - saut
 			var r := 7.0 + rang * 2.0
+			if sprites:
+				# supporters Quaternius : chacun son geste, écharpe d'une autre couleur
+				var ga := FouleSprites.geste_ambiance(0.8, f[3] / TAU, _t)
+				var autre: Color = COULEURS_FOULE[int(f[3] * 10.0) % COULEURS_FOULE.size()]
+				FouleSprites.dessiner(self, Vector2(x, y + saut + r * 3.9), r * 5.4, ga[0], ga[1], f[2], autre,
+					FouleSprites.PEAUX[int(f[3] * 31.0) % FouleSprites.PEAUX.size()], int(f[3] * 17.0) % 3)
+				continue
 			draw_circle(Vector2(x, y + r * 1.4), r * 1.1, f[2].darkened(0.25))
 			draw_circle(Vector2(x, y), r, Color("#f2c9a0"))
 			if sin(_t * 2.0 + f[3] * 3.0) > 0.6:  # bras levés
