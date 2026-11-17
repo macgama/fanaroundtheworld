@@ -532,7 +532,7 @@ func _finir() -> void:
 		["Bonus de série", "+%d" % bonus],
 	]
 	if paye < total:
-		lignes.append([tr("Fatigue (%de partie du jour)") % (deja + 1), tr("paye ÷ 2")])
+		lignes.append([tr("Fatigue (%de partie du jour)") % (deja + 1), tr(ListeBoulots.texte_fatigue(deja))])
 	lignes.append(["Jetons gagnés", "+%d" % paye])
 	lignes.append(["XP du fan club", "+%d" % xp])
 	for l in lignes:

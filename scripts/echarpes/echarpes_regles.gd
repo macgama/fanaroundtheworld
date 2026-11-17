@@ -12,8 +12,8 @@ extends RefCounted
 ## vide, il faut aller au carton (réassort, quelques secondes perdues).
 ## À 30 s, l'ouverture des portes : c'est le rush, deux clubs de plus sur le
 ## portant, des commandes plus grosses et moins de patience.
-## Au-delà de SERVICES_PLEIN_TARIF services dans la journée, la paye est
-## divisée par deux (même règle que la buvette).
+## Au-delà de SERVICES_PLEIN_TARIF services dans la journée, la paye baisse (÷ 2, puis ÷ 4) :
+## voir ListeBoulots.part_du_jour.
 
 const DUREE := 60.0
 const DEBUT_RUSH := 30.0
@@ -26,7 +26,7 @@ const SALAIRE_PAR_ECHARPE := 1
 const POURBOIRE_MAX := 1
 const SERIE_BONUS := 5          # +1 Jeton toutes les 5 commandes justes d'affilée
 const XP_PAR_CLIENT := 2
-const SERVICES_PLEIN_TARIF := 3
+const SERVICES_PLEIN_TARIF := ListeBoulots.PLEIN_TARIF
 
 var rng := RandomNumberGenerator.new()
 
@@ -135,6 +135,4 @@ static func paye(nb_echarpes: int, reste: float, serie: int) -> Dictionary:
 
 ## Paye du service entier, selon le nombre de services déjà faits aujourd'hui.
 static func paye_finale(brut: int, services_du_jour: int) -> int:
-	if services_du_jour >= SERVICES_PLEIN_TARIF:
-		return int(ceil(brut / 2.0))
-	return brut
+	return ListeBoulots.paye_du_jour(brut, services_du_jour)

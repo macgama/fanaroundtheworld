@@ -986,7 +986,7 @@ func _finir() -> void:
 			_pluie(Vector2(_rng.randf_range(300, 1600), _rng.randf_range(200, 500)), couleurs[0], 50)
 	var perf := AreneRegles.performance(banderole[0], touches[0], nettoyes[0])
 	print("Arène : %s à %.0f s, banderoles %d/%d, touches %d/%d" % [["défaite", "égalité", "victoire"][res + 1], temps, banderole[0], banderole[1], touches[0], touches[1]])
-	var g := FinDuel.enregistrer(gagne, perf, fiche, camp, mode_suivi)
+	var g := FinDuel.enregistrer(gagne, perf, fiche, camp, mode_suivi, "arene")
 	await get_tree().create_timer(1.6).timeout
 	var titre := "VICTOIRE DANS L'ARÈNE !" if gagne else ("ÉGALITÉ !" if res == 0 else "L'ARÈNE EST À EUX…")
 	FinDuel.panneau(self, titre, gagne, [

@@ -83,7 +83,7 @@ static func boulot_ouvert(id: String) -> bool:
 
 ## XP maximum de la démo (début du niveau NIVEAU_MAX).
 static func xp_max() -> int:
-	return (NIVEAU_MAX - 1) * 200
+	return Game.xp_debut_niveau(NIVEAU_MAX)
 
 
 static func xp_limitee(xp: int) -> int:

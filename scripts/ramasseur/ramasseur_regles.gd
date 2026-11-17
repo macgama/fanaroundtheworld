@@ -11,8 +11,8 @@ extends RefCounted
 ## À 30 s, le match s'emballe : les ballons volent moins longtemps.
 ## Les positions sont des fractions de la ligne de touche (0 = coin gauche,
 ## 1 = coin droit) ; l'écran les convertit en pixels.
-## Au-delà de PARTIES_PLEIN_TARIF parties dans la journée, la paye est
-## divisée par deux (le petit boulot complète les duels sans les remplacer).
+## Au-delà de PARTIES_PLEIN_TARIF parties dans la journée, la paye baisse (÷ 2, puis ÷ 4) :
+## voir ListeBoulots.part_du_jour.
 
 const DUREE := 60.0
 const DEBUT_RUSH := 30.0
@@ -35,7 +35,7 @@ const PAYE_REMISE := 1
 const PAYE_DORE := 2
 const SERIE_BONUS := 5
 const XP_PAR_BALLE := 2
-const PARTIES_PLEIN_TARIF := 3
+const PARTIES_PLEIN_TARIF := ListeBoulots.PLEIN_TARIF
 
 var rng := RandomNumberGenerator.new()
 
@@ -94,6 +94,4 @@ static func paye_remise(attente: float) -> int:
 
 ## Paye de la partie entière, selon le nombre de parties déjà faites aujourd'hui.
 static func paye_finale(brut: int, parties_du_jour: int) -> int:
-	if parties_du_jour >= PARTIES_PLEIN_TARIF:
-		return int(ceil(brut / 2.0))
-	return brut
+	return ListeBoulots.paye_du_jour(brut, parties_du_jour)

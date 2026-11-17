@@ -172,13 +172,13 @@ static func recompense(perf: float, pour_nous: bool, gain_mode: float, ferveur: 
 	return {
 		"jetons": int(round(base * gain_mode * mult_ferveur(ferveur))),
 		"xp": int(round((10.0 + 20.0 * perf) * moitie)),
-		"xp_pass": int(round((20.0 + 30.0 * perf) * moitie)),
+		"xp_pass": int(round((10.0 + 15.0 * perf) * moitie)),  # moitié depuis l'équilibrage du 17 nov. 2026
 	}
 
 
 ## Prime « soirée complète » : présent au coup de sifflet final depuis au moins 30 min.
 static func prime_fin(gain_mode: float) -> Dictionary:
-	return {"jetons": int(round(10.0 * gain_mode)), "xp": 30, "xp_pass": 60}
+	return {"jetons": int(round(10.0 * gain_mode)), "xp": 30, "xp_pass": 30}
 
 
 static func etoiles(perf: float) -> int:

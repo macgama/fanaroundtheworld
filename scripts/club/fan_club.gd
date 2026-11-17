@@ -11,12 +11,15 @@ extends RefCounted
 ## La caisse garde au plus ce nombre d'heures de recettes.
 const HEURES_CAISSE := 8.0
 ## Chaque membre verse cette cotisation, en Jetons par heure.
-const COTISATION_HEURE := 1.0
-## Bonus de taille : +5 % de recettes par membre au-delà du premier.
-const BONUS_PAR_MEMBRE := 0.05
-## Places : 3 au niveau 1, puis 2 de plus par niveau du fan club.
+## Équilibrage du 17 nov. 2026 (docs/equilibrage.md) : le fan club rapportait
+## les trois quarts des Jetons d'un joueur ; il doit compléter les duels.
+const COTISATION_HEURE := 0.25
+## Bonus de taille : +2 % de recettes par membre au-delà du premier.
+const BONUS_PAR_MEMBRE := 0.02
+## Places : 3 au niveau 1, 2 de plus par niveau jusqu'au niveau 5, puis 1 par niveau.
 const PLACES_DEPART := 3
 const PLACES_PAR_NIVEAU := 2
+const NIVEAU_PLACES_LENTES := 5
 ## La buvette rapporte double pendant ces heures après un duel (l'après-match).
 const HEURES_APRES_MATCH := 3.0
 
@@ -25,12 +28,12 @@ const HEURES_APRES_MATCH := 3.0
 const LOCAL := {
 	"buvette": {
 		"titre": "Buvette",
-		"recette": [0.0, 3.0, 6.0, 10.0, 15.0, 21.0],
+		"recette": [0.0, 1.0, 1.5, 2.0, 3.0, 4.0],
 		"cout": [40, 100, 220, 450, 900],
 	},
 	"atelier": {
 		"titre": "Atelier d'écharpes",
-		"recette": [0.0, 1.0, 2.0, 3.0, 4.0, 6.0],
+		"recette": [0.0, 0.5, 0.75, 1.0, 1.25, 1.5],
 		"cout": [30, 80, 180, 380, 800],
 	},
 }
@@ -102,7 +105,8 @@ static func sigle(nom: String) -> String:
 # ---------------------------------------------------------------- membres
 
 static func places(niveau_club: int) -> int:
-	return PLACES_DEPART + PLACES_PAR_NIVEAU * maxi(0, niveau_club - 1)
+	var n := maxi(1, niveau_club)
+	return PLACES_DEPART + PLACES_PAR_NIVEAU * (mini(n, NIVEAU_PLACES_LENTES) - 1) + maxi(0, n - NIVEAU_PLACES_LENTES)
 
 
 static func nb_membres(c: Dictionary) -> int:
@@ -164,12 +168,12 @@ static func echarpes_heure(c: Dictionary) -> float:
 
 
 static func stock_max(c: Dictionary) -> int:
-	return 6 + 6 * int(c["atelier"])
+	return 6 + 4 * int(c["atelier"])
 
 
 static func prix_echarpe(c: Dictionary) -> int:
 	## Plus le club est connu, plus ses écharpes se vendent cher.
-	return 2 + nb_membres(c) / 3
+	return 1 + nb_membres(c) / 6
 
 
 static func apres_match(c: Dictionary, maintenant: int) -> bool:

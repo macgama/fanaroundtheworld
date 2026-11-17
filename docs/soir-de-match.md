@@ -43,10 +43,10 @@ Un but adverse ouvre **« Relève la tribune ! »** : même choix, gains divisé
 ## Gains (`SoireeMatch.recompense`)
 
 - But pour ton équipe : Jetons = (6 + 10 × réussite) × gain du lieu × ferveur.
-  XP du fan club 10 à 30, XP du PASS 20 à 50.
+  XP du fan club 10 à 30, XP du PASS 10 à 25.
 - But adverse : (3 + 5 × réussite) × gain du lieu × ferveur, XP divisées par deux.
 - **Prime « soirée complète »** : présent au coup de sifflet final depuis au moins 30 min :
-  10 Jetons × gain du lieu, 30 XP, 60 XP de PASS. Une fois par match.
+  10 Jetons × gain du lieu, 30 XP, 30 XP de PASS. Une fois par match.
 - Exemple : 3 buts au stade avec de belles ambiances ≈ 60 à 80 Jetons pour la soirée.
 - Mission de la semaine **« Soirs de match »** : vivre 3 buts avec une mini-ambiance.
 
