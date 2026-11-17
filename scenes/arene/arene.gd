@@ -533,7 +533,7 @@ func toucher(o: Joueur, degat: float, par: Joueur) -> void:
 	if o.pv <= 0.0:
 		o.aller_au_banc()
 		secouer_ecran(0.7)
-		texte(o.position + Vector2(0, -150), "PLEIN DE CONFETTIS !", couleurs[par.equipe])
+		texte(o.position + Vector2(0, -150), tr("PLEIN DE CONFETTIS !"), couleurs[par.equipe])
 		_pluie(o.position + Vector2(0, -60), couleurs[par.equipe], 60)
 
 
