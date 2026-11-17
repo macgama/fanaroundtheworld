@@ -281,6 +281,8 @@ func _compte_a_rebours() -> void:
 	for t in ["3", "2", "1", "POUSSEZ !"]:
 		annoncer(t, Ui.JAUNE)
 		await get_tree().create_timer(0.75).timeout
+		if not is_inside_tree():
+			return  # écran quitté pendant le compte à rebours
 	en_cours = true
 	_lbl_annonce.text = ""
 
@@ -298,8 +300,12 @@ func _unhandled_input(ev: InputEvent) -> void:
 		return
 	if ev is InputEventKey and ev.pressed and not ev.echo:
 		var k := (ev as InputEventKey).keycode
-		if k >= KEY_1 and k <= KEY_4:
-			_selectionner(k - KEY_1)
+		# chiffres : touche physique (en AZERTY, « 1 » sans Maj donne « & »)
+		var kp := (ev as InputEventKey).physical_keycode
+		if kp >= KEY_1 and kp <= KEY_4:
+			_selectionner(kp - KEY_1)
+		elif kp >= KEY_KP_1 and kp <= KEY_KP_4:
+			_selectionner(kp - KEY_KP_1)
 		elif k == KEY_ESCAPE:
 			if selection >= 0:
 				selection = -1

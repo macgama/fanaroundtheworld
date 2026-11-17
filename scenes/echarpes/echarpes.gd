@@ -262,6 +262,8 @@ func _compte_a_rebours() -> void:
 		Ui.pop(l, 1.4, 0.3)
 		_sons.jouer("ui_decompte_go" if t.length() > 1 else "ui_decompte")
 		await get_tree().create_timer(0.7).timeout
+		if not is_inside_tree():
+			return  # écran quitté pendant le compte à rebours
 	l.queue_free()
 	pret = true
 	_client_suivant()

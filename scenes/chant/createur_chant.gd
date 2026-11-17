@@ -46,6 +46,8 @@ func _ready() -> void:
 	_lecteur.fini.connect(_sur_fin_ecoute)
 	_construire()
 	_rafraichir()
+	_sans_focus(self)
+	_laisser_passer(self)
 	if auto:
 		_ecouter.call_deferred()
 
@@ -54,14 +56,18 @@ func _ready() -> void:
 
 func _construire() -> void:
 	var cc := Game.couleurs_club()
+	# le fond laisse passer les touchers : au doigt, toucher l'écran = taper le rythme
+	mouse_filter = Control.MOUSE_FILTER_IGNORE
 	var fond := ColorRect.new()
 	fond.color = Color("#1d1850")
 	fond.set_anchors_preset(Control.PRESET_FULL_RECT)
+	fond.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(fond)
 	var bande := ColorRect.new()
 	bande.color = Color(cc[0], 0.35)
 	bande.set_anchors_preset(Control.PRESET_TOP_WIDE)
 	bande.offset_bottom = 150
+	bande.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(bande)
 
 	var racine := Ui.vbox(16)
@@ -312,6 +318,31 @@ func _construire_briques() -> void:
 		b.disabled = not ouvert
 		b.pressed.connect(func(): _choisir_parole(id))
 		_grille_paroles.add_child(b)
+	_sans_focus(_grille_morceaux)
+	_sans_focus(_grille_paroles)
+
+
+## Au doigt, toucher l'écran n'importe où hors des boutons tape le rythme :
+## panneaux et conteneurs décoratifs laissent passer les touchers.
+func _laisser_passer(n: Node) -> void:
+	if n is Control:
+		var c := n as Control
+		var lit := c is BaseButton or c is LineEdit or c is ScrollContainer or c is ScrollBar \
+			or c is Range or c.tooltip_text != "" or c is CarteMesure \
+			or not c.get_signal_connection_list("gui_input").is_empty()
+		if not lit:
+			c.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	for e in n.get_children():
+		_laisser_passer(e)
+
+
+## Les boutons ne gardent pas le focus après un clic : sinon Espace (taper le
+## rythme) et Entrée réappuieraient dessus (« Au hasard » refaisait le chant).
+func _sans_focus(n: Node) -> void:
+	if n is BaseButton:
+		(n as BaseButton).focus_mode = Control.FOCUS_NONE
+	for c in n.get_children():
+		_sans_focus(c)
 
 
 ## La ligne de la mesure `i` ; `mot` : l'index du clap en cours (-1 : aucun).

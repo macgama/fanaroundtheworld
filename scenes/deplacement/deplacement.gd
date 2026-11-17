@@ -504,7 +504,8 @@ func _unhandled_input(ev: InputEvent) -> void:
 		return
 	if _attente_choix:
 		var idx := -1
-		match (ev as InputEventKey).keycode:
+		# touche physique : en AZERTY, « 1 » sans Maj donne « & »
+		match (ev as InputEventKey).physical_keycode:
 			KEY_1, KEY_KP_1:
 				idx = 0
 			KEY_2, KEY_KP_2:

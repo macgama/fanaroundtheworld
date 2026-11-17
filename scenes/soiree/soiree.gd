@@ -232,6 +232,7 @@ func _construire() -> void:
 	for r in SoireeMatch.REACTIONS:
 		var b := Ui.bouton("%s   [%s]" % [tr(r["titre"]), r["touche"]], Ui.BLEU, 24)
 		b.custom_minimum_size = Vector2(270, 66)
+		b.focus_mode = Control.FOCUS_NONE  # sinon Espace (le chant) réappuierait dessus
 		var id: String = r["id"]
 		b.pressed.connect(func(): _reagir(id))
 		vr.add_child(b)
@@ -545,6 +546,7 @@ func _ouvrir_choix() -> void:
 		var b := Ui.bouton("%s\n[%s]" % [tr(a["titre"]).to_upper(), a["touche"]], couleurs[i], 28)
 		Ui.colorer_bouton(b, couleurs[i], true)
 		b.custom_minimum_size = Vector2(310, 110)
+		b.focus_mode = Control.FOCUS_NONE
 		b.tooltip_text = tr(a["texte"])
 		var id: String = a["id"]
 		b.pressed.connect(func(): _lancer_ambiance(id))
@@ -788,6 +790,12 @@ func _lancer_ola() -> void:
 		var f := Duel.Fleche.new()
 		f.direction = d
 		f.custom_minimum_size = Vector2(110, 110)
+		# au doigt ou à la souris : toucher une flèche = sa direction (comme en duel)
+		f.mouse_filter = Control.MOUSE_FILTER_STOP
+		var dd: int = d
+		f.gui_input.connect(func(e: InputEvent):
+			if e is InputEventMouseButton and e.pressed and (e as InputEventMouseButton).button_index == MOUSE_BUTTON_LEFT:
+				_ola_touche(dd))
 		h.add_child(f)
 		_ola_fleches.append(f)
 	_barre_temps = _barre(SoireeMatch.DUREE_OLA, Ui.VERT)
@@ -1050,12 +1058,13 @@ func _unhandled_input(ev: InputEvent) -> void:
 			if k in [KEY_SPACE, KEY_J, KEY_F]:
 				_lecteur.juger_appui()
 		"attente":
-			match k:
-				KEY_1:
+			# chiffres : touche physique (en AZERTY, « 1 » sans Maj donne « & »)
+			match (ev as InputEventKey).physical_keycode:
+				KEY_1, KEY_KP_1:
 					_reagir("allez")
-				KEY_2:
+				KEY_2, KEY_KP_2:
 					_reagir("applaudir")
-				KEY_3:
+				KEY_3, KEY_KP_3:
 					_reagir("echarpe")
 	if simule and etat != "fin":
 		if k == KEY_B:
