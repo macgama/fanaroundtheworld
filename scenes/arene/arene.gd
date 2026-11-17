@@ -5,6 +5,9 @@ extends Control
 ##   Clic droit ou E : super de la famille (se charge en touchant)
 ##   ESPACE : roulade (niveau 3) · maintenir le clic : tir chargé (niveau 5)
 ##   TAB : changer de FANZZY
+## Sur téléphone : joystick à gauche, boutons Tir / Super / Roulade / Changer à
+## droite (visée automatique sur l'adversaire le plus proche), ou toucher le
+## terrain pour tirer à cet endroit.
 ## Tenir le mégaphone au centre remplit ta banderole. 100 % = victoire.
 ## Règles chiffrées : scripts/duel/arene_regles.gd.
 
@@ -53,6 +56,7 @@ var _barres: Array = []
 var _appui_tir := -1.0
 var _auto := false             # démo : ton FANZZY joue tout seul
 var _rng := RandomNumberGenerator.new()
+var _tactile: CommandesTactiles  # téléphone seulement
 
 # --- en ligne : l'hôte simule tout (équipe 0 chez lui), l'invité dirige un FANZZY de
 # l'équipe 1. L'invité voit le terrain retourné : ses FANZZY sont à gauche (équipe 0 chez lui).
@@ -197,6 +201,10 @@ func _construire() -> void:
 	_lbl_aide.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 	add_child(_lbl_aide)
 
+	if Mobile.actif:
+		_ajouter_commandes_tactiles()
+		_lbl_aide.text = tr("Joystick : bouger · Tir : vise le plus proche · touche le terrain : tir visé")
+
 	_lbl_annonce = Ui.label("", 90, Ui.JAUNE, true, 14)
 	_lbl_annonce.set_anchors_preset(Control.PRESET_CENTER)
 	_lbl_annonce.offset_left = -700
@@ -238,6 +246,7 @@ func annoncer(texte: String, couleur: Color) -> void:
 
 func _process(delta: float) -> void:
 	_trembler_ecran(delta)
+	_maj_commandes_tactiles()
 	if not en_cours or termine:
 		_animer_effets(delta)
 		_sol.queue_redraw()
@@ -297,6 +306,11 @@ func _commandes_joueur(_delta: float) -> void:
 		d.y -= 1
 	if Input.is_physical_key_pressed(KEY_S) or Input.is_key_pressed(KEY_DOWN):
 		d.y += 1
+	if _tactile:
+		d += _tactile.direction
+		controle.direction = d.limit_length(1.0)
+		controle.visee = cible_auto(controle)
+		return
 	controle.direction = d.normalized()
 	controle.visee = get_global_mouse_position()
 
@@ -305,9 +319,13 @@ func _unhandled_input(ev: InputEvent) -> void:
 	if not en_cours or termine:
 		return
 	if ev.is_action_pressed("ui_cancel"):
+		if _tactile:
+			_tactile.relacher_tout()
 		FinDuel.pause(self, en_ligne)
 		get_viewport().set_input_as_handled()
 		return
+	if _tactile and ev is InputEventMouse and ev.device == InputEvent.DEVICE_ID_EMULATION:
+		return  # souris imitée par le doigt : déjà traité par les commandes tactiles
 	if ev is InputEventMouseButton:
 		var mb := ev as InputEventMouseButton
 		if mb.button_index == MOUSE_BUTTON_LEFT:
@@ -335,6 +353,77 @@ func _unhandled_input(ev: InputEvent) -> void:
 			if autre:
 				controle = autre
 		get_viewport().set_input_as_handled()
+
+
+# ------------------------------------------------------------------ téléphone
+
+func _ajouter_commandes_tactiles() -> void:
+	_tactile = CommandesTactiles.new()
+	_tactile.ajouter_bouton("tir", "Tir", Ui.JAUNE, Vector2(-110, -130), 100.0)
+	_tactile.ajouter_bouton("super", "Super", Ui.ROSE, Vector2(-310, -80))
+	if "roulade" in actions:
+		_tactile.ajouter_bouton("roulade", "Roulade", Ui.VERT, Vector2(-130, -350))
+	_tactile.ajouter_bouton("changer", "Changer", Ui.VIOLET, Vector2(-300, -260), 56.0)
+	_tactile.appui.connect(_sur_appui_tactile)
+	_tactile.relache.connect(_sur_relache_tactile)
+	_tactile.toucher_libre.connect(func(p: Vector2):
+		if en_cours and not termine:
+			tirer(controle, p, false))
+	add_child(_tactile)
+
+
+func _sur_appui_tactile(id: String) -> void:
+	if not en_cours or termine:
+		return
+	match id:
+		"tir":
+			if "tir_charge" in actions:
+				_appui_tir = temps
+			else:
+				tirer(controle, cible_auto(controle), false)
+		"super":
+			super_geste(controle, cible_auto(controle))
+		"roulade":
+			if _invite:
+				_action_invite("roulade", controle.position)
+			else:
+				controle.rouler()
+		"changer":
+			var autre := _prochain_allie(controle)
+			if autre:
+				controle = autre
+
+
+func _sur_relache_tactile(id: String) -> void:
+	if id == "tir" and _appui_tir >= 0.0:
+		if en_cours and not termine:
+			tirer(controle, cible_auto(controle), temps - _appui_tir >= 0.6)
+		_appui_tir = -1.0
+
+
+## Visée automatique : l'adversaire le plus proche (en vue de préférence),
+## sinon droit devant.
+func cible_auto(j: Joueur) -> Vector2:
+	var meilleur := 1e9
+	var cible := Vector2.INF
+	for o in _adversaires(j):
+		var d: float = j.position.distance_to(o.position)
+		if not vue_libre(j.position, o.position):
+			d += 400.0
+		if d < meilleur:
+			meilleur = d
+			cible = o.position
+	if cible == Vector2.INF:
+		var devant := j.direction if j.direction != Vector2.ZERO else (Vector2.RIGHT if j.equipe == 0 else Vector2.LEFT)
+		cible = j.position + devant * 300.0
+	return cible
+
+
+func _maj_commandes_tactiles() -> void:
+	if not _tactile or not controle:
+		return
+	_tactile.regler_bouton("tir", controle.munitions >= 1.0, clampf(controle.munitions / float(AreneRegles.MUNITIONS), 0.0, 1.0))
+	_tactile.regler_bouton("super", controle.charge_super >= 1.0, clampf(controle.charge_super, 0.0, 1.0))
 
 
 func _prochain_allie(j: Joueur) -> Joueur:

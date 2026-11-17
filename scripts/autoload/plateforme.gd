@@ -30,7 +30,8 @@ func _ready() -> void:
 
 
 func _initialiser_steam() -> void:
-	if "--sans-steam" in OS.get_cmdline_user_args() or not Engine.has_singleton("Steam"):
+	# Pas de Steam sur téléphone (l'extension GodotSteam n'est pas dans l'APK).
+	if OS.has_feature("mobile") or "--sans-steam" in OS.get_cmdline_user_args() or not Engine.has_singleton("Steam"):
 		return
 	steam = Engine.get_singleton("Steam")
 	OS.set_environment("SteamAppId", str(APP_ID_STEAM))  # sans_traduction
@@ -156,4 +157,6 @@ func texte_sauvegarde() -> String:
 		return "Sauvegarde : sur ce PC et dans Steam Cloud (ta progression te suit sur tes autres PC)."
 	if steam_ok:
 		return "Sauvegarde : sur ce PC. Active Steam Cloud dans Steam pour la retrouver sur tes autres PC."
+	if OS.has_feature("mobile"):
+		return "Sauvegarde : sur cet appareil."
 	return "Sauvegarde : sur ce PC (Steam n'est pas lancé)."

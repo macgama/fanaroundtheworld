@@ -5,6 +5,8 @@ extends Control
 
 const LARGEUR_COL := 172
 const H_CARTE := 290
+## Hauteur des cartes : plus basses sur téléphone pour que tout tienne.
+var h_carte := H_CARTE
 const COULEUR_GRATUIT := Color("#4b4596")
 const COULEUR_PREMIUM := Color("#ffb627")
 const COULEUR_SKIN := Color("#ff5d9e")
@@ -25,6 +27,8 @@ var _gauche: Control
 
 
 func _ready() -> void:
+	if Ui.petit_ecran:
+		h_carte = 220
 	Game.actualiser_pass()
 	_data = Game.pass_data
 	var fond := TextureRect.new()
@@ -222,7 +226,7 @@ func _remplir_premium() -> void:
 	parent.move_child(pan, idx)
 	_gauche = pan
 	var v := Ui.vbox(8)
-	pan.add_child(v)
+	pan.add_child(Ui.defilement(v))
 	var l1 := Ui.label("PASS PREMIUM", 30, Ui.JAUNE, true, 6)
 	l1.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	v.add_child(l1)
@@ -233,7 +237,7 @@ func _remplir_premium() -> void:
 	var dernier := PassSaison.recompense(_data, PassSaison.PALIERS, "premium")
 	var skins_dernier: Array = dernier.get("skins", [])
 	img.texture = Game.texture_skin(str(skins_dernier[0]["skin"]) if skins_dernier.size() > 0 else "")
-	img.custom_minimum_size = Vector2(0, 250)
+	img.custom_minimum_size = Vector2(0, 130 if Ui.petit_ecran else 250)
 	img.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	img.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	img.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
@@ -287,7 +291,7 @@ func _entete_vide() -> Control:
 
 func _etiquette_piste(texte: String, couleur: Color, couleur_texte: Color) -> Control:
 	var p := Ui.panneau(couleur, 18, 5)
-	p.custom_minimum_size = Vector2(130, H_CARTE)
+	p.custom_minimum_size = Vector2(130, h_carte)
 	var l := Ui.label(texte, 24, couleur_texte, true, 4 if couleur_texte == Ui.BLANC else 0)
 	l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	l.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
@@ -325,7 +329,7 @@ func _colonne(p: int, pal: int) -> Control:
 func _carte(p: int, piste: String, atteint: bool) -> Control:
 	var r := PassSaison.recompense(_data, p, piste)
 	var b := Button.new()
-	b.custom_minimum_size = Vector2(LARGEUR_COL, H_CARTE)
+	b.custom_minimum_size = Vector2(LARGEUR_COL, h_carte)
 	b.focus_mode = Control.FOCUS_NONE
 	if r.is_empty():
 		b.disabled = true
@@ -416,7 +420,7 @@ func _colonne_bonus() -> Control:
 	ent.custom_minimum_size = Vector2(LARGEUR_COL, 44)
 	v.add_child(ent)
 	var p := Ui.panneau(Ui.VIOLET.darkened(0.2), 18, 4)
-	p.custom_minimum_size = Vector2(LARGEUR_COL, H_CARTE * 2 + 10)
+	p.custom_minimum_size = Vector2(LARGEUR_COL, h_carte * 2 + 10)
 	var vv := Ui.vbox(8)
 	vv.alignment = BoxContainer.ALIGNMENT_CENTER
 	p.add_child(vv)

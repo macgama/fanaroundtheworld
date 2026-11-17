@@ -19,6 +19,10 @@ const OCEAN := Color("#2f8cff")
 const TERRE := Color("#6ee36a")
 
 static var _police_titre: Font
+## Taille de texte minimale (réglée par l'autoload Mobile sur téléphone, 0 sur PC).
+static var taille_mini := 0
+## Vrai sur téléphone (réglé par l'autoload Mobile) : voir `defilement`.
+static var petit_ecran := false
 static var _police_texte: Font
 
 
@@ -98,7 +102,7 @@ static func creer_theme() -> Theme:
 static func label(texte: String, taille := 22, couleur := BLANC, titre := false, contour := 0) -> Label:
 	var l := Label.new()
 	l.text = texte
-	l.add_theme_font_size_override("font_size", taille)
+	l.add_theme_font_size_override("font_size", maxi(taille, taille_mini))
 	l.add_theme_color_override("font_color", couleur)
 	if titre:
 		l.add_theme_font_override("font", police_titre())
@@ -111,7 +115,7 @@ static func label(texte: String, taille := 22, couleur := BLANC, titre := false,
 static func bouton(texte: String, couleur := BLEU, taille := 26) -> Button:
 	var b := Button.new()
 	b.text = texte
-	b.add_theme_font_size_override("font_size", taille)
+	b.add_theme_font_size_override("font_size", maxi(taille, taille_mini))
 	colorer_bouton(b, couleur)
 	b.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
 	return b
@@ -156,6 +160,21 @@ static func ecusson(sigle: String, couleur: Color, couleur2: Color, taille := 56
 	e.c2 = couleur2
 	e.custom_minimum_size = Vector2(taille, taille * 1.1)
 	return e
+
+
+## Sur téléphone, met `enfant` dans une liste qui défile de haut en bas (pour
+## les panneaux trop hauts pour l'écran) ; sur PC, rend `enfant` tel quel.
+static func defilement(enfant: Control) -> Control:
+	if not petit_ecran:
+		return enfant
+	var sc := ScrollContainer.new()
+	sc.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	sc.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	sc.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	enfant.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	enfant.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	sc.add_child(enfant)
+	return sc
 
 
 static func marge(enfant: Control, g := 0, h := 0, d := 0, b := 0) -> MarginContainer:
