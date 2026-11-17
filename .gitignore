@@ -33,3 +33,6 @@ desktop.ini
 
 # copies temporaires des extensions créées par Godot sous Windows
 ~*.dll
+
+# préréglage Android partagé (copié en export_presets.cfg par le workflow)
+!tools/android/export_presets.cfg
