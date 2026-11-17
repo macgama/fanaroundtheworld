@@ -805,7 +805,10 @@ func _afficher_fiche() -> void:
 		var hp := Ui.hbox(6)
 		if cout > 0:
 			hp.add_child(Ui.icone("jeton", 22))
-		hp.add_child(Ui.label(str(cout) if cout > 0 else "Gratuit", 18, Ui.JAUNE if cout <= Game.jetons else Ui.ROUGE, true))
+		var prix := str(cout) if cout > 0 else "Gratuit"
+		if mode == "stade" and dist >= 30:
+			prix = tr("dès %d") % cout  # le prix final dépend du transport choisi
+		hp.add_child(Ui.label(prix, 18, Ui.JAUNE if cout <= Game.jetons else Ui.ROUGE, true))
 		vb.add_child(hp)
 		for c in vb.find_children("*", "Control", true, false):  # sans_traduction
 			(c as Control).mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -818,7 +821,7 @@ func _afficher_fiche() -> void:
 		grille.add_child(b)
 	v.add_child(grille)
 	if mode_suivi == "stade":
-		var trajet := tr("Trajet : %s km") % _milliers(int(dist)) if dist >= 30 else tr("Tu es déjà sur place")
+		var trajet := tr("Déplacement de %s km à organiser") % _milliers(int(dist)) if dist >= 30 else tr("Tu es déjà sur place")
 		v.add_child(Ui.label(trajet + tr(" · gains ×%s") % str(Game.MODES_SUIVI[mode_suivi]["gain"]), 17, Ui.GRIS))
 	else:
 		v.add_child(Ui.label(tr("Pas de trajet · gains ×%s · pas de tampon") % str(Game.MODES_SUIVI[mode_suivi]["gain"]), 17, Ui.GRIS))
@@ -830,7 +833,7 @@ func _afficher_fiche() -> void:
 	go.disabled = not FicheMatch.jouable(f) or cout_final > Game.jetons
 	if not FicheMatch.jouable(f):
 		go.text = FicheMatch.STATUTS.get(statut, "Indisponible")
-	go.pressed.connect(func(): _partir(f, cout_final))
+	go.pressed.connect(func(): _partir(f, cout_final, dist))
 	v.add_child(go)
 
 
@@ -1023,13 +1026,17 @@ func _sur_pronos_resolus(liste: Array) -> void:
 	tw.tween_callback(toast.queue_free)
 
 
-func _partir(f: Dictionary, cout: int) -> void:
-	if not Game.depenser(cout):
-		return
+func _partir(f: Dictionary, cout: int, dist: float) -> void:
 	var p := {
 		"match_id": f["id"], "camp": camp, "mode": mode_suivi, "cout": cout,
 		"niveau": niveau, "continent": continent, "pays": pays,
 	}
+	if mode_suivi == "stade" and dist >= 30:
+		# Le fan club choisit son transport et son itinéraire : on paie au départ.
+		Game.aller(Game.SCENE_DEPLACEMENT, p)
+		return
+	if not Game.depenser(cout):
+		return
 	if mode_suivi == "stade":
 		# Le voyage est fait (tampon du stade) : le match est suivi, le billet n'est plus remboursé.
 		Game.noter_suivi_favori(f["m"], camp, mode_suivi)

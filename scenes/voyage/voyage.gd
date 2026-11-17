@@ -42,13 +42,19 @@ func _ready() -> void:
 	add_child(bandeau)
 	var v := Ui.vbox(4)
 	bandeau.add_child(v)
-	var t := Ui.label(tr("En route vers %s") % _fiche["stade"]["nom"], 40, Ui.JAUNE, true, 8)
+	var titre := tr("Arrivés à %s") if p.get("arrive", false) else tr("En route vers %s")
+	var t := Ui.label(titre % _fiche["stade"]["nom"], 40, Ui.JAUNE, true, 8)
 	t.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	v.add_child(t)
 	_info = Ui.label(tr("%s – %s · %d km") % [_fiche["dom"]["nom"], _fiche["ext"]["nom"], int(dist)], 22, Ui.BLANC)
 	_info.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	v.add_child(_info)
 
+	if p.get("arrive", false):
+		# Le fan club arrive d'un déplacement organisé : tampon et bilan tout de suite.
+		carte.route_avance = 1.0
+		_arrive.call_deferred()
+		return
 	var duree := clampf(1.5 + dist / 1500.0, 1.5, 4.5)
 	var tw := create_tween()
 	tw.tween_method(func(a: float):
@@ -106,6 +112,10 @@ func _arrive() -> void:
 		var pr := Ui.label("Prime de collection à réclamer sur la carte (compteur de tampons)", 22, Ui.BLANC, true, 6)
 		pr.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		bas.add_child(pr)
+	var bilan: Variant = Game.params.get("bilan")
+	if bilan is Dictionary:
+		bas.offset_top = -330
+		bas.add_child(_ligne_bilan(bilan))
 	var b := Ui.bouton("ENTRER DANS LE STADE", Ui.VERT, 36)
 	Ui.colorer_bouton(b, Ui.VERT, true)
 	b.custom_minimum_size = Vector2(560, 96)
@@ -114,6 +124,23 @@ func _arrive() -> void:
 	bas.add_child(b)
 	bas.modulate.a = 0.0
 	create_tween().tween_property(bas, "modulate:a", 1.0, 0.3).set_delay(0.7)
+
+
+## Résumé du déplacement : ferveur, arrivée à l'heure, primes, bonus des duels.
+func _ligne_bilan(b: Dictionary) -> Control:
+	var pan := Ui.panneau(Ui.NUIT, 20, 5)
+	var v := Ui.vbox(4)
+	pan.add_child(v)
+	var t := tr("Ferveur du convoi : %d / 100") % int(b["ferveur"])
+	t += tr(" · arrivés à l'heure") if b["a_l_heure"] else tr(" · arrivés pile pour le coup d'envoi (-%d)") % Deplacement.MALUS_RETARD
+	var l1 := Ui.label(t, 22, Ui.JAUNE, true, 5)
+	l1.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	v.add_child(l1)
+	var l2 := Ui.label(tr("Prime du déplacement : +%d Jetons · +%d XP PASS · duels de ce match aujourd'hui ×%s") % [
+		int(b["jetons"]), int(b["xp_pass"]), str(b["mult"]).replace(".", ",")], 18, Ui.BLANC)
+	l2.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	v.add_child(l2)
+	return pan
 
 
 func _secousse() -> void:

@@ -907,7 +907,7 @@ func _finir() -> void:
 		[Game.libelle_rejeu(g["part"]), "+%d" % g["jetons"]],
 		["XP du fan club", "+%d" % g["xp"]],
 		["XP du PASS", "+%d" % g["xp_pass"]],
-	] + FinDuel.ligne_popularite(g) + FinDuel.lignes_evenement(g["evenement"]) + FinDuel.ligne_tournoi(g["tournoi"]) + FinDuel.ligne_ligue(g["ligue"]), Game.SCENE_SALON if en_ligne and Reseau.connecte() else Game.SCENE_ARENE)
+	] + FinDuel.ligne_deplacement(g["mult_depl"], g["bonus_depl"]) + FinDuel.ligne_popularite(g) + FinDuel.lignes_evenement(g["evenement"]) + FinDuel.ligne_tournoi(g["tournoi"]) + FinDuel.ligne_ligue(g["ligue"]), Game.SCENE_SALON if en_ligne and Reseau.connecte() else Game.SCENE_ARENE)
 
 
 # ================================================================== classes

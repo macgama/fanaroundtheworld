@@ -288,6 +288,30 @@ class Icone extends Control:
 			"direct":
 				draw_circle(c, s * 0.3, Ui.CONTOUR)
 				draw_circle(c, s * 0.22, Ui.ROUGE)
+			"car":
+				var r3 := Rect2(c - Vector2(s * 0.46, s * 0.3), Vector2(s * 0.92, s * 0.5))
+				draw_style_box(Ui.boite(Ui.ROSE, int(s * 0.12), int(maxf(2.0, lw * 0.8))), r3)
+				for k in 3:
+					draw_rect(Rect2(r3.position + Vector2(s * (0.08 + 0.27 * k), s * 0.08), Vector2(s * 0.2, s * 0.16)), Ui.BLANC)
+				draw_circle(c + Vector2(-s * 0.24, s * 0.22), s * 0.12, Ui.CONTOUR)
+				draw_circle(c + Vector2(s * 0.24, s * 0.22), s * 0.12, Ui.CONTOUR)
+			"train":
+				var r4 := Rect2(c - Vector2(s * 0.3, s * 0.44), Vector2(s * 0.6, s * 0.72))
+				draw_style_box(Ui.boite(Ui.BLEU, int(s * 0.16), int(maxf(2.0, lw * 0.8))), r4)
+				draw_rect(Rect2(r4.position + Vector2(s * 0.1, s * 0.1), Vector2(s * 0.4, s * 0.22)), Ui.BLANC)
+				draw_circle(c + Vector2(-s * 0.15, s * 0.12), s * 0.06, Ui.JAUNE)
+				draw_circle(c + Vector2(s * 0.15, s * 0.12), s * 0.06, Ui.JAUNE)
+				draw_line(c + Vector2(-s * 0.2, s * 0.3), c + Vector2(-s * 0.34, s * 0.48), Ui.CONTOUR, lw)
+				draw_line(c + Vector2(s * 0.2, s * 0.3), c + Vector2(s * 0.34, s * 0.48), Ui.CONTOUR, lw)
+			"avion":
+				var corps := PackedVector2Array([c + Vector2(-s * 0.46, s * 0.04), c + Vector2(s * 0.36, -s * 0.06), c + Vector2(s * 0.48, 0),
+					c + Vector2(s * 0.36, s * 0.06), c + Vector2(-s * 0.46, s * 0.12)])
+				var ailes := PackedVector2Array([c + Vector2(-s * 0.05, 0), c + Vector2(s * 0.12, 0), c + Vector2(-s * 0.12, s * 0.42), c + Vector2(-s * 0.24, s * 0.42)])
+				var ailes2 := PackedVector2Array([c + Vector2(-s * 0.05, 0), c + Vector2(s * 0.12, 0), c + Vector2(-s * 0.12, -s * 0.38), c + Vector2(-s * 0.24, -s * 0.38)])
+				draw_colored_polygon(ailes, Ui.CONTOUR)
+				draw_colored_polygon(ailes2, Ui.CONTOUR)
+				draw_colored_polygon(corps, Ui.BLANC)
+				draw_polyline(corps + PackedVector2Array([corps[0]]), Ui.CONTOUR, lw * 0.7, true)
 
 	func _ovale(col: Color) -> StyleBoxFlat:
 		var b := StyleBoxFlat.new()

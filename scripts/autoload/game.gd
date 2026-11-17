@@ -19,6 +19,7 @@ const FICHIER_CLOUD := "sauvegarde.json"
 const SCENE_TITRE := "res://scenes/main/main.tscn"
 const SCENE_CARTE := "res://scenes/carte/carte.tscn"
 const SCENE_VOYAGE := "res://scenes/voyage/voyage.tscn"
+const SCENE_DEPLACEMENT := "res://scenes/deplacement/deplacement.tscn"
 const SCENE_TRIBUNE := "res://scenes/tribune/tribune.tscn"
 const SCENE_DUEL := "res://scenes/duel/duel.tscn"
 const SCENE_ARENE := "res://scenes/arene/arene.tscn"
@@ -99,6 +100,9 @@ var sauve_le := 0
 var nb_evenements := 0
 ## Tournoi des fan clubs du week-end (règles dans Tournoi, réseau dans EnLigne).
 var tournoi: Dictionary = Tournoi.vide()
+## Dernier déplacement fait (voir Deplacement) : {match, jour, mult, ferveur}.
+## Ses Jetons de duel sont multipliés par « mult » le jour même.
+var deplacement: Dictionary = {}
 ## Ligue des tribunes (saison du mois, scripts/jeu/ligue.gd).
 var ligue: Dictionary = Ligue.vide()
 ## Soirs de match : buts déjà récompensés et fil des buts, par match (SoireeMatch).
@@ -108,7 +112,7 @@ var _scores_favoris: Dictionary = {}
 
 ## Où suivre le match. Au stade : billet + trajet, tampon du stade, plus de Jetons.
 const MODES_SUIVI := {
-	"stade": {"titre": "Au stade", "texte": "Billet + trajet · tampon du stade", "gain": 1.5, "billet": 20},
+	"stade": {"titre": "Au stade", "texte": "Billet + déplacement · tampon", "gain": 1.5, "billet": 20},
 	"ecran": {"titre": "Écran géant", "texte": "Fan zone de la ville", "gain": 1.2, "billet": 8},
 	"pub": {"titre": "Au pub", "texte": "Avec les supporters du coin", "gain": 1.0, "billet": 4},
 	"maison": {"titre": "À la maison", "texte": "Gratuit, entre amis", "gain": 0.6, "billet": 0},
@@ -160,14 +164,14 @@ func _outils_de_test() -> void:
 		if args.has("continent"):
 			p = {"niveau": "continent", "continent": args["continent"]}
 		if args.has("match"):
-			p = {"match_id": args["match"], "camp": "home", "mode": args.get("mode", "stade"), "cout": 0}
+			p = {"match_id": args["match"], "camp": args.get("camp", "home"), "mode": args.get("mode", "stade"), "cout": 0}
 			if args.has("auto"):
 				p["auto"] = true  # Arène / Poussée : ton camp joue tout seul (démo)
 			if args.has("chant"):
 				p["chant"] = ChantClub.par_defaut()  # duel : essayer le chant par défaut
 			if args.has("simuler"):
 				p["simuler"] = true  # soir de match : buts simulés (démo, captures)
-		var scenes := {"carte": SCENE_CARTE, "voyage": SCENE_VOYAGE, "tribune": SCENE_TRIBUNE, "duel": SCENE_DUEL,
+		var scenes := {"carte": SCENE_CARTE, "voyage": SCENE_VOYAGE, "deplacement": SCENE_DEPLACEMENT, "tribune": SCENE_TRIBUNE, "duel": SCENE_DUEL,
 			"arene": SCENE_ARENE, "poussee": SCENE_POUSSEE,
 			"pronos": SCENE_PRONOS, "missions": SCENE_MISSIONS, "favoris": SCENE_FAVORIS, "club": SCENE_CLUB, "creation": SCENE_CREATION_CLUB, "chant": SCENE_CHANT, "buvette": SCENE_BUVETTE, "boulots": SCENE_BOULOTS, "speaker": SCENE_SPEAKER, "tifo": SCENE_TIFO,
 			"salon": SCENE_SALON, "collection": SCENE_COLLECTION, "classement": SCENE_CLASSEMENT, "pass": SCENE_PASS,
@@ -182,6 +186,9 @@ func _outils_de_test() -> void:
 				p["auto"] = true
 			p["jeu"] = args.get("jeu", "duel")  # jeu lancé tout seul par l'hôte en test
 		aller.call_deferred(scenes.get(args["scene"], SCENE_TITRE), p)
+	if args.has("depuis"):
+		var ll: PackedStringArray = str(args["depuis"]).split(",")  # --depuis=lon,lat : point de départ du fan club
+		position_club = {"nom": "Test", "lon": float(ll[0]), "lat": float(ll[1])}  # sans_traduction
 	if args.has("xp-pass"):
 		xp_pass = int(args["xp-pass"])  # captures et tests du PASS
 	if args.has("premium"):
@@ -228,10 +235,51 @@ func cout_suivi(mode: String, distance_km: float) -> int:
 	return c
 
 
+## Trajet le moins cher (car ou train, cagnotte du club comprise) : prix affiché « dès ».
 func cout_trajet(distance_km: float) -> int:
-	if distance_km < 30.0:
-		return 0
-	return clampi(int(round(distance_km / 120.0)) + 5, 5, 80)
+	return Deplacement.cout_min(distance_km, convoi().size())
+
+
+# ---------------------------------------------------------------- déplacements
+
+## Les FANZZY du convoi : les membres du fan club, ou la tribune s'il n'est pas encore créé.
+func convoi() -> Array:
+	var res: Array = []
+	for id in club.get("membres", []):
+		if not fanzzy_par_id(str(id)).is_empty() and not str(id) in res:
+			res.append(str(id))
+	for id in equipe:
+		if not fanzzy_par_id(str(id)).is_empty() and not str(id) in res:
+			res.append(str(id))
+	return res
+
+
+func familles_convoi() -> Array:
+	var res: Array = []
+	for id in convoi():
+		res.append(str(fanzzy_par_id(id).get("famille", "")))
+	return res
+
+
+## Arrivée au stade : verse la prime du déplacement et garde le bonus de duel du jour.
+func finir_deplacement(match_id: String, b: Dictionary) -> Dictionary:
+	var r := b.duplicate()
+	jetons += int(b["jetons"])
+	xp += int(b["xp"])
+	r["xp_pass"] = gagner_xp_pass(int(b["xp_pass"]))
+	deplacement = {"match": match_id, "jour": Time.get_date_string_from_system(), "mult": float(b["mult"]), "ferveur": int(b["ferveur"])}
+	Succes.compter(stats, "deplacement", str(b.get("transport", "")), 1)
+	sauver()
+	return r
+
+
+## Multiplicateur des Jetons de duel sur ce match (×1 sans déplacement le jour même).
+func bonus_deplacement(match_id: String) -> float:
+	if match_id == "" or str(deplacement.get("match", "")) != match_id:
+		return 1.0
+	if str(deplacement.get("jour", "")) != Time.get_date_string_from_system():
+		return 1.0
+	return maxf(1.0, float(deplacement.get("mult", 1.0)))
 
 
 func depenser(n: int) -> bool:
@@ -1291,6 +1339,7 @@ func sauver() -> void:
 		"stats": stats,
 		"sauve_le": sauve_le,
 		"tournoi": tournoi,
+		"deplacement": deplacement,
 		"ligue": ligue,
 		"soirees": soirees,
 	}
@@ -1363,6 +1412,8 @@ func _appliquer(d: Dictionary) -> void:
 	stats = Succes.reparer_stats(d.get("stats", null))
 	sauve_le = int(d.get("sauve_le", 0))
 	tournoi = Tournoi.reparer(d.get("tournoi", null))
+	var dp: Variant = d.get("deplacement", {})
+	deplacement = dp if dp is Dictionary else {}
 	ligue = Ligue.reparer(d.get("ligue", null))
 	soirees = SoireeMatch.reparer(d.get("soirees", null))
 	# Un FANZZY retiré du catalogue ne doit pas casser la tribune.
@@ -1406,6 +1457,7 @@ func reinitialiser() -> void:
 	stats = {}
 	sauve_le = 0
 	tournoi = Tournoi.vide()
+	deplacement = {}
 	ligue = Ligue.vide()
 	soirees = SoireeMatch.vide()
 	equipe = equipe_par_defaut()

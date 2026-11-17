@@ -89,7 +89,19 @@ func _ready() -> void:
 	Game.jetons = 999  # le stade peut coûter cher : on veut voir le voyage
 	_appuyer("C'EST PARTI")
 	await _attendre(0.5)
-	_verifier(Tutoriel.etape in ["voyage", "tribune"], "étape voyage ou tribune (%s)" % Tutoriel.etape)
+	_verifier(Tutoriel.etape in ["deplacement", "voyage", "tribune"], "étape déplacement, voyage ou tribune (%s)" % Tutoriel.etape)
+	if Tutoriel.etape == "deplacement":
+		await _capture("7-deplacement")
+		_appuyer("EN ROUTE")
+		# en route : premier choix possible à chaque événement, jusqu'à l'arrivée
+		for _i in 160:
+			if _scene() == Game.SCENE_VOYAGE:
+				break
+			var choix := Tutoriel._trouver("1. ") as Button
+			if choix and not choix.disabled:
+				choix.pressed.emit()
+			await _attendre(0.25)
+		_verifier(Tutoriel.etape == "voyage", "étape voyage après le déplacement (%s)" % Tutoriel.etape)
 	if Tutoriel.etape == "voyage":
 		for _i in 40:
 			if Tutoriel._trouver("ENTRER DANS LE STADE"):
