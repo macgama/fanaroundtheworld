@@ -9,8 +9,8 @@ extends RefCounted
 ## lassé = rien, et la série repart de zéro.
 ## À 30 s, la mi-temps du vrai match : c'est le rush, commandes plus
 ## grosses (donc mieux payées) et patience plus courte.
-## Au-delà de SERVICES_PLEIN_TARIF services dans la journée, la paye est
-## divisée par deux (le petit boulot complète les duels sans les remplacer).
+## Au-delà de SERVICES_PLEIN_TARIF services dans la journée, la paye baisse (÷ 2, puis ÷ 4) :
+## voir ListeBoulots.part_du_jour.
 
 const DUREE := 60.0
 const DEBUT_RUSH := 30.0
@@ -27,7 +27,7 @@ const ARTICLES_PAR_JETON_EN_PLUS := 3   # +1 Jeton de salaire par tranche de 3 a
 const POURBOIRE_MAX := 1
 const SERIE_BONUS := 5          # +1 Jeton toutes les 5 commandes justes d'affilée
 const XP_PAR_CLIENT := 2
-const SERVICES_PLEIN_TARIF := 3
+const SERVICES_PLEIN_TARIF := ListeBoulots.PLEIN_TARIF
 
 var rng := RandomNumberGenerator.new()
 
@@ -105,6 +105,4 @@ static func paye(articles: Dictionary, reste: float, serie: int) -> Dictionary:
 
 ## Paye du service entier, selon le nombre de services déjà faits aujourd'hui.
 static func paye_finale(brut: int, services_du_jour: int) -> int:
-	if services_du_jour >= SERVICES_PLEIN_TARIF:
-		return int(ceil(brut / 2.0))
-	return brut
+	return ListeBoulots.paye_du_jour(brut, services_du_jour)

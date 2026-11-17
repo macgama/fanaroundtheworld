@@ -39,12 +39,14 @@ const PRIX := "7,99 €"
 
 ## XP de PASS hors missions (valeurs de départ, à régler en test).
 ## Un duel rejoué sur le même match le même jour suit la règle des Jetons (100 %, 50 %, 25 %, 0).
-const XP_DUEL := 50
-const XP_DUEL_PERF := 25      # selon la performance (0 à 1)
-const XP_DUEL_GAGNE := 25
-const XP_NOUVEAU_STADE := 200
-const XP_PRONO_BON := 30
-const XP_PRONO_EXACT := 100
+## XP de PASS des actions : réglées le 17 nov. 2026 pour qu'un joueur régulier (1 h par jour)
+## finisse le PASS vers avril, pas en trois mois (docs/equilibrage.md).
+const XP_DUEL := 12
+const XP_DUEL_PERF := 6      # selon la performance (0 à 1)
+const XP_DUEL_GAGNE := 6
+const XP_NOUVEAU_STADE := 100
+const XP_PRONO_BON := 15
+const XP_PRONO_EXACT := 50
 
 ## Types d'objets d'apparence et leur libellé.
 const TYPES_OBJETS := {

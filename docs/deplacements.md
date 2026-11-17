@@ -32,8 +32,9 @@ organise son déplacement. Règles : `scripts/jeu/deplacement.gd` (classe
 | Petites routes / Trains régionaux | ×1,12 | ×0,6 | ×1,45 | 2 |
 | Route panoramique / Ligne touristique | ×1,3 | ×1,1 | ×1,2 | 2 + l'étape |
 
-L'avion ne fait que du direct. Prix de base = ancien barème du trajet
-(`distance / 120 + 5`, entre 5 et 80), minimum 3 Jetons.
+L'avion ne fait que du direct. Prix de base : `distance / 80 + 5`, entre 5 et 150
+(avant le 17 nov. 2026 : `distance / 120 + 5`, plafond 80 ; voir `docs/equilibrage.md`),
+minimum 3 Jetons.
 
 **Cagnotte du club** : -3 % sur le trajet par membre au-delà de 3, jusqu'à -30 %.
 La fiche du match affiche « dès X » (trajet le moins cher).
@@ -55,7 +56,7 @@ milieu du trajet, un peu à l'écart de la route ; sinon « Halte panoramique »
 ## Récompenses à l'arrivée
 
 - Jetons : ferveur / 4 (+ Jetons gagnés en route : quiz, radio, carte postale…).
-- XP du PASS : ferveur × 2. XP du fan club : 20 + ferveur / 5.
+- XP du PASS : ferveur (× 2 avant l’équilibrage du 17 nov. 2026). XP du fan club : 20 + ferveur / 5.
 - **Bonus des duels** : les Jetons des duels de ce match, le jour même, sont
   multipliés par ×1,00 à ×1,20 selon la ferveur (ligne « Ferveur du
   déplacement » dans le panneau de fin, dans les trois modes). Le bonus

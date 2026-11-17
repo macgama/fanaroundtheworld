@@ -193,7 +193,7 @@ func _construire_infos() -> void:
 		sep.custom_minimum_size = Vector2(0, 2)
 		_infos.add_child(sep)
 	_infos.add_child(Ui.espace())
-	var prochain := Ui.label(tr("Niveau %d : +%d places pour recruter.") % [Game.niveau() + 1, FanClub.PLACES_PAR_NIVEAU], 18, Ui.GRIS)
+	var prochain := Ui.label(tr("Niveau %d : +%d places pour recruter.") % [Game.niveau() + 1, FanClub.places(Game.niveau() + 1) - FanClub.places(Game.niveau())], 18, Ui.GRIS)
 	prochain.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_infos.add_child(prochain)
 	var barre := ProgressBar.new()

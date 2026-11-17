@@ -34,10 +34,10 @@ const SEMAINE_S := 604800
 
 ## Paliers de récompense selon les points (le plus haut atteint).
 const PALIERS := [
-	{"points": 28, "titre": "Tribune de légende", "jetons": 150, "xp_pass": 400},
-	{"points": 20, "titre": "Tribune en feu", "jetons": 100, "xp_pass": 300},
-	{"points": 12, "titre": "Tribune solide", "jetons": 60, "xp_pass": 200},
-	{"points": 5, "titre": "Tribune engagée", "jetons": 30, "xp_pass": 100},
+	{"points": 28, "titre": "Tribune de légende", "jetons": 150, "xp_pass": 200},
+	{"points": 20, "titre": "Tribune en feu", "jetons": 100, "xp_pass": 150},
+	{"points": 12, "titre": "Tribune solide", "jetons": 60, "xp_pass": 100},
+	{"points": 5, "titre": "Tribune engagée", "jetons": 30, "xp_pass": 50},
 ]
 ## Bonus de classement : seulement avec au moins CLUBS_MIN_BONUS clubs classés.
 const CLUBS_MIN_BONUS := 10

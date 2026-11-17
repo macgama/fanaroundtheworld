@@ -45,7 +45,7 @@ func _tester_prix() -> void:
 	_verifier(is_equal_approx(Deplacement.reduction(3), 0.0) and is_equal_approx(Deplacement.reduction(30), Deplacement.REDUCTION_MAX), "réduction de 0 à 30 %")
 	_verifier(Deplacement.cout(40.0, "car", "eco", 30) >= Deplacement.PRIX_MIN, "prix minimum")
 	_verifier(Deplacement.cout_min(600.0, 3) == eco, "le prix « dès » est le moins cher")
-	_verifier(Deplacement.cout_base(600.0) == 10, "barème de base inchangé")
+	_verifier(Deplacement.cout_base(600.0) == 13 and Deplacement.cout_base(20000.0) == Deplacement.COUT_BASE_MAX, "barème de base (600 km : 13, plafond %d)" % Deplacement.COUT_BASE_MAX)
 	_verifier(Deplacement.duree(600.0, "train", "direct") < Deplacement.duree(600.0, "car", "direct"), "le train est plus rapide")
 	_verifier(Deplacement.duree(600.0, "car", "eco") > Deplacement.duree(600.0, "car", "direct"), "les petites routes sont plus longues")
 	_verifier(Deplacement.duree_texte(45) == "45 min" and Deplacement.duree_texte(120) == "2 h" and Deplacement.duree_texte(95) == "1 h 35", "durées lisibles")
@@ -106,7 +106,7 @@ func _tester_bilan() -> void:
 	e["jetons"] = 10
 	var b := Deplacement.bilan(e)
 	_verifier(b["a_l_heure"] and b["ferveur"] == 80, "à l'heure : pas de malus")
-	_verifier(b["jetons"] == 30 and b["xp_pass"] == 160, "prime : jetons des événements + ferveur / 4")
+	_verifier(b["jetons"] == 30 and b["xp_pass"] == 80, "prime : jetons des événements + ferveur / 4")
 	_verifier(is_equal_approx(b["mult"], 1.16), "bonus duel ×1,16 (%s)" % str(b["mult"]))
 	e["retard"] = Deplacement.MARGE_RETARD + 5
 	b = Deplacement.bilan(e)

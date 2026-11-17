@@ -25,11 +25,11 @@ montées et descentes, calée sur les vrais week-ends de match.
 
 | Division | Jetons | XP PASS |
 |---|---|---|
-| 1 · Ligue Étoile | 200 | 500 |
-| 2 · Ligue Or | 150 | 400 |
-| 3 · Ligue Argent | 110 | 320 |
-| 4 · Ligue Bronze | 80 | 260 |
-| 5 · Ligue Espoir | 50 | 200 |
+| 1 · Ligue Étoile | 200 | 250 |
+| 2 · Ligue Or | 150 | 200 |
+| 3 · Ligue Argent | 110 | 160 |
+| 4 · Ligue Bronze | 80 | 130 |
+| 5 · Ligue Espoir | 50 | 100 |
 
 Champion de poule : +100 Jetons. Montée : +50 Jetons. Jamais de skin. En ligne, le jeu attend le rang final du
 serveur avant de verser.

@@ -41,11 +41,11 @@ const NOMS_DIVISIONS := ["Ligue Étoile", "Ligue Or", "Ligue Argent", "Ligue Bro
 const COULEURS_DIVISIONS := ["#ffd23f", "#ffb02e", "#c9d3e6", "#d08a4e", "#3ddc84"]
 ## Récompense de fin de saison selon la division (index 0 = division 1).
 const RECOMPENSES := [
-	{"jetons": 200, "xp_pass": 500},
-	{"jetons": 150, "xp_pass": 400},
-	{"jetons": 110, "xp_pass": 320},
-	{"jetons": 80, "xp_pass": 260},
-	{"jetons": 50, "xp_pass": 200},
+	{"jetons": 200, "xp_pass": 250},
+	{"jetons": 150, "xp_pass": 200},
+	{"jetons": 110, "xp_pass": 160},
+	{"jetons": 80, "xp_pass": 130},
+	{"jetons": 50, "xp_pass": 100},
 ]
 const BONUS_CHAMPION := 100
 const BONUS_MONTEE := 50
