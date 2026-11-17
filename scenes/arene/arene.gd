@@ -1344,11 +1344,11 @@ class HudBas extends Node2D:
 		draw_string_outline(f, Vector2(x + 52, 32), t, HORIZONTAL_ALIGNMENT_LEFT, -1, 24, 8, Ui.CONTOUR)
 		draw_string(f, Vector2(x + 52, 32), t, HORIZONTAL_ALIGNMENT_LEFT, -1, 24, Ui.JAUNE if pret else Ui.BLANC)
 		if "roulade" in arene.actions:
-			var tr := "roulade prête" if j.recharge_roulade <= 0.0 else tr("roulade %.1f s") % j.recharge_roulade
+			var txt_roulade := tr("roulade prête") if j.recharge_roulade <= 0.0 else tr("roulade %.1f s") % j.recharge_roulade
 			# après le nom du FANZZY (les noms longs le chevauchaient)
 			var xr := maxf(x + 52, f.get_string_size(str(j.z.get("nom", "")).to_upper(), HORIZONTAL_ALIGNMENT_LEFT, -1, 26).x + 24)
-			draw_string_outline(f, Vector2(xr, -10), tr, HORIZONTAL_ALIGNMENT_LEFT, -1, 20, 6, Ui.CONTOUR)
-			draw_string(f, Vector2(xr, -10), tr, HORIZONTAL_ALIGNMENT_LEFT, -1, 20, Ui.BLANC if j.recharge_roulade <= 0.0 else Ui.GRIS)
+			draw_string_outline(f, Vector2(xr, -10), txt_roulade, HORIZONTAL_ALIGNMENT_LEFT, -1, 20, 6, Ui.CONTOUR)
+			draw_string(f, Vector2(xr, -10), txt_roulade, HORIZONTAL_ALIGNMENT_LEFT, -1, 20, Ui.BLANC if j.recharge_roulade <= 0.0 else Ui.GRIS)
 		var c: float = arene.charge_tir()
 		if c > 0.0:
 			draw_rect(Rect2(0, 48, 120 * c, 8), Ui.JAUNE if c >= 1.0 else Ui.BLANC)

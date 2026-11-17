@@ -151,7 +151,10 @@ func _remplir() -> void:
 
 func _remplir_carnet() -> void:
 	var lieux := Game.lieux_visites()
-	_titre.text = tr("CARNET DE VOYAGE · %d stade%s · %d pays") % [Game.tampons.size(), "" if Game.tampons.size() == 1 else "s", lieux["pays"].size()]
+	var nb_st := Game.tampons.size()
+	var nb_pays: int = lieux["pays"].size()
+	_titre.text = " · ".join([tr("CARNET DE VOYAGE"), tr("1 stade") if nb_st == 1 else tr("%d stades") % nb_st,
+		tr("1 pays") if nb_pays == 1 else tr("%d pays") % nb_pays])
 	if Game.tampons.is_empty():
 		var vide := Ui.label("Aucun stade tamponné pour l'instant.\nChoisis un match sur la carte et va le voir « Au stade » : le stade du club qui reçoit rejoint ton carnet.", 24, Ui.GRIS)
 		vide.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
@@ -168,7 +171,7 @@ func _remplir_carnet() -> void:
 	var pays := groupes.keys()
 	pays.sort_custom(func(a, b): return groupes[a].size() > groupes[b].size() or (groupes[a].size() == groupes[b].size() and str(a) < str(b)))
 	for p in pays:
-		var nom := Geo.nom_pays(p) if p != "" else "Ailleurs"
+		var nom := Geo.nom_pays(p) if p != "" else tr("Ailleurs")
 		_gauche.add_child(Ui.label("%s · %d" % [nom, groupes[p].size()], 26, Ui.JAUNE, true, 6))
 		var flux := HFlowContainer.new()
 		flux.add_theme_constant_override("h_separation", 14)
@@ -318,7 +321,7 @@ func _ligne_serie(s: Dictionary) -> Control:
 		l.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 		h.add_child(l)
 	elif prete:
-		var b := Ui.bouton("+%d J" % s["prime"], Ui.JAUNE, 26)
+		var b := Ui.bouton(tr("+%d Jetons") % s["prime"], Ui.JAUNE, 26)
 		Ui.colorer_bouton(b, Ui.JAUNE, true)
 		b.custom_minimum_size = Vector2(150, 64)
 		b.size_flags_vertical = Control.SIZE_SHRINK_CENTER

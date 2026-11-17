@@ -278,6 +278,16 @@ static func skins_de(etat: Dictionary, fanzzy_id: String) -> Array:
 
 
 ## Phrase courte qui résume un gain (annonce à l'écran).
+## Nom d'un objet, d'un skin ou d'un chapitre du PASS dans la langue du jeu :
+## « Nom du FANZZY · Thème » est traduit morceau par morceau (les noms des
+## FANZZY restent en français, voir data/langues/en/pass_objets.json).
+static func nom_texte(nom: Variant) -> String:
+	var morceaux: Array = []
+	for m in str(nom).split(" · "):
+		morceaux.append(Trad.t(m))
+	return " · ".join(morceaux)
+
+
 static func resume(g: Dictionary) -> String:
 	var morceaux: Array = []
 	if g["fanzzy"].size() > 0:
@@ -287,7 +297,7 @@ static func resume(g: Dictionary) -> String:
 	if g["objets"].size() > 0:
 		morceaux.append(Trad.t("%d objet%s") % [g["objets"].size(), "s" if g["objets"].size() > 1 else ""])
 	if g["titres"].size() > 0:
-		morceaux.append(Trad.t("titre « %s »") % g["titres"][0])
+		morceaux.append(Trad.t("titre « %s »") % nom_texte(g["titres"][0]))
 	if int(g["jetons"]) > 0:
 		morceaux.append(Trad.t("%d Jetons") % int(g["jetons"]))
 	return ", ".join(morceaux)
