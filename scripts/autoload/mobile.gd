@@ -51,7 +51,10 @@ func _ready() -> void:
 	if "--mobile" in args and OS.has_feature("pc"):
 		# essai sur PC : comme un téléphone de la taille de la fenêtre
 		var fenetre := DisplayServer.window_get_size()
-		echelle_menus = clampf(floorf(float(fenetre.x) / fenetre.y / (16.0 / 9.0) * 20.0) / 20.0, 1.0, 1.25)
+		if fenetre.x > 0 and fenetre.y > 0:  # sans écran (tests) : taille 0
+			echelle_menus = clampf(floorf(float(fenetre.x) / fenetre.y / (16.0 / 9.0) * 20.0) / 20.0, 1.0, 1.25)
+		else:
+			echelle_menus = 1.0
 	for a in args:
 		if a.begins_with("--echelle="):  # sans_traduction
 			echelle_menus = float(a.get_slice("=", 1))
@@ -79,6 +82,8 @@ func _ready() -> void:
 ## au-delà, les écrans dessinés pour 1080 lignes débordent).
 func _echelle_ecran() -> float:
 	var ecran := DisplayServer.screen_get_size()
+	if ecran.x <= 0 or ecran.y <= 0:
+		return 1.0
 	var dpi := maxf(DisplayServer.screen_get_dpi(), 96.0)
 	var hauteur_pouces := minf(ecran.x, ecran.y) / dpi
 	var lignes := clampf(1080.0 * hauteur_pouces / 6.0, 864.0, 1080.0)
