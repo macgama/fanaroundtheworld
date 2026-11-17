@@ -4,7 +4,8 @@ extends Node
 ##   xvfb-run -a -s "-screen 0 1920x1080x24" godot --path . --resolution 1920x1080 \
 ##       res://tools/steam/vitrine.tscn -- --hors-ligne --auto --sortie=/chemin/captures
 ##
-## Option « --seule=nom » : ne prend qu'une capture (pour régler un cadrage).
+## Option « --seule=nom » : ne prend qu'une capture (pour régler un cadrage) ;
+## plusieurs noms séparés par des virgules. « --langue=fr|en » choisit la langue.
 ## Une partie « vitrine » est préparée (fan club fondé, niveau 7, stades tamponnés,
 ## album entamé) ; la sauvegarde et le tutoriel du joueur sont remis en place à la fin.
 
@@ -33,7 +34,7 @@ func _ready() -> void:
 	_preparer_partie()
 
 	for c in _captures():
-		if _seule != "" and c["nom"] != _seule:
+		if _seule != "" and not c["nom"] in _seule.split(","):
 			continue
 		Game.aller(c["scene"], c.get("params", {}))
 		await _attendre(0.4)
@@ -63,6 +64,7 @@ func _captures() -> Array:
 	var classique := "vit:classique" if not Donnees.match_par_id("vit:classique").is_empty() else "ex:1"
 	var a_venir := "vit:milan" if not Donnees.match_par_id("vit:milan").is_empty() else "ex:4"
 	var duel := {"match_id": direct, "camp": "home", "mode": "stade", "cout": 0, "auto": true}
+	var soir := {"match_id": direct, "camp": "home", "mode": "maison", "cout": 0, "simuler": true}
 	return [
 		{"nom": "01-duel-ambiance", "scene": Game.SCENE_DUEL, "params": duel, "attente": [12.0, 18.0, 24.0, 32.0, 40.0, 50.0, 60.0]},
 		{"nom": "02-carte-monde", "scene": Game.SCENE_CARTE, "params": {"niveau": "monde"}, "attente": 2.5},
@@ -81,7 +83,42 @@ func _captures() -> Array:
 		{"nom": "12-pronostics", "scene": Game.SCENE_PRONOS, "params": {}, "attente": 1.5},
 		{"nom": "13-missions", "scene": Game.SCENE_MISSIONS, "params": {}, "attente": 1.5},
 		{"nom": "14-accueil", "scene": Game.SCENE_TITRE, "params": {}, "attente": 2.5},
+		# --- soir de match : un vrai match suivi en direct, une ambiance à chaque but
+		{"nom": "15-soir-de-match", "scene": Game.SCENE_SOIREE, "params": soir, "attente": [3.0, 8.0]},
+		{"nom": "15b-soir-but", "scene": Game.SCENE_SOIREE, "params": soir,
+			"action": func(): await _but_soiree(""), "attente": [0.8, 1.6, 3.4]},
+		{"nom": "15c-soir-tifo", "scene": Game.SCENE_SOIREE, "params": soir,
+			"action": func(): await _but_soiree("tifo"), "attente": [2.0, 4.0, 6.0]},
+		{"nom": "15d-soir-chant", "scene": Game.SCENE_SOIREE, "params": soir,
+			"action": func(): await _but_soiree("chant"), "attente": [3.0, 5.5, 8.0]},
+		{"nom": "15e-soir-ola", "scene": Game.SCENE_SOIREE, "params": soir,
+			"action": func(): await _but_soiree("ola"), "attente": [1.5, 3.0]},
+		# --- déplacement à l'extérieur : le convoi en car, ses événements en route
+		{"nom": "16-deplacement", "scene": Game.SCENE_DEPLACEMENT,
+			"params": {"match_id": a_venir, "camp": "away", "mode": "stade", "cout": 0, "auto": true},
+			"attente": [1.0, 3.5, 6.0, 9.0, 12.0, 15.0, 18.0, 22.0]},
+		{"nom": "17-pass", "scene": Game.SCENE_PASS, "params": {}, "attente": 2.0},
+		{"nom": "18-ligue", "scene": Game.SCENE_LIGUE, "params": {}, "attente": 2.0},
+		{"nom": "19-boulots", "scene": Game.SCENE_BOULOTS, "params": {}, "attente": 1.5},
+		{"nom": "20-echarpes", "scene": "res://scenes/echarpes/echarpes.tscn", "params": {}, "attente": [9.0, 15.0, 22.0]},
+		{"nom": "21-ramasseur", "scene": Game.SCENE_RAMASSEUR, "params": {}, "attente": [8.0, 13.0, 18.0, 24.0]},
+		{"nom": "22-tifo", "scene": Game.SCENE_TIFO, "params": {}, "attente": [8.0, 14.0, 20.0, 28.0]},
+		{"nom": "23-speaker", "scene": Game.SCENE_SPEAKER, "params": {}, "attente": [8.0, 14.0, 20.0, 28.0]},
+		{"nom": "24-createur-chant", "scene": Game.SCENE_CHANT, "params": {"auto": true}, "attente": [2.0, 6.0]},
+		{"nom": "25-favoris", "scene": Game.SCENE_FAVORIS, "params": {}, "attente": 1.5},
+		{"nom": "26-classement", "scene": Game.SCENE_CLASSEMENT, "params": {}, "attente": 2.5},
 	]
+
+
+## Soir de match : un but simulé pour nous, puis l'ambiance choisie (vide : rien).
+func _but_soiree(ambiance: String) -> void:
+	await _attendre(1.5)
+	var s: Node = get_tree().current_scene
+	s._simuler_but(true)
+	if ambiance == "":
+		return
+	await _attendre(3.0)
+	s._lancer_ambiance(ambiance)
 
 
 ## Une partie bien avancée, pour montrer tout ce que le jeu propose.
@@ -91,6 +128,8 @@ func _preparer_partie() -> void:
 	Game.equipe = ["TR1", "TR3", "TR34"]
 	Game.skins = {"TR1": "TR1B", "TR3": "TR3C", "TR34": "TR34B"}
 	Game.creer_club(CLUB, FanClub.COULEURS[0], FanClub.COULEURS[2])
+	Game.enregistrer_chant(ChantClub.par_defaut())  # chanté en duel, avec karaoké
+	Game.inscrire_ligue()
 	Game.xp = 6 * 200 + 130  # niveau 7
 	Game.jetons = 1240
 	Game.xp_pass = 2600
