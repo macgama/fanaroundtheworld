@@ -57,7 +57,7 @@ func _ready() -> void:
 		tr("Bon résultat (victoire, nul ou défaite) : +%d Jetons.") % Pronostics.RECOMPENSE_RESULTAT,
 		tr("Score exact : +%d de plus.") % Pronostics.RECOMPENSE_SCORE,
 		tr("Premier but trouvé : +%d.") % Pronostics.RECOMPENSE_PREMIER_BUT,
-		tr("Chaque bon résultat d'affilée ajoute +%d %% à tes gains, jusqu'à ×%s.") % [int(Pronostics.PAS_SERIE * 100), str(Pronostics.MULTI_MAX)],
+		tr("Chaque bon résultat d'affilée ajoute +%d %% à tes gains, jusqu'à ×%s.") % [int(Pronostics.PAS_SERIE * 100), Trad.decimal(Pronostics.MULTI_MAX)],
 		"Rien à miser, rien à perdre : un mauvais prono remet juste la série à zéro.",
 		"Score de fin de match, prolongation comprise, sans les tirs au but. Modifiable jusqu'au coup d'envoi.",
 		tr("%d pronos en attente au maximum.") % Pronostics.MAX_EN_ATTENTE,
@@ -95,16 +95,15 @@ func _remplir() -> void:
 	var multi := Pronostics.multiplicateur(Game.serie_pronos)
 	_serie.text = (tr("%d bons résultats d'affilée · gains ×%s\nMeilleure série : %d") if Game.serie_pronos > 1
 		else tr("%d bon résultat d'affilée · gains ×%s\nMeilleure série : %d")) % [
-		Game.serie_pronos, str(multi), Game.meilleure_serie]
+		Game.serie_pronos, Trad.decimal(multi), Game.meilleure_serie]
 	for c in _liste.get_children():
 		c.queue_free()
 	var attente := Game.pronos.values()
 	attente.sort_custom(func(a, b): return int(a["kickoff"]) < int(b["kickoff"]))
 	_liste.add_child(Ui.label(tr("En attente (%d / %d)") % [attente.size(), Pronostics.MAX_EN_ATTENTE], 28, Ui.BLANC, true, 6))
 	if attente.is_empty():
-		var l := Ui.label("Aucun prono en cours. Ouvre un match à venir sur la carte pour en faire un.", 19, Ui.GRIS)
-		l.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-		_liste.add_child(l)
+		_liste.add_child(Ui.etat_vide("cible", "Aucun prono en cours. Ouvre un match à venir sur la carte pour en faire un.",
+			"Voir les matchs", func(): Game.aller(Game.SCENE_CARTE)))
 	for p in attente:
 		_liste.add_child(_ligne(p))
 	if not Game.pronos_finis.is_empty():

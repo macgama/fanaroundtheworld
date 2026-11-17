@@ -52,7 +52,7 @@ static func enregistrer(gagne: bool, perf: float, fiche: Dictionary, camp: Strin
 static func ligne_deplacement(mult: float, bonus: int) -> Array:
 	if mult <= 1.0 or bonus <= 0:
 		return []
-	return [[Trad.t("Ferveur du déplacement (×%s)") % str(mult).replace(".", ","), Trad.t("+%d Jetons") % bonus]]
+	return [[Trad.t("Ferveur du déplacement (×%s)") % Trad.decimal(mult), Trad.t("+%d Jetons") % bonus]]
 
 
 ## Ligne « Ligue des tribunes » du panneau de fin, ou [] si le duel n'y comptait pas.
@@ -70,7 +70,7 @@ static func ligne_ligue(d: Variant) -> Array:
 static func ligne_tournoi(d: Variant) -> Array:
 	if not d is Dictionary or d.is_empty():
 		return []
-	return [[Trad.t("Tournoi · %s contre %s") % ["victoire" if d["gagne"] else Trad.t("défaite"), Tournoi.nom_texte(d["nom_adv"])], Trad.t("+%d pt%s") % [int(d["pts"]), "" if int(d["pts"]) == 1 else "s"]]]
+	return [[Trad.t("Tournoi · %s contre %s") % [Trad.t("victoire") if d["gagne"] else Trad.t("défaite"), Tournoi.nom_texte(d["nom_adv"])], Trad.t("+%d pt%s") % [int(d["pts"]), "" if int(d["pts"]) == 1 else "s"]]]
 
 
 ## Nom affiché pour la tribune d'en face : le club adverse du tournoi, sinon celle de l'équipe.

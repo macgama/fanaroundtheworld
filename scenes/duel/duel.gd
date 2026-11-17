@@ -377,6 +377,7 @@ func _compte_a_rebours() -> void:
 	add_child(l)
 	for t in ["3", "2", "1", "ALLEZ !"]:
 		l.text = t
+		Ui.ajuster_taille(l, 220, get_viewport_rect().size.x - 120)
 		l.pivot_offset = l.size / 2.0
 		Ui.pop(l, 1.4, 0.3)
 		_jouer("tambour")
@@ -1267,7 +1268,7 @@ class Decor extends Control:
 		while x < size.x:
 			var col: Color = [Ui.ROSE, Ui.JAUNE, Ui.BLEU, Ui.VERT, Ui.VIOLET][i % 5]
 			draw_rect(Rect2(x, r.position.y - 26, 300, 26), col)
-			draw_string(f, Vector2(x + 14, r.position.y - 6), pubs[i % pubs.size()], HORIZONTAL_ALIGNMENT_LEFT, -1, 20, Ui.CONTOUR if col == Ui.JAUNE else Ui.BLANC)
+			draw_string(f, Vector2(x + 14, r.position.y - 6), tr(pubs[i % pubs.size()]), HORIZONTAL_ALIGNMENT_LEFT, -1, 20, Ui.CONTOUR if col == Ui.JAUNE else Ui.BLANC)
 			x += 300
 			i += 1
 

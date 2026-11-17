@@ -1,7 +1,7 @@
 {
 	"Modifier": "Edit",
 	"Changer le nom ou les couleurs": "Change the name or colours",
-	"Jetons : gagnés en jouant, ils payent billets, trajets et le local du club.": "Tokens: earned by playing, they pay for tickets, trips and the club house.",
+	"Jetons : gagnés en jouant, ils payent billets, trajets et le local du club.": "Tokens: earned by playing, they pay for tickets, trips and the clubhouse.",
 	"LES MEMBRES": "THE MEMBERS",
 	"Chaque membre cotise, et plus le club est grand, plus tout rapporte.": "Every member pays dues, and the bigger the club, the more everything earns.",
 	"MON FAN CLUB": "MY FAN CLUB",
@@ -46,7 +46,6 @@
 	" · après-match x2 !": " · after-match x2!",
 	"La buvette rapporte double pendant 3 h après chaque duel.": "The snack bar earns double for 3 h after each duel.",
 	"Fermé. Ouvre-le pour tricoter des écharpes aux couleurs du club.": "Closed. Open it to knit scarves in the club colours.",
-	"Niveau %d · %d écharpe%s/h · %d Jetons pièce\nStock : %d / %d": "Level %d · %d scarf%s per h · %d Tokens each\nStock: %d / %d",
 	"Vendre (+%d)": "Sell (+%d)",
 	"Rien à vendre": "Nothing to sell",
 	"Niveau max": "Max level",
@@ -58,5 +57,8 @@
 	"Composer le chant que ta tribune chante en duel": "Compose the chant your stand sings in duels",
 	"Tournoi des fan clubs du week-end": "Weekend fan club tournament",
 	"Chant du club": "Club chant",
-	"à composer": "to compose"
+	"à composer": "to compose",
+	"Niveau %d · %d écharpes/h · %d Jetons pièce\nStock : %d / %d": "Level %d · %d scarves per h · %d Tokens each\nStock: %d / %d",
+	"Niveau %d · %d écharpe/h · %d Jetons pièce\nStock : %d / %d": "Level %d · %d scarf per h · %d Tokens each\nStock: %d / %d",
+	"%s · %d Jetons": "%s · %d Tokens"
 }
