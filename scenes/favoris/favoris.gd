@@ -6,6 +6,7 @@ extends Control
 ## Les autres supporters viennent du classement en ligne (autoload EnLigne),
 ## ou sont simulés hors ligne.
 
+const Classement := preload("res://scenes/classement/classement.gd")
 const TOP := 30
 const ONGLETS := [["clubs", "Clubs du monde"], ["pays", "Clubs du pays"], ["nations", "Sélections"]]
 
@@ -220,8 +221,8 @@ func _carte_favori(i: Dictionary, rang: int, attente: int, changer: Callable, re
 	nom.clip_text = true
 	nom.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
 	v.add_child(nom)
-	var lieu := "Sélection" if Supporters.est_nation(i["cle"]) else Geo.nom_pays(i["pays"])
-	v.add_child(Ui.label(tr("%s · %de · tu lui as donné %d points") % [lieu, rang, int(Game.supporters["points"].get(i["cle"], 0))], 16, Ui.GRIS))
+	var lieu := tr("Sélection") if Supporters.est_nation(i["cle"]) else Geo.nom_pays(i["pays"])
+	v.add_child(Ui.label(tr("%s · %s · tu lui as donné %d points") % [lieu, Classement._ordinal(rang), int(Game.supporters["points"].get(i["cle"], 0))], 16, Ui.GRIS))
 	if attente > 0:
 		var j := ceili(attente / 86400.0)
 		h.add_child(Ui.pastille(tr("Changement dans %d j") % j, Color("#6b6699"), 15))

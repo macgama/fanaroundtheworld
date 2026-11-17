@@ -221,7 +221,7 @@ def main(src: Path) -> None:
 
         # Piste Premium : une récompense à chaque palier.
         fin = debut + 24
-        bundle = {"type": "tribune", "nom": f"Tribune complète {ch['theme_nom']}", "skins": premium_skins[:5]}
+        bundle = {"type": "tribune", "nom": f"Tribune complète · {ch['theme_nom']}", "skins": premium_skins[:5]}
         singles = premium_skins[5:]
         file_p = [
             objet("echarpe", 0), singles[0], objet("emote", 0), objet("drapeau", 0), singles[1], objet("decor", 0),
@@ -248,7 +248,7 @@ def main(src: Path) -> None:
             r = recrues[100]
             dore = r["skins"][0]["id"] + "_dore"
             _skin_dore(r["skins"][0]["id"], dore)
-            premium[100] = {"type": "tribune", "nom": f"{r['nom']} doré + titre « Tour du monde 2026-27 »",
+            premium[100] = {"type": "tribune", "nom": "Skin doré + titre « Tour du monde 2026-27 »",
                             "skins": [{"type": "skin", "fanzzy": r["id"], "skin": dore, "nom": f"{r['nom']} · Doré"}],
                             "titre": "Tour du monde 2026-27"}
             # Les skins de la tribune dorée passent en simples récompenses plus tôt dans le chapitre.

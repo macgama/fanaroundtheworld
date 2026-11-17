@@ -258,6 +258,7 @@ func _compte_a_rebours() -> void:
 	add_child(l)
 	for t in ["3", "2", "1", "AU STAND !"]:
 		l.text = t
+		Ui.ajuster_taille(l, 200, get_viewport_rect().size.x - 120)
 		l.pivot_offset = l.size / 2.0
 		Ui.pop(l, 1.4, 0.3)
 		_sons.jouer("ui_decompte_go" if t.length() > 1 else "ui_decompte")
@@ -687,7 +688,7 @@ class Decor extends Control:
 		var e := Rect2(w / 2.0 - 300, 18, 600, 112)
 		draw_style_box(Ui.boite(Ui.JAUNE, 26, 6, 8), e)
 		var police := Ui.police_titre()
-		var txt := "ÉCHARPES"
+		var txt := tr("ÉCHARPES")
 		var fs := 76
 		var tw := police.get_string_size(txt, HORIZONTAL_ALIGNMENT_LEFT, -1, fs).x
 		var pos := Vector2(e.get_center().x - tw / 2.0, e.get_center().y + fs * 0.34)
@@ -761,6 +762,6 @@ class Stock extends Control:
 			draw_circle(c, r, Ui.JAUNE if i < reste else Color("#4a428f"))
 		if reste == 0:
 			var f := Ui.police_titre()
-			var t := "VIDE"
+			var t := tr("VIDE")
 			var w := f.get_string_size(t, HORIZONTAL_ALIGNMENT_LEFT, -1, 20).x
 			draw_string(f, Vector2(size.x - w - 10, size.y * 0.75), t, HORIZONTAL_ALIGNMENT_LEFT, -1, 20, Ui.ROUGE)

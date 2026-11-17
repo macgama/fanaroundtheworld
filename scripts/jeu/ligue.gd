@@ -420,7 +420,12 @@ static func reclamer(s: Dictionary) -> Dictionary:
 ## « novembre 2026 » pour « 2026-11 ».
 static func saison_texte(saison: String) -> String:
 	var m := clampi(int(saison.substr(5, 2)), 1, 12)
-	return "%s %s" % [Trad.t(["janvier", "février", "mars", "avril", "mai", "juin", "juillet", "août", "septembre", "octobre", "novembre", "décembre"][m - 1]), saison.substr(0, 4)]
+	# « mars », « mai », « juin » et « août » servent aussi d'abréviations (dates
+	# courtes) : leurs clés de traduction donnent « Mar », « May »… d'où les
+	# noms anglais complets écrits ici.
+	if not Trad.est_source():
+		return "%s %s" % [["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"][m - 1], saison.substr(0, 4)]  # sans_traduction
+	return "%s %s" % [["janvier", "février", "mars", "avril", "mai", "juin", "juillet", "août", "septembre", "octobre", "novembre", "décembre"][m - 1], saison.substr(0, 4)]  # sans_traduction
 
 
 ## Code de duel : 16 chiffres hexadécimaux au hasard.

@@ -229,7 +229,7 @@ static func bonus_jetons(ev: Dictionary, jetons_duel: int) -> int:
 static func texte_mult(ev: Dictionary) -> String:
 	var mult := float(ev.get("mult", 1.0))
 	var s := str(mult) if mult != floorf(mult) else str(int(mult))
-	return "×" + s.replace(".", ",")
+	return "×" + Trad.decimal(s)
 
 
 ## Oublie les primes des matchs d'il y a plus de 10 jours (sauvegarde légère).
