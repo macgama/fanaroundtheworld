@@ -44,6 +44,7 @@ var _suivante: TextureRect
 var _ferveur_barre: BarreFerveur
 var _rng := RandomNumberGenerator.new()
 var _ia_pense := [1.5, 1.5]
+var niveaux_ia := [IaNiveau.PAR_DEFAUT, IaNiveau.PAR_DEFAUT]  # ton camp (démo --auto), l'adversaire
 var _auto := false             # démo : ton camp joue tout seul
 var _visuels := {}              # [equipe, famille] -> id FANZZY
 
@@ -72,6 +73,7 @@ func _ready() -> void:
 	camp = p.get("camp", "home")
 	mode_suivi = p.get("mode", "stade")
 	_auto = p.get("auto", false)
+	niveaux_ia = p.get("ia", [IaNiveau.moi(), IaNiveau.adversaire()])
 	_rng.seed = hash(str(fiche["id"])) + Time.get_ticks_msec()
 	var dom: Dictionary = fiche["dom"]
 	var ext: Dictionary = fiche["ext"]
@@ -607,13 +609,24 @@ func _ballon(delta: float) -> void:
 
 # ------------------------------------------------------------------ IA
 
-## L'adversaire (et ton camp en mode démo --auto) : défend quand le ballon
-## ou des supporters entrent dans sa moitié, sinon attaque.
+## L'adversaire (et ton camp en mode démo --auto), selon son niveau (IaNiveau) :
+## normal et difficile lisent le terrain (scripts/duel/ia_poussee.gd) ;
+## facile défend quand le ballon ou des supporters entrent dans sa moitié,
+## sinon joue une carte au hasard.
 func _ia(e: int, delta: float) -> void:
 	_ia_pense[e] -= delta
 	if _ia_pense[e] > 0.0:
 		return
-	_ia_pense[e] = _rng.randf_range(0.6, 1.2)
+	var p := IaNiveau.params(str(niveaux_ia[e]))
+	_ia_pense[e] = _rng.randf_range(p["pense"][0], p["pense"][1])
+	if p["malin"]:
+		var d := IaPoussee.decider(self, e, p, _rng)
+		if not d.is_empty() and zone_permise(e, piles[e][d["i"]], d["pos"]):
+			if e == 0:
+				_jouer(d["i"], d["pos"])
+			else:
+				poser(e, d["i"], d["pos"])
+		return
 	var s := _sens(e)
 	var main: Array = piles[e].slice(0, PousseeRegles.TAILLE_MAIN)
 	var cx := TERRAIN.get_center().x
