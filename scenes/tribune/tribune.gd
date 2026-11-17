@@ -37,6 +37,15 @@ func _ready() -> void:
 		var mode: Dictionary = Game.MODES_SUIVI.get(p.get("mode", "stade"), {})
 		info.add_child(Ui.label("%s – %s · %s" % [f["dom"]["nom"], f["ext"]["nom"], tr(mode.get("titre", ""))], 22, Ui.BLANC, true))
 		haut.add_child(info)
+		if SoireeMatch.ouverte(m, Game.maintenant()):
+			# un vrai match en cours (ou tout proche) : le vivre en direct, but après but
+			var soiree := Ui.bouton("SOIR DE MATCH\nvis les buts en direct", Ui.ROUGE, 24)
+			soiree.custom_minimum_size = Vector2(320, 84)
+			soiree.tooltip_text = "Suis le vrai match en direct : à chaque but, lance une mini-ambiance"
+			soiree.pressed.connect(func():
+				_noter_suivi(m, p)
+				Game.aller(Game.SCENE_SOIREE, p))
+			haut.add_child(soiree)
 
 	_colonnes = Ui.hbox(24)
 	_colonnes.size_flags_vertical = Control.SIZE_EXPAND_FILL

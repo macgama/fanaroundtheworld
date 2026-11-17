@@ -31,6 +31,9 @@ var _envoi_en_cours := false
 ## Tournoi des fan clubs : classement du tournoi en cours (top des clubs) et état des échanges.
 var tournoi_classement: Dictionary = {}
 var _tournoi_en_cours := false
+## Ligue des tribunes : ta poule d'après le serveur (clubs du jeu compris), vide avant la réponse.
+var ligue_poule: Dictionary = {}
+var _ligue_en_cours := false
 ## Adresse du serveur ; « -- --classement-url=http://localhost:8787/classement/ » pour un Worker de test.
 var url := ClassementFans.URL
 
@@ -50,6 +53,7 @@ func _ready() -> void:
 	te.autostart = true
 	te.timeout.connect(envoyer)
 	te.timeout.connect(synchroniser_tournoi)
+	te.timeout.connect(synchroniser_ligue)
 	add_child(te)
 	var tq := Timer.new()
 	tq.wait_time = PERIODE_EQUIPES
@@ -300,6 +304,114 @@ func rafraichir_tournoi() -> void:
 		if code == 200 and d is Dictionary and d.get("clubs") is Array:
 			tournoi_classement = d
 			mis_a_jour.emit())
+
+
+# ------------------------------------------------------------------ Ligue des tribunes
+## Routes /ligue/… du même Worker (src/ligue.js). Ordre : vérifier la saison finie
+## (rang final avant la récompense), inscription, résultats en attente, puis l'état
+## du club (points, rang, duels confirmés par l'adversaire).
+
+func _url_ligue() -> String:
+	return url.replace("/classement/", "/ligue/")
+
+
+func _corps_ligue(extra: Dictionary) -> Dictionary:
+	var c := {"v": 1, "id": identite["id"], "cle": identite["cle"], "saison": Game.ligue["saison"]}
+	c.merge(extra, true)
+	return c
+
+
+func synchroniser_ligue() -> void:
+	if desactive or _ligue_en_cours or not identite_connue():
+		return
+	Game.actualiser_ligue()
+	var l: Dictionary = Game.ligue
+	var fini := func(): _ligue_en_cours = false
+	var ar: Dictionary = l["a_reclamer"]
+	if not ar.is_empty() and not bool(ar.get("verifie", false)):
+		_ligue_en_cours = true
+		_requete(tr("club?id=%s&saison=%s") % [identite["id"], ar["saison"]], func(code: int, d: Variant):  # sans_traduction
+			fini.call()
+			if code == 200 and d is Dictionary:
+				ar["rang"] = int(d.get("rang", ar["rang"]))
+				ar["mouvement"] = int(d.get("mouvement", ar["mouvement"]))
+				ar["division"] = int(d.get("division", ar["division"]))
+				ar["duels"] = maxi(int(ar.get("duels", 0)), int(d.get("duels", 0)))
+				ar["points"] = int(d.get("points", ar["points"]))
+				ar["verifie"] = true
+				Game.sauver()
+				mis_a_jour.emit()
+				synchroniser_ligue()
+			elif code == 404:
+				ar["verifie"] = true  # inconnu du serveur : on garde le calcul du jeu
+				Game.sauver()
+		, null, _url_ligue())
+		return
+	if not bool(l["inscrit"]):
+		return
+	_ligue_en_cours = true
+	if not bool(l["inscrit_serveur"]):
+		_requete("inscription", func(code: int, d: Variant):
+			fini.call()
+			if code == 200 and d is Dictionary and d.get("ok", false):
+				l["inscrit_serveur"] = true
+				_lire_ligue(d.get("moi"))
+				synchroniser_ligue()
+			elif code == 403 and d is Dictionary and d.get("erreur", "") == "fan_inconnu":
+				envoyer(true)
+		, _corps_ligue({"nom": l["nom"], "couleurs": l["couleurs"], "niveau": Game.niveau()}), _url_ligue())
+		return
+	var file := Ligue.a_envoyer(l)
+	if not file.is_empty():
+		var d0: Dictionary = file[0]
+		_requete("resultat", func(code: int, d: Variant):
+			fini.call()
+			if code == 200 or code == 400 or code == 409:
+				d0["envoye"] = true
+				if code != 200:
+					d0["etat"] = "refuse"  # hors règles : il ne compte pas
+				elif d is Dictionary:
+					if str(d.get("etat", "")) == "compte":
+						d0["etat"] = "compte"
+						d0["pts"] = int(d.get("pts", d0["pts"]))
+					elif str(d.get("etat", "")) == "refuse":
+						d0["etat"] = "refuse"
+					_lire_ligue(d.get("moi"))
+				Game.sauver()
+				mis_a_jour.emit()
+				synchroniser_ligue()
+		, _corps_ligue({"code": d0["code"], "adversaire": d0["adv"], "match": d0["match"], "gagne": d0["gagne"], "direct": d0["direct"]}), _url_ligue())
+		return
+	_requete(tr("club?id=%s&saison=%s") % [identite["id"], l["saison"]], func(code: int, d: Variant):  # sans_traduction
+		fini.call()
+		if code == 200:
+			_lire_ligue(d)
+		elif code == 404:
+			l["inscrit_serveur"] = false  # le serveur ne le connaît pas (base remise à zéro ?)
+			Game.sauver()
+	, null, _url_ligue())
+
+
+func _lire_ligue(m: Variant) -> void:
+	if not m is Dictionary:
+		return
+	Ligue.appliquer_serveur(Game.ligue, m)
+	Game.sauver()
+	mis_a_jour.emit()
+
+
+## Écran de la Ligue : état du club et poule complète.
+func rafraichir_ligue() -> void:
+	if desactive or not identite_connue():
+		return
+	synchroniser_ligue()
+	if not bool(Game.ligue["inscrit"]):
+		return
+	_requete(tr("poule.json?id=%s&saison=%s") % [identite["id"], Game.ligue["saison"]], func(code: int, d: Variant):  # sans_traduction
+		if code == 200 and d is Dictionary and d.get("clubs") is Array:
+			ligue_poule = d
+			mis_a_jour.emit()
+	, null, _url_ligue())
 
 
 # ------------------------------------------------------------------ fichier

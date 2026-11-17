@@ -11,7 +11,7 @@ concerne est dans `scripts/jeu/demo.gd` (classe `Demo`).
 | Duel d'ambiance, Arène, Poussée contre l'ordinateur | Classement en ligne |
 | Carte : compétitions mondiales + Europe | Les 5 autres continents |
 | Petits boulots : buvette, speaker | Ramasseur, peintre de tifo, stand d'écharpes |
-| Fan club, pronos, missions, équipes favorites, collection | PASS saisonnier, tournoi, créateur de chants |
+| Fan club, pronos, missions, équipes favorites, collection, soirs de match (buts en direct) | PASS saisonnier, tournoi, Ligue des tribunes, créateur de chants |
 | Progression jusqu'au **niveau 6** (≈ 1 h à 1 h 30) | XP au-delà du niveau 6 |
 
 Au niveau 6, la carte affiche une fois l'écran « Fin de la démo » (liste de

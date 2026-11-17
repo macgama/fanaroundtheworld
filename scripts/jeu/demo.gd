@@ -10,10 +10,10 @@ extends RefCounted
 ##  - les trois modes de duel contre l'ordinateur (ambiance, Arène, Poussée) ;
 ##  - la carte : compétitions mondiales et Europe (les autres continents sont fermés) ;
 ##  - deux petits boulots sur cinq (buvette, speaker) ;
-##  - fan club, pronostics, missions, équipes favorites, collection ;
+##  - fan club, pronostics, missions, équipes favorites, collection, soirs de match ;
 ##  - la progression jusqu'au niveau NIVEAU_MAX, puis l'écran de fin de démo.
 ## Fermé (fenêtre « Dans le jeu complet » + bouton liste de souhaits) :
-## en ligne, classement, tournoi, PASS, créateur de chants, trois petits boulots.
+## en ligne, classement, tournoi, Ligue des tribunes, PASS, créateur de chants, trois petits boulots.
 ##
 ## Sauvegarde à part (user://demo_*.json) : la démo n'écrase jamais une
 ## partie du jeu complet. Rien n'est envoyé au classement en ligne.
@@ -34,6 +34,7 @@ const ECRANS_FERMES := {
 	"res://scenes/salon/salon.tscn": "Défie tes amis et d'autres fans en ligne, en duel d'ambiance ou en Poussée.",
 	"res://scenes/classement/classement.tscn": "Grimpe au classement mondial des fans et pousse ton équipe tout en haut.",
 	"res://scenes/tournoi/tournoi.tscn": "Chaque week-end, le tournoi des fan clubs sur les vrais matchs.",
+	"res://scenes/ligue/ligue.tscn": "La Ligue des tribunes : une saison de duels en ligne, avec montées et descentes.",
 	"res://scenes/pass/pass.tscn": "Le PASS saisonnier : 100 paliers, nouvelles recrues FANZZY et skins.",
 	"res://scenes/chant/createur_chant.tscn": "Compose le chant de ton fan club et chante-le en duel, en karaoké.",
 	"res://scenes/ramasseur/ramasseur.tscn": "Petit boulot : ramasseur de balles au bord du terrain.",

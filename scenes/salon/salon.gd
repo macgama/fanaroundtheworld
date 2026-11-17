@@ -15,6 +15,7 @@ var _lbl_match: Label
 var _actions: VBoxContainer
 var _liste_lan: VBoxContainer
 var _champ_ip: LineEdit
+var _lbl_ligue: Label
 var _auto := false
 
 
@@ -64,6 +65,11 @@ func _ready() -> void:
 	_carte_eux = Ui.panneau()
 	_carte_eux.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	milieu.add_child(_carte_eux)
+
+	_lbl_ligue = Ui.label("", 21, Ui.JAUNE, true, 5)
+	_lbl_ligue.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_lbl_ligue.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	racine.add_child(_lbl_ligue)
 
 	_statut = Ui.label("", 26, Ui.BLANC, true, 6)
 	_statut.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
@@ -145,6 +151,14 @@ func _maj() -> void:
 	else:
 		_remplir_carte(_carte_eux, adv["nom"], adv["couleurs"], adv["equipe"], tr("Adversaire · niveau %d") % adv["niveau"])
 	var m := Reseau.match_salon
+	var hors := Game.raison_hors_ligue(m)
+	if hors == "":
+		_lbl_ligue.text = tr("★ Ce duel compte pour la Ligue des tribunes (%s)") % Ligue.nom_division(int(Game.ligue["division"]))
+	elif m.is_empty():
+		_lbl_ligue.text = tr("Ligue des tribunes : les duels du week-end sur un vrai match comptent (du vendredi au lundi midi).")
+	else:
+		_lbl_ligue.text = tr("Ligue des tribunes : ") + tr(hors)
+	_lbl_ligue.add_theme_color_override("font_color", Ui.JAUNE if hors == "" else Ui.BLANC)
 	if m.is_empty():
 		_lbl_match.text = "Le match sera choisi par l'hôte"
 	else:
@@ -247,16 +261,20 @@ func _sur_adversaire() -> void:
 func _lancer(jeu: String) -> void:
 	if not Reseau.hote or not Reseau.connecte() or Reseau.match_salon.is_empty() or not jeu in Protocole.JEUX:
 		return
-	Reseau.envoyer(Protocole.msg("lancer", {"jeu": jeu}))
-	_aller_au_duel(jeu)
+	# Code du duel pour la Ligue des tribunes : les deux joueurs l'envoient avec leur résultat.
+	var rng := RandomNumberGenerator.new()
+	rng.randomize()
+	var code := Ligue.nouveau_code(rng)
+	Reseau.envoyer(Protocole.msg("lancer", {"jeu": jeu, "code": code}))
+	_aller_au_duel(jeu, code)
 
 
 func _sur_message(m: Dictionary) -> void:
 	if m["t"] == "lancer" and not Reseau.hote and not Reseau.match_salon.is_empty():
-		_aller_au_duel(str(m["jeu"]))
+		_aller_au_duel(str(m["jeu"]), Protocole.code_ligue(m))
 
 
-func _aller_au_duel(jeu: String) -> void:
+func _aller_au_duel(jeu: String, code := "") -> void:
 	var p: Dictionary = Game.params
 	var m := Reseau.match_salon
 	var scenes := {"duel": Game.SCENE_DUEL, "poussee": Game.SCENE_POUSSEE, "arene": Game.SCENE_ARENE}
@@ -264,5 +282,5 @@ func _aller_au_duel(jeu: String) -> void:
 		"en_ligne": true, "match": m, "match_id": str(m.get("id", "")), "camp": Reseau.mon_camp(),
 		# l'invité suit le match « au pub » avec l'hôte : gains normaux, pas de billet
 		"mode": str(p.get("mode", "stade")) if Reseau.hote else "pub",
-		"auto": _auto, "cout": 0, "jeu": jeu,
+		"auto": _auto, "cout": 0, "jeu": jeu, "code_ligue": code,
 	})

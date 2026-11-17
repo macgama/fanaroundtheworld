@@ -893,6 +893,8 @@ func _finir() -> void:
 	var xp_pass := Game.xp_pass_duel(gagne, clampf(points / 2400.0, 0.0, 1.0), part)
 	var ev := Game.recompense_evenement(fiche["m"], jetons)
 	var tour := {} if en_ligne else Game.noter_duel_tournoi(fiche["m"], gagne, mode)
+	# Ligue des tribunes : pas sur un forfait (l'adversaire parti n'enverra pas son résultat).
+	var lig := {} if _forfait else Game.noter_duel_ligue(fiche["m"], 1 if gagne else -1)
 	if gagne:
 		_decor.confettis(300)
 		for mar in _fanzzy:
@@ -912,7 +914,7 @@ func _finir() -> void:
 	pan.set_anchors_preset(Control.PRESET_CENTER)
 	pan.offset_left = -460
 	pan.offset_right = 460
-	var demi_h := 330 + 24 * maxi(0, FinDuel.lignes_evenement(ev).size() + (1 if pop > 0 else 0) + FinDuel.ligne_tournoi(tour).size() - 1)
+	var demi_h := 330 + 24 * maxi(0, FinDuel.lignes_evenement(ev).size() + (1 if pop > 0 else 0) + FinDuel.ligne_tournoi(tour).size() + FinDuel.ligne_ligue(lig).size() - 1)
 	pan.offset_top = -demi_h
 	pan.offset_bottom = demi_h
 	add_child(pan)
@@ -936,7 +938,7 @@ func _finir() -> void:
 		[Game.libelle_rejeu(part), "+%d" % jetons],
 		["XP du fan club", "+%d" % xp],
 		["XP du PASS", "+%d" % xp_pass],
-	] + FinDuel.ligne_popularite({"popularite": pop, "equipe": (fiche["dom"] if camp == "home" else fiche["ext"])["nom"]}) + FinDuel.lignes_evenement(ev) + FinDuel.ligne_tournoi(tour)
+	] + FinDuel.ligne_popularite({"popularite": pop, "equipe": (fiche["dom"] if camp == "home" else fiche["ext"])["nom"]}) + FinDuel.lignes_evenement(ev) + FinDuel.ligne_tournoi(tour) + FinDuel.ligne_ligue(lig)
 	for l in lignes:
 		var h := Ui.hbox(10)
 		var a := Ui.label(l[0], 24, Ui.BLANC)
@@ -1167,7 +1169,8 @@ class Marionnette extends Node2D:
 
 ## Le décor : ciel, tribune adverse, terrain (ou écran), notre tribune, confettis.
 class Decor extends Control:
-	var duel: Duel
+	## Le duel, ou tout écran qui expose `jauge` (-100…100) et `fiche` (soir de match).
+	var duel  # Duel ou SoireeEcran (pas de type : les deux conviennent)
 	var mode := "stade"
 	var c_nous := Ui.BLEU
 	var c_nous2 := Ui.BLANC
