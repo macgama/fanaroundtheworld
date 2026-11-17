@@ -230,9 +230,7 @@ func _bouton_choix(texte: String, actif: bool, action: Callable) -> Button:
 
 
 func _vide(liste: VBoxContainer, texte: String) -> void:
-	var l := Ui.label(texte, 20, Ui.GRIS)
-	l.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	liste.add_child(l)
+	liste.add_child(Ui.etat_vide("monde", texte))
 
 
 func _liste_fans(liste: VBoxContainer) -> void:
@@ -334,6 +332,11 @@ func _rang(rang: int) -> Label:
 
 
 static func _ordinal(n: int) -> String:
+	if not Trad.est_source():  # 1st, 2nd, 3rd, 4th… 11th, 12th, 13th
+		var fin := "th"
+		if n % 100 < 11 or n % 100 > 13:
+			fin = {1: "st", 2: "nd", 3: "rd"}.get(n % 10, "th")
+		return _milliers(n) + fin
 	return "1er" if n == 1 else "%se" % _milliers(n)
 
 
@@ -341,6 +344,6 @@ static func _milliers(n: int) -> String:
 	var s := str(absi(n))
 	var out := ""
 	while s.length() > 3:
-		out = " " + s.right(3) + out
+		out = ("," if not Trad.est_source() else " ") + s.right(3) + out
 		s = s.left(s.length() - 3)
 	return ("-" if n < 0 else "") + s + out

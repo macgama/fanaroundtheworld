@@ -420,11 +420,11 @@ func _ligne_club(rang: int, nom_v: Variant, couleurs: Variant, points: int, bot:
 
 func _liste_matchs(liste: VBoxContainer, c: Dictionary) -> void:
 	if c["etat"] != "journee":
-		_texte(liste, "Les matchs de la prochaine journée apparaîtront ici vendredi.", 20, Ui.GRIS)
+		liste.add_child(Ui.etat_vide("calendrier", "Les matchs de la prochaine journée apparaîtront ici vendredi."))
 		return
 	var matchs := _matchs_du_week_end(c)
 	if matchs.is_empty():
-		_texte(liste, "Aucun match du week-end dans le calendrier pour l'instant.", 20, Ui.GRIS)
+		liste.add_child(Ui.etat_vide("calendrier", "Aucun match du week-end dans le calendrier pour l'instant."))
 		return
 	_texte(liste, "Choisis le vrai match de ton duel. En direct, une victoire rapporte un point de plus.", 17, Ui.GRIS)
 	for m in matchs.slice(0, 60):
@@ -488,7 +488,7 @@ const ETATS := {
 func _liste_duels(liste: VBoxContainer, l: Dictionary) -> void:
 	var d: Array = l["duels"]
 	if d.is_empty():
-		_texte(liste, "Pas encore de duel de Ligue ce mois-ci.", 20, Ui.GRIS)
+		liste.add_child(Ui.etat_vide("stade", "Pas encore de duel de Ligue ce mois-ci."))
 		return
 	_texte(liste, "Un duel en ligne compte quand ton adversaire a aussi envoyé son résultat (quelques minutes).", 17, Ui.GRIS)
 	for i in range(d.size() - 1, -1, -1):

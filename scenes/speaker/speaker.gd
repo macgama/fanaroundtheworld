@@ -255,6 +255,7 @@ func _compte_a_rebours() -> void:
 	add_child(l)
 	for t in ["3", "2", "1", "COUP D'ENVOI !"]:
 		l.text = t
+		Ui.ajuster_taille(l, 200, get_viewport_rect().size.x - 120)
 		l.pivot_offset = l.size / 2.0
 		Ui.pop(l, 1.4, 0.3)
 		_sons.jouer("ui_decompte_go" if t.length() > 1 else "ui_decompte")
@@ -587,7 +588,7 @@ func _finir() -> void:
 		["Buts des visiteurs sans annonce", "+%d" % (silences * SpeakerRegles.PAYE_SILENCE)],
 	]
 	if paye < b:
-		lignes.append([tr("Fatigue (%de match du jour)") % (deja + 1), tr("paye ÷ 2")])
+		lignes.append([tr("Fatigue (%de match du jour)") % (deja + 1), tr(ListeBoulots.texte_fatigue(deja))])
 	lignes.append(["Jetons gagnés", "+%d" % paye])
 	lignes.append(["XP du fan club", "+%d" % xp])
 	for l in lignes:

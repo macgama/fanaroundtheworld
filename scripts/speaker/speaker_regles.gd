@@ -12,8 +12,8 @@ extends RefCounted
 ## justes d'un même but donnent un bonus. Quand ce sont les visiteurs qui
 ## marquent, le speaker reste sobre : ne rien annoncer rapporte un petit plus.
 ## Le tempo monte d'un but à l'autre.
-## Au-delà de SERVICES_PLEIN_TARIF matchs dans la journée, la paye est
-## divisée par deux (le petit boulot complète les duels sans les remplacer).
+## Au-delà de SERVICES_PLEIN_TARIF matchs dans la journée, la paye baisse (÷ 2, puis ÷ 4) :
+## voir ListeBoulots.part_du_jour.
 
 const NB_BUTS := 7
 const NB_BUTS_VISITEURS := 2
@@ -32,7 +32,7 @@ const PAYE_APPEL := {"parfait": 3, "bien": 2}
 const BONUS_TRIPLE := 2        # les trois appels d'un but justes
 const PAYE_SILENCE := 1        # but des visiteurs, pas d'annonce
 const XP_PAR_BUT := 2          # but local annoncé au moins une fois
-const SERVICES_PLEIN_TARIF := 3
+const SERVICES_PLEIN_TARIF := ListeBoulots.PLEIN_TARIF
 
 ## Prénoms et noms des joueurs (inventés, courts pour être criés).
 const PRENOMS := [
@@ -201,9 +201,7 @@ static func paye_but(notes: Array) -> Dictionary:
 
 ## Paye du match entier, selon le nombre de matchs déjà faits aujourd'hui.
 static func paye_finale(brut: int, services_du_jour: int) -> int:
-	if services_du_jour >= SERVICES_PLEIN_TARIF:
-		return int(ceil(brut / 2.0))
-	return brut
+	return ListeBoulots.paye_du_jour(brut, services_du_jour)
 
 
 ## L'annonce d'un joueur, comme au stade : [prénom, NOM].

@@ -104,7 +104,7 @@ func _tester_recompenses() -> void:
 	_verifier(Missions.recuperer(e, "jour", 0).is_empty(), "pas de récompense avant la fin")
 	Missions.noter(e, "suivre", "pub")
 	var g := Missions.recuperer(e, "jour", 0)
-	_verifier(g.get("jetons") == 15 and g.get("xp_pass") == 50 and not g["bonus"], "récompense de « Suis un match »")
+	_verifier(g.get("jetons") == 15 and g.get("xp_pass") == 25 and not g["bonus"], "récompense de « Suis un match »")
 	_verifier(Missions.recuperer(e, "jour", 0).is_empty(), "une seule fois")
 	Missions.noter(e, "duel_gagne", "duel")
 	Missions.noter(e, "prono")

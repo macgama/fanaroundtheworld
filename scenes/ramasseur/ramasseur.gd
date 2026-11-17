@@ -186,6 +186,7 @@ func _compte_a_rebours() -> void:
 	add_child(l)
 	for t in ["3", "2", "1", "COUP D'ENVOI !"]:
 		l.text = t
+		Ui.ajuster_taille(l, 200, get_viewport_rect().size.x - 120)
 		l.pivot_offset = l.size / 2.0
 		Ui.pop(l, 1.4, 0.3)
 		_sons.jouer("ui_decompte_go" if t.length() > 1 else "ui_decompte")
@@ -534,7 +535,7 @@ func _finir() -> void:
 		["Bonus de série", "+%d" % bonus],
 	]
 	if paye < total:
-		lignes.append([tr("Fatigue (%de partie du jour)") % (deja + 1), tr("paye ÷ 2")])
+		lignes.append([tr("Fatigue (%de partie du jour)") % (deja + 1), tr(ListeBoulots.texte_fatigue(deja))])
 	lignes.append(["Jetons gagnés", "+%d" % paye])
 	lignes.append(["XP du fan club", "+%d" % xp])
 	for l in lignes:
@@ -633,10 +634,10 @@ class Decor extends Control:
 			draw_rect(r, couleurs[i])
 			draw_rect(r, Ui.CONTOUR, false, 4)
 			var fs := 26
-			var tw := f.get_string_size(pubs[i], HORIZONTAL_ALIGNMENT_LEFT, -1, fs).x
+			var tw := f.get_string_size(tr(pubs[i]), HORIZONTAL_ALIGNMENT_LEFT, -1, fs).x
 			var pos := Vector2(r.get_center().x - tw / 2.0, r.get_center().y + fs * 0.36)
 			var sombre: bool = couleurs[i] == Ui.JAUNE or couleurs[i] == Ui.VERT
-			draw_string(f, pos, pubs[i], HORIZONTAL_ALIGNMENT_LEFT, -1, fs, Ui.CONTOUR if sombre else Ui.BLANC)
+			draw_string(f, pos, tr(pubs[i]), HORIZONTAL_ALIGNMENT_LEFT, -1, fs, Ui.CONTOUR if sombre else Ui.BLANC)
 		# bord de touche : pelouse plus sombre où court le ramasseur
 		var yr := yp + 62
 		draw_rect(Rect2(0, yr, w, size.y - yr), Color("#24894f"))

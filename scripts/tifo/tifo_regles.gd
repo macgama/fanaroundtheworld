@@ -10,8 +10,8 @@ extends RefCounted
 ##   - ressemblance < SEUIL_REFUS : le capo la refuse, on continue de peindre ;
 ##   - sinon la bâche est hissée en tribune et payée selon sa ressemblance,
 ##     avec un bonus si elle est parfaite (et toutes les SERIE_BONUS parfaites).
-## Au-delà de SERVICES_PLEIN_TARIF services dans la journée, la paye est
-## divisée par deux, comme à la buvette.
+## Au-delà de SERVICES_PLEIN_TARIF services dans la journée, la paye baisse (÷ 2, puis ÷ 4) :
+## voir ListeBoulots.part_du_jour.
 
 const DUREE := 60.0
 const VIERGE := -1
@@ -43,7 +43,7 @@ const PALIERS := [[1.0, 1.0], [0.9, 0.6], [0.75, 0.3]]  # [ressemblance mini, pa
 const BONUS_PARFAIT := 1
 const SERIE_BONUS := 3           # +1 Jeton toutes les 3 bâches parfaites d'affilée
 const XP_PAR_TIFO := 4
-const SERVICES_PLEIN_TARIF := 3
+const SERVICES_PLEIN_TARIF := ListeBoulots.PLEIN_TARIF
 
 var rng := RandomNumberGenerator.new()
 
@@ -216,6 +216,4 @@ static func appreciation(resse: float) -> String:
 
 ## Paye du service entier, selon le nombre de services déjà faits aujourd'hui.
 static func paye_finale(brut: int, services_du_jour: int) -> int:
-	if services_du_jour >= SERVICES_PLEIN_TARIF:
-		return int(ceil(brut / 2.0))
-	return brut
+	return ListeBoulots.paye_du_jour(brut, services_du_jour)

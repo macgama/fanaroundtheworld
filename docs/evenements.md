@@ -27,12 +27,12 @@ rappelées dans le bandeau (« Et aussi : Derby de Madrid »).
 
 | Événement | Repéré grâce à | Jetons des duels | Prime du 1er duel |
 |---|---|---|---|
-| Soirée de finale | tour « Final » (pas la petite finale) | ×2 | +400 XP PASS, +50 Jetons |
-| Derby | même ville de stade et même pays (teams.json), ou la table | ×1,5 | +250 XP PASS, +30 Jetons |
-| Demi-finale | tour « Semi-finals » | ×1,5 | +200 XP PASS, +25 Jetons |
-| Grand Choc | la table, ou deux grands clubs (noms fictifs choisis à la main) en coupe continentale ou mondiale | ×1,4 | +200 XP PASS, +25 Jetons |
-| Fête des nations | Mondial, Euro, Coupe des Amériques, Coupe d'Afrique, Ligue des Nations (pas les amicaux) | ×1,3 | +150 XP PASS, +20 Jetons |
-| Quart de finale | tour « Quarter-finals » | ×1,25 | +100 XP PASS, +15 Jetons |
+| Soirée de finale | tour « Final » (pas la petite finale) | ×2 | +200 XP PASS, +50 Jetons |
+| Derby | même ville de stade et même pays (teams.json), ou la table | ×1,5 | +125 XP PASS, +30 Jetons |
+| Demi-finale | tour « Semi-finals » | ×1,5 | +100 XP PASS, +25 Jetons |
+| Grand Choc | la table, ou deux grands clubs (noms fictifs choisis à la main) en coupe continentale ou mondiale | ×1,4 | +100 XP PASS, +25 Jetons |
+| Fête des nations | Mondial, Euro, Coupe des Amériques, Coupe d'Afrique, Ligue des Nations (pas les amicaux) | ×1,3 | +75 XP PASS, +20 Jetons |
+| Quart de finale | tour « Quarter-finals » | ×1,25 | +50 XP PASS, +15 Jetons |
 
 - **La ville du stade** vient du relais (`city` dans `teams.json`, relu chaque lundi).
   Le derby prend le nom de la ville en français : « Derby de Londres », « Derby d'Istanbul ».

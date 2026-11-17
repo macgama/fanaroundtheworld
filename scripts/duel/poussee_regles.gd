@@ -22,18 +22,20 @@ const BALLON_VITESSE_MAX := 260.0
 
 ## Les cartes. type : unite, batiment ou effet. Les PV sont l'« entrain » :
 ## un supporter sans entrain va s'asseoir. famille : FANZZY qui le représente.
+## Réglées le 17 nov. 2026 avec tools/equilibrage/simuler_poussee.tscn : à Ferveur égale,
+## aucune carte ne gagne ses duels de plus de 5 points (docs/equilibrage.md).
 const CARTES := {
 	"tambour": {"nom": "Petit Tambour", "cout": 2, "type": "unite", "famille": "perc", "nb": 1,
-		"pv": 70.0, "vitesse": 125.0, "portee": 55.0, "puissance": 12.0, "cadence": 0.6, "poussee": 1.0,
+		"pv": 65.0, "vitesse": 125.0, "portee": 55.0, "puissance": 11.0, "cadence": 0.6, "poussee": 1.0,
 		"texte": "Rapide, pousse le ballon"},
 	"drapeau": {"nom": "Porte-Drapeau", "cout": 3, "type": "unite", "famille": "fide", "nb": 1,
 		"pv": 240.0, "vitesse": 70.0, "portee": 55.0, "puissance": 10.0, "cadence": 1.0, "poussee": 2.4,
 		"texte": "Costaud, gros pousseur"},
 	"serpentins": {"nom": "Lanceur de serpentins", "cout": 3, "type": "unite", "famille": "tifo", "nb": 1,
-		"pv": 75.0, "vitesse": 90.0, "portee": 260.0, "puissance": 14.0, "cadence": 0.9, "poussee": 0.5,
+		"pv": 95.0, "vitesse": 90.0, "portee": 260.0, "puissance": 16.0, "cadence": 0.9, "poussee": 0.5,
 		"texte": "Chante de loin"},
 	"chorale": {"nom": "Chorale", "cout": 5, "type": "unite", "famille": "voix", "nb": 3,
-		"pv": 55.0, "vitesse": 95.0, "portee": 160.0, "puissance": 8.0, "cadence": 0.7, "poussee": 0.8,
+		"pv": 70.0, "vitesse": 95.0, "portee": 160.0, "puissance": 8.0, "cadence": 0.7, "poussee": 0.8,
 		"texte": "Trois chanteurs d'un coup"},
 	"mascotte": {"nom": "Mascotte géante", "cout": 6, "type": "unite", "famille": "depl", "nb": 1,
 		"pv": 650.0, "vitesse": 55.0, "portee": 70.0, "puissance": 45.0, "cadence": 1.2, "poussee": 3.0,

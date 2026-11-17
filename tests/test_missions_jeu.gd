@@ -61,8 +61,8 @@ func _ready() -> void:
 	var jetons := Game.jetons
 	var xp_avant := Game.xp_pass
 	var g := Game.recuperer_mission("jour", 0)
-	# 50 XP, ou 100 pendant le rattrapage du PASS (joueur en retard sur la saison).
-	var xp_mission := 100 if Game.rattrapage_pass() else 50
+	# 25 XP, ou 50 pendant le rattrapage du PASS (joueur en retard sur la saison).
+	var xp_mission := 50 if Game.rattrapage_pass() else 25
 	_verifier(Game.jetons == jetons + 15 and g.get("xp_pass") == xp_mission and Game.xp_pass == xp_avant + xp_mission, "récompense versée (%s)" % str(g))
 	_verifier(Game.recuperer_mission("jour", 0).is_empty() and Game.jetons == jetons + 15, "une seule fois")
 	Game.charger()

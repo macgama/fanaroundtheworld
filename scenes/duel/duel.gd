@@ -377,6 +377,7 @@ func _compte_a_rebours() -> void:
 	add_child(l)
 	for t in ["3", "2", "1", "ALLEZ !"]:
 		l.text = t
+		Ui.ajuster_taille(l, 220, get_viewport_rect().size.x - 120)
 		l.pivot_offset = l.size / 2.0
 		Ui.pop(l, 1.4, 0.3)
 		_jouer("tambour")
@@ -545,11 +546,11 @@ func _chant() -> void:
 	if ecart <= FENETRE_PARFAIT * tw:
 		parfaits += 1
 		gain = 2.0 * float(mods["perfectBonus"])  # sans_traduction
-		_piste.eclat("PARFAIT !", Ui.JAUNE)
+		_piste.eclat(tr("PARFAIT !"), Ui.JAUNE)
 		_jouer("clap", 0.0, 1.15)
 	else:
 		biens += 1
-		_piste.eclat("BIEN", Ui.VERT)
+		_piste.eclat(tr("BIEN"), Ui.VERT)
 		_jouer("clap", -4.0)
 	_pousser(gain * mult * 0.9)
 	points += int(gain * mult * 10.0)
@@ -575,7 +576,7 @@ func _rate(appui: bool) -> void:
 	if mods["backfire"]:
 		cout *= 1.5
 	_pousser(-cout)
-	_piste.eclat("RATÉ", Ui.ROUGE)
+	_piste.eclat(tr("RATÉ"), Ui.ROUGE)
 	_fanzzy[0].trembler()
 	_maj_combo()
 
@@ -1269,7 +1270,7 @@ class Decor extends Control:
 		while x < size.x:
 			var col: Color = [Ui.ROSE, Ui.JAUNE, Ui.BLEU, Ui.VERT, Ui.VIOLET][i % 5]
 			draw_rect(Rect2(x, r.position.y - 26, 300, 26), col)
-			draw_string(f, Vector2(x + 14, r.position.y - 6), pubs[i % pubs.size()], HORIZONTAL_ALIGNMENT_LEFT, -1, 20, Ui.CONTOUR if col == Ui.JAUNE else Ui.BLANC)
+			draw_string(f, Vector2(x + 14, r.position.y - 6), tr(pubs[i % pubs.size()]), HORIZONTAL_ALIGNMENT_LEFT, -1, 20, Ui.CONTOUR if col == Ui.JAUNE else Ui.BLANC)
 			x += 300
 			i += 1
 

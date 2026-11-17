@@ -53,11 +53,11 @@ func _ouverture() -> void:
 
 func _gains() -> void:
 	var r := SoireeMatch.recompense(1.0, true, 1.5, 100.0)
-	_v(r["jetons"] == 29 and r["xp"] == 30 and r["xp_pass"] == 50, "but parfait au stade, ferveur max : %s" % str(r))
+	_v(r["jetons"] == 29 and r["xp"] == 30 and r["xp_pass"] == 25, "but parfait au stade, ferveur max : %s" % str(r))
 	r = SoireeMatch.recompense(0.0, true, 1.0, 50.0)
-	_v(r["jetons"] == 6 and r["xp"] == 10 and r["xp_pass"] == 20, "but raté au pub : %s" % str(r))
+	_v(r["jetons"] == 6 and r["xp"] == 10 and r["xp_pass"] == 10, "but raté au pub : %s" % str(r))
 	r = SoireeMatch.recompense(1.0, false, 1.0, 50.0)
-	_v(r["jetons"] == 8 and r["xp"] == 15 and r["xp_pass"] == 25, "but adverse : moitié : %s" % str(r))
+	_v(r["jetons"] == 8 and r["xp"] == 15 and r["xp_pass"] == 13, "but adverse : moitié : %s" % str(r))
 	_v(is_equal_approx(SoireeMatch.mult_ferveur(0.0), 0.8) and is_equal_approx(SoireeMatch.mult_ferveur(100.0), 1.2), "ferveur ×0,8 à ×1,2")
 	_v(SoireeMatch.prime_fin(0.6)["jetons"] == 6, "prime à la maison")
 	var e := {"buts": []}

@@ -20,14 +20,14 @@ les fan clubs des joueurs s'affrontent sur les vrais matchs du week-end.
 
 | Points | Palier | Jetons | XP PASS |
 |---|---|---|---|
-| 5 | Tribune engagée | 30 | 100 |
-| 12 | Tribune solide | 60 | 200 |
-| 20 | Tribune en feu | 100 | 300 |
-| 28 | Tribune de légende | 150 | 400 |
+| 5 | Tribune engagée | 30 | 50 |
+| 12 | Tribune solide | 60 | 100 |
+| 20 | Tribune en feu | 100 | 150 |
+| 28 | Tribune de légende | 150 | 200 |
 
 Bonus de classement, seulement s'il y a au moins 10 clubs classés : 1er +150, 2e +100, 3e +75, top 10 +40, top 25 % +20 Jetons.
 En ligne, le jeu attend le rang final avant de verser. Hors ligne, seul le palier compte.
-Mission de la semaine « Esprit de compétition » : 3 duels de tournoi (60 Jetons, 300 XP PASS).
+Mission de la semaine « Esprit de compétition » : 3 duels de tournoi (60 Jetons, 150 XP PASS).
 
 ## Code
 
