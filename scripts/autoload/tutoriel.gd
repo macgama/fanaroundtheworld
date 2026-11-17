@@ -18,7 +18,7 @@ extends CanvasLayer
 signal etape_changee(id: String)
 signal termine(recompense: int)
 
-const CHEMIN := "user://tutoriel.json"
+var CHEMIN := Demo.fichier("user://tutoriel.json")
 const RECOMPENSE := 50
 
 const SC_CREATION := "res://scenes/club/creation_club.tscn"

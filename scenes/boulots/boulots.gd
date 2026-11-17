@@ -77,8 +77,10 @@ func _carte(b: Dictionary) -> Control:
 	if n > 0:
 		info += tr("  ·  %d partie%s aujourd'hui") % [n, "s" if n > 1 else ""]
 	v.add_child(Ui.label(info, 20, Ui.GRIS))
-	var jouer := Ui.bouton("Y aller", c, 30)
-	Ui.colorer_bouton(jouer, c)
+	var ouvert := Demo.boulot_ouvert(id)
+	var jouer := Ui.bouton("Y aller" if ouvert else "Dans le jeu complet", c if ouvert else Ui.NUIT_CLAIR, 30)
+	if ouvert:
+		Ui.colorer_bouton(jouer, c)
 	jouer.custom_minimum_size = Vector2(0, 84)
 	jouer.tooltip_text = str(b["titre"])
 	var scene := str(b["scene"])

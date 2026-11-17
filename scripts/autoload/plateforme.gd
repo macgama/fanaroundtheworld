@@ -16,6 +16,11 @@ const APP_ID_STEAM := 480
 ## Écriture dans Steam Cloud au plus toutes les N secondes (et toujours en quittant).
 const DELAI_CLOUD := 20.0
 
+## App ID utilisé : celui de la démo dans la version démo (s'il existe déjà).
+static func app_id() -> int:
+	return Demo.APP_ID_DEMO if Demo.actif() and Demo.APP_ID_DEMO > 0 else APP_ID_STEAM
+
+
 var steam: Object = null
 var steam_ok := false
 
@@ -33,8 +38,8 @@ func _initialiser_steam() -> void:
 	if "--sans-steam" in OS.get_cmdline_user_args() or not Engine.has_singleton("Steam"):
 		return
 	steam = Engine.get_singleton("Steam")
-	OS.set_environment("SteamAppId", str(APP_ID_STEAM))  # sans_traduction
-	OS.set_environment("SteamGameId", str(APP_ID_STEAM))  # sans_traduction
+	OS.set_environment("SteamAppId", str(app_id()))  # sans_traduction
+	OS.set_environment("SteamGameId", str(app_id()))  # sans_traduction
 	var r: Variant = steam.call("steamInitEx")  # sans_traduction
 	steam_ok = r is Dictionary and int(r.get("status", 1)) == 0
 	print("Steam : %s" % str(r))
@@ -72,7 +77,7 @@ func nom_joueur() -> String:
 ## Débloque un succès chez Steam (sans effet hors Steam ou s'il l'est déjà).
 ## L'envoi à Steam (storeStats) est groupé ; `tout_de_suite` le fait maintenant.
 func debloquer(id: String, tout_de_suite := false) -> bool:
-	if not steam_ok:
+	if not steam_ok or Demo.actif():  # pas de succès Steam dans la démo
 		return false
 	var deja: Variant = steam.call("getAchievement", id)  # sans_traduction
 	if deja is Dictionary and bool(deja.get("ret", false)) and bool(deja.get("achieved", false)):

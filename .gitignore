@@ -2,7 +2,7 @@
 .godot/
 .import/
 *.translation
-export_presets.cfg
+# export_presets.cfg est suivi (préréglages démo et jeu complet, sans mot de passe)
 export_credentials.cfg
 
 # Builds
