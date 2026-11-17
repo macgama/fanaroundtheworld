@@ -726,9 +726,9 @@ func actualiser_pass() -> void:
 
 
 func _dlc_premium_installe() -> bool:
-	if DLC_PASS_PREMIUM <= 0 or not Engine.has_singleton("Steam"):
+	if DLC_PASS_PREMIUM <= 0 or not Plateforme.steam_ok:
 		return false
-	return bool(Engine.get_singleton("Steam").call("isDLCInstalled", DLC_PASS_PREMIUM))  # sans_traduction
+	return bool(Plateforme.steam.call("isDLCInstalled", DLC_PASS_PREMIUM))  # sans_traduction
 
 
 ## Ajoute de l'XP de PASS et renvoie celle vraiment gagnée. Missions : double
@@ -850,9 +850,9 @@ func preparer_bouton_pass(b: Button, p: Dictionary) -> void:
 
 ## Ouvre la page du DLC dans Steam. Renvoie false si l'achat n'est pas encore possible.
 func acheter_premium() -> bool:
-	if DLC_PASS_PREMIUM <= 0 or not Engine.has_singleton("Steam"):
+	if DLC_PASS_PREMIUM <= 0 or not Plateforme.steam_ok:
 		return false
-	Engine.get_singleton("Steam").call("activateGameOverlayToStore", DLC_PASS_PREMIUM, 0)  # sans_traduction
+	Plateforme.steam.call("activateGameOverlayToStore", DLC_PASS_PREMIUM, 0)  # sans_traduction
 	return true
 
 

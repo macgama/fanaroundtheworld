@@ -52,7 +52,7 @@ func _ready() -> void:
 	form.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	milieu.add_child(form)
 	var vf := Ui.vbox(16)
-	form.add_child(Ui.marge(vf, 12, 8, 12, 8))
+	form.add_child(Ui.defilement(Ui.marge(vf, 12, 8, 12, 8)))
 	vf.add_child(Ui.label("Nom du club", 30, Ui.BLANC, true, 6))
 	var hn := Ui.hbox(12)
 	vf.add_child(hn)

@@ -493,6 +493,10 @@ func _unhandled_input(ev: InputEvent) -> void:
 		return
 	if _nom.has_focus():
 		return
+	if Mobile.tactile and _lecteur.en_cours and ev is InputEventMouseButton and ev.pressed:
+		_lecteur.juger_appui()  # au doigt : toucher l'écran pendant l'écoute = taper le rythme
+		get_viewport().set_input_as_handled()
+		return
 	if ev is InputEventKey and ev.pressed and not ev.echo:
 		match (ev as InputEventKey).keycode:
 			KEY_SPACE:
