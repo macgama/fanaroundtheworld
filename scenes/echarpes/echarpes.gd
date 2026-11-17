@@ -687,7 +687,7 @@ class Decor extends Control:
 		var e := Rect2(w / 2.0 - 300, 18, 600, 112)
 		draw_style_box(Ui.boite(Ui.JAUNE, 26, 6, 8), e)
 		var police := Ui.police_titre()
-		var txt := "ÉCHARPES"
+		var txt := tr("ÉCHARPES")
 		var fs := 76
 		var tw := police.get_string_size(txt, HORIZONTAL_ALIGNMENT_LEFT, -1, fs).x
 		var pos := Vector2(e.get_center().x - tw / 2.0, e.get_center().y + fs * 0.34)

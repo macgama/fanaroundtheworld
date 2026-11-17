@@ -543,11 +543,11 @@ func _chant() -> void:
 	if ecart <= FENETRE_PARFAIT * tw:
 		parfaits += 1
 		gain = 2.0 * float(mods["perfectBonus"])  # sans_traduction
-		_piste.eclat("PARFAIT !", Ui.JAUNE)
+		_piste.eclat(tr("PARFAIT !"), Ui.JAUNE)
 		_jouer("clap", 0.0, 1.15)
 	else:
 		biens += 1
-		_piste.eclat("BIEN", Ui.VERT)
+		_piste.eclat(tr("BIEN"), Ui.VERT)
 		_jouer("clap", -4.0)
 	_pousser(gain * mult * 0.9)
 	points += int(gain * mult * 10.0)
@@ -573,7 +573,7 @@ func _rate(appui: bool) -> void:
 	if mods["backfire"]:
 		cout *= 1.5
 	_pousser(-cout)
-	_piste.eclat("RATÉ", Ui.ROUGE)
+	_piste.eclat(tr("RATÉ"), Ui.ROUGE)
 	_fanzzy[0].trembler()
 	_maj_combo()
 

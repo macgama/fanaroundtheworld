@@ -180,7 +180,7 @@ class Tampon extends Control:
 			draw_string(f, Vector2(-w / 2.0, fs * 0.35), ch, HORIZONTAL_ALIGNMENT_LEFT, -1, fs, encre)
 			angle += w / rayon
 		draw_set_transform(Vector2.ZERO, 0, Vector2.ONE)
-		_centre(f, "VISITÉ", c + Vector2(0, -20), 54, encre)
+		_centre(f, tr("VISITÉ"), c + Vector2(0, -20), 54, encre)
 		_centre(f, date, c + Vector2(0, 40), 30, encre)
 		_centre(Ui.police_texte(), club, c + Vector2(0, r * 0.88), 22, encre)
 
