@@ -5,7 +5,7 @@ extends CanvasLayer
 ##
 ## Parcours : fonder son fan club → visiter le QG → choisir ses équipes
 ## favorites → choisir un match → faire un prono → choisir où le suivre →
-## voyage → tribune → premier duel → cadeau de bienvenue.
+## déplacement → tribune → premier duel → cadeau de bienvenue.
 ##
 ## Il ne touche à aucun écran : il regarde la scène en cours et l'état du jeu
 ## (Game) pour savoir où en est le joueur, et retrouve les boutons par leur
@@ -26,6 +26,7 @@ const SC_CLUB := "res://scenes/club/club.tscn"
 const SC_FAVORIS := "res://scenes/favoris/favoris.tscn"
 const SC_CARTE := "res://scenes/carte/carte.tscn"
 const SC_VOYAGE := "res://scenes/voyage/voyage.tscn"
+const SC_DEPLACEMENT := "res://scenes/deplacement/deplacement.tscn"
 const SC_TRIBUNE := "res://scenes/tribune/tribune.tscn"
 const SC_DUELS := ["res://scenes/duel/duel.tscn", "res://scenes/arene/arene.tscn", "res://scenes/poussee/poussee.tscn"]
 
@@ -48,6 +49,9 @@ const ETAPES := [
 	{"id": "lieu", "scenes": [SC_CARTE], "titre": "Où suivre le match ?",
 		"texte": "Choisis ton camp et où suivre le match : au stade, tu gagnes le tampon du stade ; à la maison, c'est gratuit. Puis appuie sur C'EST PARTI !",
 		"cible": "C'EST PARTI"},  # sans_traduction
+	{"id": "deplacement", "scenes": [SC_DEPLACEMENT], "titre": "Le déplacement",
+		"texte": "Ton fan club organise le voyage : choisis le car ou le train, et ton itinéraire. En route, tes choix font monter la ferveur du convoi, qui rapporte une prime à l'arrivée !",
+		"cible": "EN ROUTE"},  # sans_traduction
 	{"id": "voyage", "scenes": [SC_VOYAGE], "titre": "En route !",
 		"texte": "Le car du fan club file vers le stade. Une fois arrivé, entre dans le stade !",
 		"cible": "ENTRER DANS LE STADE"},
@@ -362,6 +366,8 @@ func _placer() -> void:
 		largeur = 500.0
 	elif sc == SC_CARTE and not _reduit:
 		largeur = 620.0  # à côté d'un panneau qu'il ne faut pas cacher
+	elif sc == SC_DEPLACEMENT and not _reduit:
+		largeur = 520.0
 	_bulle.custom_minimum_size.x = largeur
 	_bulle.size = Vector2.ZERO
 	_bulle.reset_size()
@@ -381,6 +387,9 @@ func _placer() -> void:
 		y = vp.y - taille.y - 300.0  # laisse voir la flèche sur les boutons
 	elif sc == SC_CARTE:
 		x = 500.0  # entre la liste des matchs et la fiche
+	elif sc == SC_DEPLACEMENT:
+		x = 24.0  # en haut à gauche : ni le panneau, ni les événements en route
+		y = 130.0
 	_bulle.position = Vector2(x, maxf(20.0, y))
 	_bulle.size = taille
 	if not _replace:

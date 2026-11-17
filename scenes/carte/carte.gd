@@ -810,9 +810,6 @@ func _afficher_fiche() -> void:
 	go.disabled = not FicheMatch.jouable(f) or cout_final > Game.jetons
 	if not FicheMatch.jouable(f):
 		go.text = FicheMatch.STATUTS.get(statut, "Indisponible")
-	if mode_suivi == "stade" and dist >= 30 and FicheMatch.jouable(f):
-		go.text = "ORGANISER LE DÉPLACEMENT"
-		go.add_theme_font_size_override("font_size", 30)
 	go.pressed.connect(func(): _partir(f, cout_final, dist))
 	v.add_child(go)
 

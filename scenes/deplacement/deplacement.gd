@@ -70,7 +70,7 @@ func _ready() -> void:
 	_panneau.offset_top = 24
 	_panneau.offset_bottom = -24
 	add_child(_panneau)
-	_contenu = Ui.vbox(12)
+	_contenu = Ui.vbox(9)
 	_panneau.add_child(_contenu)
 	_cadrer.call_deferred()
 	_afficher()
@@ -90,7 +90,7 @@ func _cadrer() -> void:
 	var boite := Rect2(_depart, Vector2.ZERO)
 	for q in pts:
 		boite = boite.expand(q)
-	var largeur := clampf(maxf(boite.size.x * 1.7, boite.size.y * 2.4) + 6.0, 14.0, 300.0)
+	var largeur := clampf(maxf(boite.size.x * 1.6, boite.size.y * 3.4) + 6.0, 14.0, 300.0)
 	carte.voir(boite.get_center(), largeur, false)
 	_tracer()
 
@@ -189,16 +189,22 @@ func _afficher() -> void:
 	aide.add_child(la)
 	v.add_child(aide)
 	var fd := Deplacement.ferveur_depart(_transport, _familles, _exterieur)
-	v.add_child(Ui.label(tr("Ferveur au départ : %d / 100 · billet %d + trajet %d") % [fd, int(Game.MODES_SUIVI["stade"]["billet"]), _cout_trajet()], 17, Ui.GRIS))
+	v.add_child(Ui.label(tr("Ferveur au départ : %d / 100") % fd, 17, Ui.GRIS))
+	var hprix := Ui.hbox(6)
+	hprix.add_child(Ui.label(tr("Billet %d + trajet %d = ") % [int(Game.MODES_SUIVI["stade"]["billet"]), _cout_trajet()], 20, Ui.BLANC, true))
+	hprix.add_child(Ui.icone("jeton", 26))
+	hprix.add_child(Ui.label(str(_cout_total()), 24, Ui.JAUNE if _cout_total() <= Game.jetons else Ui.ROUGE, true))
+	v.add_child(hprix)
 
 	var hb := Ui.hbox(12)
 	var retour := Ui.bouton("Retour", Ui.NUIT_CLAIR, 26)
-	retour.custom_minimum_size = Vector2(180, 84)
+	retour.custom_minimum_size = Vector2(180, 76)
 	retour.pressed.connect(func(): Game.aller(Game.SCENE_CARTE, {"niveau": _p.get("niveau", "monde"), "continent": _p.get("continent", ""), "pays": _p.get("pays", "")}))
 	hb.add_child(retour)
-	_bouton_partir = Ui.bouton(tr("EN ROUTE ! · %d Jetons") % _cout_total(), Ui.JAUNE, 30)
+	# texte fixe (traduit à l'affichage) : le tutoriel retrouve le bouton par son début
+	_bouton_partir = Ui.bouton("EN ROUTE !", Ui.JAUNE, 30)
 	Ui.colorer_bouton(_bouton_partir, Ui.JAUNE, true)
-	_bouton_partir.custom_minimum_size = Vector2(0, 84)
+	_bouton_partir.custom_minimum_size = Vector2(0, 76)
 	_bouton_partir.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_bouton_partir.disabled = _cout_total() > Game.jetons
 	if _bouton_partir.disabled:
@@ -231,7 +237,7 @@ func _carte_transport(t: String) -> Control:
 	var possible := Deplacement.transport_possible(t, _dist)
 	var choisi := t == _transport
 	var b := Button.new()
-	b.custom_minimum_size = Vector2(0, 118)
+	b.custom_minimum_size = Vector2(0, 116)
 	b.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	b.add_theme_stylebox_override("normal", Ui.boite(Ui.BLEU if choisi else Ui.NUIT_CLAIR, 16, 4, 4, Ui.JAUNE if choisi else Ui.CONTOUR))
 	b.add_theme_stylebox_override("hover", Ui.boite(Ui.NUIT_CLAIR.lightened(0.1), 16, 4, 4))
@@ -265,7 +271,7 @@ func _carte_itineraire(i: String) -> Control:
 	var info: Dictionary = Deplacement.ITINERAIRES[i]
 	var choisi := i == _itin
 	var b := Button.new()
-	b.custom_minimum_size = Vector2(0, 78)
+	b.custom_minimum_size = Vector2(0, 70)
 	b.add_theme_stylebox_override("normal", Ui.boite(Ui.VIOLET if choisi else Ui.NUIT_CLAIR, 16, 4, 4, Ui.JAUNE if choisi else Ui.CONTOUR))
 	b.add_theme_stylebox_override("hover", Ui.boite(Ui.NUIT_CLAIR.lightened(0.1), 16, 4, 4))
 	b.add_theme_stylebox_override("pressed", Ui.boite(Ui.VIOLET, 16, 4, 2))
@@ -357,7 +363,7 @@ func _cadrer_route() -> void:
 	var boite := Rect2(_depart, Vector2.ZERO)
 	for q in carte.route_points:
 		boite = boite.expand(q)
-	var largeur := clampf(maxf(boite.size.x * 1.5, boite.size.y * 4.0) + 6.0, 14.0, 300.0)
+	var largeur := clampf(maxf(boite.size.x * 1.5, boite.size.y * 5.0) + 6.0, 14.0, 300.0)
 	carte.voir(boite.get_center(), largeur, true)
 
 

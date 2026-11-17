@@ -39,13 +39,11 @@
 	"DÉPLACEMENT À L'EXTÉRIEUR": "AWAY DAY",
 	"Décorer le convoi": "Decorate the convoy",
 	"Déplacement de %s km à organiser": "%s km trip to organise",
-	"EN ROUTE ! · %d Jetons": "LET'S GO! · %d Tokens",
 	"Elle danse dans l'allée du car.": "It dances down the coach aisle.",
 	"Elle vous fait coucou aussi.": "It waves back.",
 	"En route, chaque choix fait monter ou baisser la ferveur du convoi. À l'arrivée : une prime de Jetons et d'XP du PASS, et jusqu'à ×%s sur les Jetons des duels de ce match aujourd'hui. Certains choix demandent un FANZZY d'une famille précise dans le convoi.": "On the way, every choice raises or lowers the convoy's fervour. On arrival: a Token and PASS XP bonus, and up to ×%s on Tokens from duels on this match today. Some choices need a FANZZY from a specific family in the convoy.",
 	"Faire une ola pour les vaches": "Do a wave for the cows",
 	"Ferveur": "Fervour",
-	"Ferveur au départ : %d / 100 · billet %d + trajet %d": "Starting fervour: %d / 100 · ticket %d + trip %d",
 	"Ferveur du convoi : %d / 100": "Convoy fervour: %d / 100",
 	"Ferveur du déplacement (×%s)": "Away day fervour (×%s)",
 	"Fête de village": "Village fête",
@@ -180,5 +178,10 @@
 	"Ça se calme vite.": "It calms down quickly.",
 	"Échanger des écharpes, entre fans": "Swap scarves, fan to fan",
 	"Étape : %s": "Stop: %s",
-	"Événement %d / %d": "Event %d / %d"
+	"Événement %d / %d": "Event %d / %d",
+	"Le déplacement": "The away day",
+	"Ton fan club organise le voyage : choisis le car ou le train, et ton itinéraire. En route, tes choix font monter la ferveur du convoi, qui rapporte une prime à l'arrivée !": "Your fan club organises the trip: pick the coach or the train, and your route. On the way, your choices raise the convoy's fervour, which earns a bonus on arrival!",
+	"EN ROUTE !": "LET'S GO!",
+	"Ferveur au départ : %d / 100": "Starting fervour: %d / 100",
+	"Billet %d + trajet %d = ": "Ticket %d + trip %d = "
 }
