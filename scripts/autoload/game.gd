@@ -12,7 +12,8 @@ signal missions_terminees(liste: Array)
 signal succes_gagnes(liste: Array)
 
 const VERSION := "0.3.0"
-const CHEMIN_SAUVEGARDE := "user://sauvegarde.json"
+## La démo garde sa propre sauvegarde (user://demo_sauvegarde.json, voir Demo).
+var CHEMIN_SAUVEGARDE := Demo.fichier("user://sauvegarde.json")
 ## Nom du fichier dans Steam Cloud (même contenu que la sauvegarde locale).
 const FICHIER_CLOUD := "sauvegarde.json"
 
@@ -100,6 +101,8 @@ var sauve_le := 0
 var nb_evenements := 0
 ## Tournoi des fan clubs du week-end (règles dans Tournoi, réseau dans EnLigne).
 var tournoi: Dictionary = Tournoi.vide()
+## Démo : écran « fin de la démo » déjà montré.
+var demo_fin_vue := false
 ## Dernier déplacement fait (voir Deplacement) : {match, jour, mult, ferveur}.
 ## Ses Jetons de duel sont multipliés par « mult » le jour même.
 var deplacement: Dictionary = {}
@@ -205,6 +208,10 @@ func _outils_de_test() -> void:
 # ---------------------------------------------------------------- navigation
 
 func aller(scene: String, p: Dictionary = {}) -> void:
+	var ferme := Demo.ecran_ferme(scene)
+	if ferme != "":
+		Demo.montrer_ferme(ferme)  # démo : « dans le jeu complet »
+		return
 	params = p
 	get_tree().change_scene_to_file(scene)
 
@@ -220,8 +227,19 @@ func xp_dans_niveau() -> float:
 
 
 func ajouter_xp(n: int) -> void:
-	xp += n
+	xp = Demo.xp_limitee(xp + n)  # la démo s'arrête au niveau Demo.NIVEAU_MAX
 	sauver()
+
+
+## Démo : vrai quand le joueur a fini la démo et n'a pas encore vu l'écran de fin.
+func fin_demo_a_montrer() -> bool:
+	return Demo.actif() and not demo_fin_vue and niveau() >= Demo.NIVEAU_MAX
+
+
+func montrer_fin_demo() -> void:
+	demo_fin_vue = true
+	sauver()
+	Demo.montrer_fin()
 
 
 func gain_suivi(mode: String) -> float:
@@ -1339,6 +1357,7 @@ func sauver() -> void:
 		"stats": stats,
 		"sauve_le": sauve_le,
 		"tournoi": tournoi,
+		"demo_fin_vue": demo_fin_vue,
 		"deplacement": deplacement,
 		"ligue": ligue,
 		"soirees": soirees,
@@ -1373,7 +1392,8 @@ func charger() -> void:
 
 func _appliquer(d: Dictionary) -> void:
 	fan_club_nom = d.get("fan_club_nom", fan_club_nom)
-	xp = int(d.get("xp", 0))
+	xp = Demo.xp_limitee(int(d.get("xp", 0)))
+	demo_fin_vue = bool(d.get("demo_fin_vue", false))
 	position_club = d.get("position", position_club)
 	tampons = d.get("tampons", {})
 	equipe = d.get("equipe", [])
@@ -1457,6 +1477,7 @@ func reinitialiser() -> void:
 	stats = {}
 	sauve_le = 0
 	tournoi = Tournoi.vide()
+	demo_fin_vue = false
 	deplacement = {}
 	ligue = Ligue.vide()
 	soirees = SoireeMatch.vide()

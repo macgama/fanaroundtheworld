@@ -61,6 +61,8 @@ func _ready() -> void:
 	_rafraichir(false)
 	if p.has("match_id") and not Donnees.match_par_id(p["match_id"]).is_empty():
 		_choisir_match(p["match_id"])
+	if Game.fin_demo_a_montrer():
+		Game.montrer_fin_demo.call_deferred()
 
 
 func _placer_vue() -> void:
@@ -334,6 +336,9 @@ func _aller_monde() -> void:
 
 
 func _aller_continent(c: String) -> void:
+	if not Demo.continent_ouvert(c):
+		Demo.montrer_ferme(Demo.TEXTE_CONTINENTS)
+		return
 	niveau = "continent"
 	continent = c
 	pays = ""
@@ -342,6 +347,9 @@ func _aller_continent(c: String) -> void:
 
 
 func _aller_pays(cle: String) -> void:
+	if not Demo.continent_ouvert(Geo.continent_de(cle)):
+		Demo.montrer_ferme(Demo.TEXTE_CONTINENTS)
+		return
 	niveau = "pays"
 	pays = cle
 	continent = Geo.continent_de(cle)
@@ -684,6 +692,10 @@ func _carte_match(f: Dictionary) -> Control:
 # ------------------------------------------------------------------ fiche du match
 
 func _choisir_match(id: String) -> void:
+	var lieu: Dictionary = FicheMatch.de(Donnees.match_par_id(id))["lieu"]
+	if lieu["niveau"] != "monde" and not Demo.continent_ouvert(str(lieu["continent"])):
+		Demo.montrer_ferme(Demo.TEXTE_CONTINENTS)
+		return
 	match_choisi = id
 	camp = "home"
 	# Ton équipe favorite est choisie d'office (tu peux toujours changer de camp).

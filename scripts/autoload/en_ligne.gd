@@ -40,7 +40,8 @@ var url := ClassementFans.URL
 
 func _ready() -> void:
 	_charger()
-	desactive = OS.has_feature("hors_ligne") or "--hors-ligne" in OS.get_cmdline_user_args()
+	# La démo n'envoie rien au classement en ligne (il est réservé au jeu complet).
+	desactive = OS.has_feature("hors_ligne") or "--hors-ligne" in OS.get_cmdline_user_args() or Demo.actif()
 	for a in OS.get_cmdline_user_args():
 		if a.begins_with("--classement-url="):  # sans_traduction
 			url = a.trim_prefix("--classement-url=")  # sans_traduction

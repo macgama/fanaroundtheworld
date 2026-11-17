@@ -20,7 +20,7 @@ func _ready() -> void:
 	_construire_foule()
 	_construire_titre()
 	_construire_menu()
-	var bas := Ui.label(tr("v%s · prototype · noms de clubs fictifs · %s") % [Game.VERSION, tr(Donnees.attribution)], 18, Color(1, 1, 1, 0.8), false, 5)
+	var bas := Ui.label(tr("v%s · %s · noms de clubs fictifs · %s") % [Game.VERSION, tr("démo") if Demo.actif() else tr("prototype"), tr(Donnees.attribution)], 18, Color(1, 1, 1, 0.8), false, 5)
 	bas.set_anchors_preset(Control.PRESET_BOTTOM_WIDE)
 	bas.offset_top = -40
 	bas.offset_left = 24
@@ -173,6 +173,8 @@ func _construire_menu() -> void:
 	jouer.pressed.connect(_jouer)
 	_focus_plus_tard(jouer)
 	_pulser(jouer)
+	if Demo.actif():
+		v.add_child(Demo.ruban_accueil())
 	var ligne := _bouton(v, "EN LIGNE", Ui.BLEU, 38, 90)
 	ligne.tooltip_text = "Défie un ami ou un autre joueur"
 	ligne.pressed.connect(_en_ligne)
