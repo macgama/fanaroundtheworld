@@ -40,6 +40,8 @@ const SCENE_COLLECTION := "res://scenes/collection/collection.tscn"
 const SCENE_CLASSEMENT := "res://scenes/classement/classement.tscn"
 const SCENE_PASS := "res://scenes/pass/pass.tscn"
 const SCENE_TOURNOI := "res://scenes/tournoi/tournoi.tscn"
+const SCENE_LIGUE := "res://scenes/ligue/ligue.tscn"
+const SCENE_SOIREE := "res://scenes/soiree/soiree.tscn"
 
 ## Paramètres passés d'un écran à l'autre (match choisi, camp supporté…).
 var params: Dictionary = {}
@@ -101,6 +103,12 @@ var tournoi: Dictionary = Tournoi.vide()
 ## Dernier déplacement fait (voir Deplacement) : {match, jour, mult, ferveur}.
 ## Ses Jetons de duel sont multipliés par « mult » le jour même.
 var deplacement: Dictionary = {}
+## Ligue des tribunes (saison du mois, scripts/jeu/ligue.gd).
+var ligue: Dictionary = Ligue.vide()
+## Soirs de match : buts déjà récompensés et fil des buts, par match (SoireeMatch).
+var soirees: Dictionary = SoireeMatch.vide()
+## Dernier score vu de chaque match en direct d'une équipe favorite (alerte « BUT ! »).
+var _scores_favoris: Dictionary = {}
 
 ## Où suivre le match. Au stade : billet + trajet, tampon du stade, plus de Jetons.
 const MODES_SUIVI := {
@@ -161,11 +169,13 @@ func _outils_de_test() -> void:
 				p["auto"] = true  # Arène / Poussée : ton camp joue tout seul (démo)
 			if args.has("chant"):
 				p["chant"] = ChantClub.par_defaut()  # duel : essayer le chant par défaut
+			if args.has("simuler"):
+				p["simuler"] = true  # soir de match : buts simulés (démo, captures)
 		var scenes := {"carte": SCENE_CARTE, "voyage": SCENE_VOYAGE, "deplacement": SCENE_DEPLACEMENT, "tribune": SCENE_TRIBUNE, "duel": SCENE_DUEL,
 			"arene": SCENE_ARENE, "poussee": SCENE_POUSSEE,
 			"pronos": SCENE_PRONOS, "missions": SCENE_MISSIONS, "favoris": SCENE_FAVORIS, "club": SCENE_CLUB, "creation": SCENE_CREATION_CLUB, "chant": SCENE_CHANT, "buvette": SCENE_BUVETTE, "boulots": SCENE_BOULOTS, "speaker": SCENE_SPEAKER, "tifo": SCENE_TIFO,
 			"salon": SCENE_SALON, "collection": SCENE_COLLECTION, "classement": SCENE_CLASSEMENT, "pass": SCENE_PASS,
-			"tournoi": SCENE_TOURNOI}
+			"tournoi": SCENE_TOURNOI, "ligue": SCENE_LIGUE, "soiree": SCENE_SOIREE}
 		for b in ListeBoulots.LISTE:
 			scenes[b["id"]] = b["scene"]  # chaque petit boulot : --scene=<id>
 		if args.has("onglet"):
@@ -372,8 +382,18 @@ func tamponner(cle: String, info: Dictionary) -> bool:
 
 # ---------------------------------------------------------------- fan club
 
+static var _decalage_test := 0
+static var _decalage_lu := false
+
+
+## Heure du jeu (secondes UTC). Tests : « -- --maintenant=2026-11-21T15:00:00 » fait comme si c'était ce moment.
 static func maintenant() -> int:
-	return int(Time.get_unix_time_from_system())
+	if not _decalage_lu:
+		_decalage_lu = true
+		for a in OS.get_cmdline_user_args():
+			if a.begins_with("--maintenant="):  # sans_traduction
+				_decalage_test = int(Time.get_unix_time_from_datetime_string(a.trim_prefix("--maintenant="))) - int(Time.get_unix_time_from_system())  # sans_traduction
+	return int(Time.get_unix_time_from_system()) + _decalage_test
 
 
 func club_cree() -> bool:
@@ -450,11 +470,104 @@ func ameliorer_local(type: String) -> bool:
 	return true
 
 
+# ---------------------------------------------------------------- soir de match
+
+## État de la soirée d'un match : {debut, buts, fil, prime}.
+func soiree_de(match_id: String) -> Dictionary:
+	SoireeMatch.nettoyer(soirees, maintenant())
+	return SoireeMatch.etat(soirees, match_id, maintenant())
+
+
+## Une mini-ambiance jouée après un vrai but : verse les gains (une fois par
+## but, MAX_BUTS par match) et renvoie {jetons, xp, xp_pass}, ou {} si ce but
+## a déjà rapporté.
+func recompenser_but_soiree(m: Dictionary, cle: String, perf: float, pour_nous: bool, mode_suivi: String, ferveur: float) -> Dictionary:
+	var e := soiree_de(str(m.get("id", "")))
+	if not SoireeMatch.peut_recompenser(e, cle):
+		return {}
+	e["buts"].append(cle)
+	var r := SoireeMatch.recompense(perf, pour_nous, gain_suivi(mode_suivi), ferveur)
+	jetons += int(r["jetons"])
+	xp += int(r["xp"])
+	r["xp_pass"] = gagner_xp_pass(int(r["xp_pass"]))
+	noter_mission("soiree_but", "nous" if pour_nous else "eux")
+	sauver()
+	return r
+
+
+## Prime de fin de soirée (présent au coup de sifflet final depuis 30 min), une fois.
+func prime_fin_soiree(m: Dictionary, mode_suivi: String) -> Dictionary:
+	var e := soiree_de(str(m.get("id", "")))
+	if bool(e["prime"]) or maintenant() - int(e["debut"]) < SoireeMatch.PRESENCE_PRIME:
+		return {}
+	e["prime"] = true
+	var r := SoireeMatch.prime_fin(gain_suivi(mode_suivi))
+	jetons += int(r["jetons"])
+	xp += int(r["xp"])
+	r["xp_pass"] = gagner_xp_pass(int(r["xp_pass"]))
+	sauver()
+	return r
+
+
+## Un vrai but d'une équipe favorite, où qu'on soit dans le jeu : petite alerte
+## qui propose de vivre la fin du match en soir de match.
+func _surveiller_buts_favoris() -> void:
+	var vus: Dictionary = {}
+	for m in Donnees.matchs():
+		if not Donnees.en_direct(m):
+			continue
+		var favs := camps_favoris(m)
+		if favs.is_empty():
+			continue
+		var id := str(m.get("id", ""))
+		var sc := SoireeMatch.score_de(m)
+		vus[id] = sc
+		if not _scores_favoris.has(id):
+			continue
+		for b in SoireeMatch.detecter(_scores_favoris[id], sc):
+			if not b["annule"]:
+				_alerte_but(m, str(favs[0]), str(b["cote"]) in favs)
+	_scores_favoris = vus
+
+
+func _alerte_but(m: Dictionary, camp_favori: String, pour_nous: bool) -> void:
+	if DisplayServer.get_name() == "headless" or not is_inside_tree():
+		return
+	var sc := get_tree().current_scene
+	if sc and sc.scene_file_path in [SCENE_SOIREE, SCENE_DUEL, SCENE_ARENE, SCENE_POUSSEE]:
+		return  # déjà dans un match : l'écran s'en occupe
+	var f := FicheMatch.de(m)
+	var couche := CanvasLayer.new()
+	couche.layer = 51
+	add_child(couche)
+	var toast := Ui.panneau(Ui.JAUNE if pour_nous else Ui.NUIT_CLAIR, 20, 5)
+	var h := Ui.hbox(14)
+	var nom: String = (f["dom"] if camp_favori == "home" else f["ext"])["nom"]
+	var titre := tr("BUT ! %s") % nom if pour_nous else tr("But encaissé par %s") % nom
+	h.add_child(Ui.label("%s · %s %s %s" % [titre, f["dom"]["sigle"], Donnees.score_texte(m), f["ext"]["sigle"]], 24, Ui.CONTOUR if pour_nous else Ui.BLANC, true))
+	var b := Ui.bouton("Vivre le match", Ui.ROSE, 22)
+	b.pressed.connect(func():
+		couche.queue_free()
+		aller(SCENE_SOIREE, {"match_id": str(m.get("id", "")), "camp": camp_favori, "mode": "maison", "cout": 0, "suivi_a_noter": true}))
+	h.add_child(b)
+	toast.add_child(h)
+	toast.set_anchors_preset(Control.PRESET_CENTER_TOP)
+	toast.grow_horizontal = Control.GROW_DIRECTION_BOTH
+	toast.offset_top = 128  # sous la barre du haut de la carte
+	couche.add_child(toast)
+	Ui.pop(toast, 1.15)
+	var tw := toast.create_tween()
+	tw.tween_interval(8.0)
+	tw.tween_property(toast, "modulate:a", 0.0, 0.5)
+	tw.tween_callback(couche.queue_free)
+
+
 # ---------------------------------------------------------------- pronostics
 
 func _brancher_pronostics() -> void:
 	Donnees.mis_a_jour.connect(resoudre_pronostics)
 	Donnees.mis_a_jour.connect(_compter_evenements)
+	Donnees.mis_a_jour.connect(_surveiller_buts_favoris)
 	resoudre_pronostics()
 	_compter_evenements()
 
@@ -851,7 +964,7 @@ func couleurs_club_index() -> Array:
 ## Le club adverse si un duel sur ce match compte pour le tournoi, sinon {}.
 ## Les duels en ligne contre un vrai joueur ne comptent pas (ils ont leur salon).
 func adversaire_tournoi(m: Dictionary) -> Dictionary:
-	if m.is_empty() or bool(params.get("en_ligne", false)):
+	if m.is_empty() or bool(params.get("en_ligne", false)) or params.has("ligue_bot"):
 		return {}
 	actualiser_tournoi()
 	if Tournoi.raison_refus(tournoi, str(m.get("id", "")), Donnees.heure_unix(m), maintenant()) != "":
@@ -877,6 +990,121 @@ func noter_duel_tournoi(m: Dictionary, gagne: bool, mode_suivi: String) -> Dicti
 ## Récompense du tournoi fini (Jetons + XP de PASS). {} s'il n'y en a pas.
 func reclamer_tournoi() -> Dictionary:
 	var g := Tournoi.reclamer(tournoi)
+	if g.is_empty():
+		return {}
+	jetons += int(g["jetons"])
+	g["xp_pass"] = gagner_xp_pass(int(g["xp_pass"]))
+	sauver()
+	return g
+
+
+# ---------------------------------------------------------------- Ligue des tribunes
+
+## Passe à la saison du mois (la précédente attend sa récompense). Renvoie le calendrier.
+func actualiser_ligue() -> Dictionary:
+	var t := maintenant()
+	var change := Ligue.actualiser(ligue, t)
+	var avant := (ligue["duels"] as Array).map(func(d): return d["etat"])
+	Ligue.expirer(ligue, t)
+	if change or avant != (ligue["duels"] as Array).map(func(d): return d["etat"]):
+		sauver()
+	return Ligue.calendrier(t)
+
+
+## Entrée dans la saison : nom de tournoi (ou un nom tiré du fan club) et couleurs.
+func inscrire_ligue(nom: Variant = null, couleurs: Variant = null) -> bool:
+	actualiser_ligue()
+	if not club_cree():
+		return false
+	if nom == null:
+		nom = tournoi["nom"] if bool(tournoi["inscrit"]) or not (tournoi["historique"] as Array).is_empty() else ligue["nom"]
+		if not bool(ligue["inscrit"]) and nom == [0, 0]:
+			var rng := RandomNumberGenerator.new()
+			rng.seed = hash(fan_club_nom)
+			nom = Tournoi.nom_au_hasard(rng)
+	if couleurs == null:
+		couleurs = couleurs_club_index()
+	ligue["nom"] = Tournoi.nom_valide(nom)
+	ligue["couleurs"] = [clampi(int(couleurs[0]), 0, FanClub.COULEURS.size() - 1), clampi(int(couleurs[1]), 0, FanClub.COULEURS.size() - 1)]
+	ligue["inscrit"] = true
+	ligue["inscrit_serveur"] = false
+	sauver()
+	return true
+
+
+## Club du jeu de ta poule affronté dans ce duel (Game.params["ligue_bot"]), sinon {}.
+func bot_ligue() -> Dictionary:
+	if not params.has("ligue_bot") or bool(params.get("en_ligne", false)):
+		return {}
+	var k := int(params["ligue_bot"])
+	for b in Ligue.bots_de_la_poule(ligue, EnLigne.ligue_poule, maintenant()):
+		if str(b["id"]) == "bot:%d" % k:
+			return b
+	return {}
+
+
+## Fin d'un duel (trois modes). Compte pour la Ligue si c'est un duel en ligne
+## (code de l'hôte, adversaire connu du serveur) ou contre un club du jeu de ta poule,
+## pendant une journée et sur un match du week-end. Renvoie la ligne du duel ou {}.
+## `resultat` : 1 gagné, 0 nul, -1 perdu.
+func noter_duel_ligue(m: Dictionary, resultat: int) -> Dictionary:
+	if m.is_empty():
+		return {}
+	var c := actualiser_ligue()
+	if c["etat"] != "journee" or not Ligue.match_de_la_journee(Donnees.heure_unix(m), c):
+		return {}
+	var adv := {}
+	var code := ""
+	if bool(params.get("en_ligne", false)):
+		var fan := str(Reseau.adversaire.get("fan", ""))
+		code = str(params.get("code_ligue", ""))
+		if fan == "" or not Ligue.code_valide(code) or fan == str(EnLigne.identite["id"]):
+			return {}
+		adv = {"id": fan, "bot": false, "nom": Reseau.adversaire.get("ligue_nom", [0, 0]), "couleurs": [0, 7],
+			"nom_texte": str(Reseau.adversaire.get("nom", ""))}
+	else:
+		adv = bot_ligue()
+		if adv.is_empty():
+			return {}
+		var rng := RandomNumberGenerator.new()
+		rng.randomize()
+		code = Ligue.nouveau_code(rng)
+	if not bool(ligue["inscrit"]) and not inscrire_ligue():
+		return {}
+	var d := Ligue.noter_duel(ligue, code, adv, str(m.get("id", "")), Donnees.heure_unix(m), resultat, Donnees.en_direct(m), maintenant())
+	if d.is_empty():
+		return {}
+	if adv.has("nom_texte"):
+		d["nom_texte"] = adv["nom_texte"]
+	sauver()
+	EnLigne.synchroniser_ligue()
+	return d
+
+
+## Ce duel en ligne comptera-t-il pour la Ligue ? "" si oui, sinon la raison (pour le salon).
+func raison_hors_ligue(m: Dictionary) -> String:
+	var c := actualiser_ligue()
+	if not club_cree():
+		return "Crée ton fan club pour jouer la Ligue des tribunes"
+	if c["etat"] != "journee":
+		return "Pas de journée de Ligue en ce moment (du vendredi au lundi midi)"
+	if m.is_empty() or not Ligue.match_de_la_journee(Donnees.heure_unix(m), c):
+		return "Ce match n'est pas un match du week-end de la journée"
+	if str(Reseau.adversaire.get("fan", "")) == "" and Reseau.connecte():
+		return "L'adversaire n'a pas encore d'identité en ligne"
+	var r := Ligue.raison_refus(ligue if bool(ligue["inscrit"]) else _ligue_essai(), str(Reseau.adversaire.get("fan", "?")), Donnees.heure_unix(m), maintenant())
+	return r
+
+
+func _ligue_essai() -> Dictionary:
+	var s: Dictionary = ligue.duplicate(true)
+	s["inscrit"] = true
+	return s
+
+
+## Récompense de la saison finie (Jetons + XP de PASS). {} s'il n'y en a pas.
+func reclamer_ligue() -> Dictionary:
+	var g := Ligue.reclamer(ligue)
 	if g.is_empty():
 		return {}
 	jetons += int(g["jetons"])
@@ -1112,6 +1340,8 @@ func sauver() -> void:
 		"sauve_le": sauve_le,
 		"tournoi": tournoi,
 		"deplacement": deplacement,
+		"ligue": ligue,
+		"soirees": soirees,
 	}
 	var texte := JSON.stringify(d, "\t")
 	var f := FileAccess.open(CHEMIN_SAUVEGARDE, FileAccess.WRITE)
@@ -1184,6 +1414,8 @@ func _appliquer(d: Dictionary) -> void:
 	tournoi = Tournoi.reparer(d.get("tournoi", null))
 	var dp: Variant = d.get("deplacement", {})
 	deplacement = dp if dp is Dictionary else {}
+	ligue = Ligue.reparer(d.get("ligue", null))
+	soirees = SoireeMatch.reparer(d.get("soirees", null))
 	# Un FANZZY retiré du catalogue ne doit pas casser la tribune.
 	for i in equipe.size():
 		if fanzzy_par_id(str(equipe[i])).is_empty():
@@ -1226,4 +1458,6 @@ func reinitialiser() -> void:
 	sauve_le = 0
 	tournoi = Tournoi.vide()
 	deplacement = {}
+	ligue = Ligue.vide()
+	soirees = SoireeMatch.vide()
 	equipe = equipe_par_defaut()
