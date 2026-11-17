@@ -850,7 +850,7 @@ func _finir(res: int, pourquoi: String) -> void:
 		_pluie(Vector2(_rng.randf_range(300, 1600), _rng.randf_range(200, 600)), couleurs[0 if gagne else 1], 40)
 	var perf := PousseeRegles.performance(gagne, maxf(tribune[1], 0.0), posees[0])
 	print("Poussée : %s (%s) à %.0f s, tribunes %d/%d, cartes %d/%d" % [["défaite", "égalité", "victoire"][res + 1], pourquoi, temps, tribune[0], tribune[1], posees[0], posees[1]])
-	var g := FinDuel.enregistrer(gagne, perf, fiche, camp, mode_suivi)
+	var g := FinDuel.enregistrer(gagne, perf, fiche, camp, mode_suivi, "poussee")
 	await get_tree().create_timer(2.0).timeout
 	_lbl_annonce.text = ""
 	var titre := "VICTOIRE !" if gagne else ("ÉGALITÉ !" if res == 0 else "PERDU DE PEU…")

@@ -4,7 +4,9 @@ Depuis l'écran **Ta tribune**, trois façons de jouer le même match, avec les 
 FANZZY. Le ton reste familial : on chante, on lance des confettis, on agite des drapeaux,
 et personne ne se bagarre. Un supporter « battu » va s'asseoir ou se secouer au banc.
 Les gains (Jetons + XP du fan club) suivent les mêmes règles dans les trois modes :
-`scripts/duel/fin_duel.gd`.
+`scripts/duel/fin_duel.gd`. Une partie d'Arène (2 min) rapporte ×1,3 Jetons et une partie
+de Poussée (3 min) ×1,6, pour que chaque mode paie à peu près autant par minute de jeu
+(`FinDuel.FACTEUR_JEU`, voir `docs/equilibrage.md`).
 
 - **Rejouer le même match** (choix de Gaël, 16 nov.) : le même jour, un match rapporte 100 % des
   Jetons au 1er duel, 50 % au 2e, 25 % au 3e, puis plus rien (l'XP ne change pas). On peut

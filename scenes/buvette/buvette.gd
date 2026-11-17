@@ -288,6 +288,7 @@ func _compte_a_rebours() -> void:
 	add_child(l)
 	for t in ["3", "2", "1", "SERVICE !"]:
 		l.text = t
+		Ui.ajuster_taille(l, 200, get_viewport_rect().size.x - 120)
 		l.pivot_offset = l.size / 2.0
 		Ui.pop(l, 1.4, 0.3)
 		_sons.jouer("ui_decompte_go" if t.length() > 1 else "ui_decompte")
@@ -574,7 +575,7 @@ func _finir() -> void:
 		["Bonus de série", "+%d" % bonus],
 	]
 	if paye < brut:
-		lignes.append([tr("Fatigue (%de service du jour)") % (deja + 1), tr("paye ÷ 2")])
+		lignes.append([tr("Fatigue (%de service du jour)") % (deja + 1), tr(ListeBoulots.texte_fatigue(deja))])
 	lignes.append(["Jetons gagnés", "+%d" % paye])
 	lignes.append(["XP du fan club", "+%d" % xp])
 	for l in lignes:
@@ -657,9 +658,12 @@ class Decor extends Control:
 		var e := Rect2(w / 2.0 - 260, 18, 520, 112)
 		draw_style_box(Ui.boite(Ui.JAUNE, 26, 6, 8), e)
 		var f := Ui.police_titre()
-		var txt := "BUVETTE"
+		var txt := tr("BUVETTE")
 		var fs := 76
 		var tw := f.get_string_size(txt, HORIZONTAL_ALIGNMENT_LEFT, -1, fs).x
+		if tw > e.size.x - 60:  # « SNACK BAR » en anglais : plus long que l'enseigne
+			fs = int(fs * (e.size.x - 60) / tw)
+			tw = f.get_string_size(txt, HORIZONTAL_ALIGNMENT_LEFT, -1, fs).x
 		var pos := Vector2(e.get_center().x - tw / 2.0, e.get_center().y + fs * 0.34)
 		draw_string_outline(f, pos, txt, HORIZONTAL_ALIGNMENT_LEFT, -1, fs, 14, Ui.CONTOUR)
 		draw_string(f, pos, txt, HORIZONTAL_ALIGNMENT_LEFT, -1, fs, Ui.BLANC)

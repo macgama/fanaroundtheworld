@@ -206,6 +206,42 @@ static func espace() -> Control:
 	return c
 
 
+## Liste vide : grande icône, phrase centrée et, au besoin, un bouton pour
+## aller faire la chose (au lieu d'une ligne grise perdue en haut du panneau).
+static func etat_vide(type_icone: String, texte: String, bouton_texte := "", action := Callable()) -> Control:
+	var c := CenterContainer.new()
+	c.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	c.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	c.custom_minimum_size.y = 260
+	var v := vbox(14)
+	v.custom_minimum_size.x = 440
+	c.add_child(v)
+	var ic := icone(type_icone, 88)
+	ic.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	ic.modulate = Color(1, 1, 1, 0.85)
+	v.add_child(ic)
+	var l := label(texte, 20, GRIS)
+	l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	l.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	v.add_child(l)
+	if bouton_texte != "" and action.is_valid():
+		var b := bouton(bouton_texte, ROSE, 22)
+		b.custom_minimum_size = Vector2(280, 56)
+		b.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+		b.pressed.connect(action)
+		v.add_child(b)
+	return c
+
+
+## Réduit la taille du texte d'un Label pour qu'il tienne dans `largeur`
+## (les grands « C'EST PARTI ! » traduits débordaient de l'écran).
+static func ajuster_taille(l: Label, taille_max: int, largeur: float) -> void:
+	var f := l.get_theme_font("font")
+	var txt := String(TranslationServer.translate(l.text)) if l.auto_translate_mode != Node.AUTO_TRANSLATE_MODE_DISABLED else l.text
+	var w := f.get_string_size(txt, HORIZONTAL_ALIGNMENT_LEFT, -1, taille_max).x + l.get_theme_constant("outline_size") * 2
+	l.add_theme_font_size_override("font_size", taille_max if w <= largeur else maxi(24, int(taille_max * largeur / w)))
+
+
 static func pop(n: CanvasItem, echelle := 1.15, duree := 0.18) -> void:
 	## Petit rebond « cartoon » sur un élément.
 	if not is_instance_valid(n):

@@ -9,5 +9,6 @@
 	"Abandonner ne rapporte ni Jetons ni XP.": "Giving up earns neither Tokens nor XP.",
 	"Abandonner": "Give up",
 	"Tournoi · %s contre %s": "Tournament · %s against %s",
-	"+%d pt%s": "+%d pt%s"
+	"+%d pt%s": "+%d pt%s",
+	"victoire": "victory"
 }

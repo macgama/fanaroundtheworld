@@ -137,7 +137,7 @@ func _ligne_bilan(b: Dictionary) -> Control:
 	l1.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	v.add_child(l1)
 	var l2 := Ui.label(tr("Prime du déplacement : +%d Jetons · +%d XP PASS · duels de ce match aujourd'hui ×%s") % [
-		int(b["jetons"]), int(b["xp_pass"]), str(b["mult"]).replace(".", ",")], 18, Ui.BLANC)
+		int(b["jetons"]), int(b["xp_pass"]), Trad.decimal(b["mult"])], 18, Ui.BLANC)
 	l2.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	v.add_child(l2)
 	return pan
@@ -180,7 +180,7 @@ class Tampon extends Control:
 			draw_string(f, Vector2(-w / 2.0, fs * 0.35), ch, HORIZONTAL_ALIGNMENT_LEFT, -1, fs, encre)
 			angle += w / rayon
 		draw_set_transform(Vector2.ZERO, 0, Vector2.ONE)
-		_centre(f, "VISITÉ", c + Vector2(0, -20), 54, encre)
+		_centre(f, tr("VISITÉ"), c + Vector2(0, -20), 54, encre)
 		_centre(f, date, c + Vector2(0, 40), 30, encre)
 		_centre(Ui.police_texte(), club, c + Vector2(0, r * 0.88), 22, encre)
 

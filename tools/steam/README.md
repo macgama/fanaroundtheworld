@@ -22,7 +22,14 @@ xvfb-run -a -s "-screen 0 1920x1080x24" godot --path . --resolution 1920x1080 \
 
 `vitrine.gd` prépare une partie avancée (club niveau 7, 16 stades, album entamé),
 passe sur chaque écran et enregistre une ou plusieurs images. La sauvegarde du
-joueur est remise en place à la fin. `--seule=nom` pour une seule capture.
+joueur est remise en place à la fin. `--seule=nom1,nom2` pour quelques captures,
+`--langue=fr` ou `--langue=en` pour la langue (une passe par langue).
+
+Écrans couverts : duel d'ambiance (avec le chant du club en karaoké), cartes, Arène,
+Poussée, voyage, tribune, buvette, fan club, collection, pronostics, missions, accueil,
+soir de match (but simulé, chant, tifo, ola), déplacement à l'extérieur, PASS, Ligue des
+tribunes, petits boulots (écharpes, ramasseur, tifo, speaker), créateur de chants,
+équipes favorites, classement (vide hors ligne).
 
 ## 3. Plans du trailer (Movie Maker)
 

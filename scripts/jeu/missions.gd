@@ -34,8 +34,8 @@ const NB_SEMAINE := 3
 const CHANGEMENTS_PAR_JOUR := 1
 ## Bonus quand les 3 missions de la période sont récupérées.
 const BONUS := {
-	"jour": {"jetons": 10, "xp_pass": 50},
-	"semaine": {"jetons": 50, "xp_pass": 250},
+	"jour": {"jetons": 10, "xp_pass": 25},
+	"semaine": {"jetons": 50, "xp_pass": 125},
 }
 
 ## Modèles de missions. « cle » : seuls les événements avec cette clé comptent.
@@ -44,39 +44,39 @@ const BONUS := {
 ## favoris = au moins une équipe favorite, evenements = un derby, une finale…
 ## au calendrier).
 const JOUR := [
-	{"id": "j_suivre1", "evt": "suivre", "n": 1, "titre": "Suis un match", "texte": "Au stade, au pub, sur écran géant ou à la maison.", "jetons": 15, "xp_pass": 50},
-	{"id": "j_suivre3", "evt": "suivre", "n": 3, "titre": "Suis 3 matchs", "texte": "Peu importe où : l'important, c'est de chanter !", "jetons": 25, "xp_pass": 75},
-	{"id": "j_ecran", "evt": "suivre", "cle": "ecran", "n": 1, "titre": "Rejoins une fan zone", "texte": "Suis un match sur l'écran géant d'une ville.", "jetons": 15, "xp_pass": 50},
-	{"id": "j_pub", "evt": "suivre", "cle": "pub", "n": 1, "titre": "Ambiance au pub", "texte": "Suis un match au pub avec les supporters du coin.", "jetons": 15, "xp_pass": 50},
-	{"id": "j_duel2", "evt": "duel_joue", "n": 2, "titre": "Joue 2 duels", "texte": "Jauge d'ambiance, Arène ou Poussée.", "jetons": 20, "xp_pass": 60},
-	{"id": "j_gagne1", "evt": "duel_gagne", "n": 1, "titre": "Gagne un duel", "texte": "Fais plus de bruit que la tribune d'en face.", "jetons": 20, "xp_pass": 75},
-	{"id": "j_ambiance", "evt": "duel_joue", "cle": "duel", "n": 1, "titre": "Lance la jauge d'ambiance", "texte": "Chant, tifo et ola : joue un duel d'ambiance.", "jetons": 15, "xp_pass": 50},
-	{"id": "j_arene", "evt": "duel_joue", "cle": "arene", "n": 1, "titre": "Passe par l'Arène", "texte": "Joue une partie d'Arène, 3 FANZZY contre 3.", "jetons": 15, "xp_pass": 50},
-	{"id": "j_poussee", "evt": "duel_joue", "cle": "poussee", "n": 1, "titre": "Tente une Poussée", "texte": "Pousse le ballon jusqu'à la tribune d'en face.", "jetons": 15, "xp_pass": 50},
-	{"id": "j_prono2", "evt": "prono", "n": 2, "titre": "Fais 2 pronostics", "texte": "Gratuits et sans mise, sur les vrais matchs.", "jetons": 15, "xp_pass": 50},
-	{"id": "j_buvette", "evt": "buvette", "n": 1, "titre": "Coup de main à la buvette", "texte": "Fais un service de vendeur.", "jetons": 15, "xp_pass": 50},
-	{"id": "j_ramasseur", "evt": "ramasseur", "n": 1, "titre": "Ramasseur de balles", "texte": "Fais une partie de ramasseur de balles.", "jetons": 15, "xp_pass": 50},
-	{"id": "j_tifo", "evt": "tifo", "n": 1, "titre": "Coup de pinceau", "texte": "Peins des tifos pour le capo.", "jetons": 15, "xp_pass": 50},
-	{"id": "j_recolte", "evt": "recolte", "n": 1, "titre": "Passe à la caisse", "texte": "Récolte les recettes de ton fan club.", "jetons": 10, "xp_pass": 100, "si": "club"},
-	{"id": "j_favori", "evt": "favori", "n": 1, "titre": "Soutiens tes couleurs", "texte": "Suis ou joue un duel pour une de tes équipes favorites.", "jetons": 20, "xp_pass": 120, "si": "favoris"},
+	{"id": "j_suivre1", "evt": "suivre", "n": 1, "titre": "Suis un match", "texte": "Au stade, au pub, sur écran géant ou à la maison.", "jetons": 15, "xp_pass": 25},
+	{"id": "j_suivre3", "evt": "suivre", "n": 3, "titre": "Suis 3 matchs", "texte": "Peu importe où : l'important, c'est de chanter !", "jetons": 25, "xp_pass": 40},
+	{"id": "j_ecran", "evt": "suivre", "cle": "ecran", "n": 1, "titre": "Rejoins une fan zone", "texte": "Suis un match sur l'écran géant d'une ville.", "jetons": 15, "xp_pass": 25},
+	{"id": "j_pub", "evt": "suivre", "cle": "pub", "n": 1, "titre": "Ambiance au pub", "texte": "Suis un match au pub avec les supporters du coin.", "jetons": 15, "xp_pass": 25},
+	{"id": "j_duel2", "evt": "duel_joue", "n": 2, "titre": "Joue 2 duels", "texte": "Jauge d'ambiance, Arène ou Poussée.", "jetons": 20, "xp_pass": 30},
+	{"id": "j_gagne1", "evt": "duel_gagne", "n": 1, "titre": "Gagne un duel", "texte": "Fais plus de bruit que la tribune d'en face.", "jetons": 20, "xp_pass": 40},
+	{"id": "j_ambiance", "evt": "duel_joue", "cle": "duel", "n": 1, "titre": "Lance la jauge d'ambiance", "texte": "Chant, tifo et ola : joue un duel d'ambiance.", "jetons": 15, "xp_pass": 25},
+	{"id": "j_arene", "evt": "duel_joue", "cle": "arene", "n": 1, "titre": "Passe par l'Arène", "texte": "Joue une partie d'Arène, 3 FANZZY contre 3.", "jetons": 15, "xp_pass": 25},
+	{"id": "j_poussee", "evt": "duel_joue", "cle": "poussee", "n": 1, "titre": "Tente une Poussée", "texte": "Pousse le ballon jusqu'à la tribune d'en face.", "jetons": 15, "xp_pass": 25},
+	{"id": "j_prono2", "evt": "prono", "n": 2, "titre": "Fais 2 pronostics", "texte": "Gratuits et sans mise, sur les vrais matchs.", "jetons": 15, "xp_pass": 25},
+	{"id": "j_buvette", "evt": "buvette", "n": 1, "titre": "Coup de main à la buvette", "texte": "Fais un service de vendeur.", "jetons": 15, "xp_pass": 25},
+	{"id": "j_ramasseur", "evt": "ramasseur", "n": 1, "titre": "Ramasseur de balles", "texte": "Fais une partie de ramasseur de balles.", "jetons": 15, "xp_pass": 25},
+	{"id": "j_tifo", "evt": "tifo", "n": 1, "titre": "Coup de pinceau", "texte": "Peins des tifos pour le capo.", "jetons": 15, "xp_pass": 25},
+	{"id": "j_recolte", "evt": "recolte", "n": 1, "titre": "Passe à la caisse", "texte": "Récolte les recettes de ton fan club.", "jetons": 10, "xp_pass": 50, "si": "club"},
+	{"id": "j_favori", "evt": "favori", "n": 1, "titre": "Soutiens tes couleurs", "texte": "Suis ou joue un duel pour une de tes équipes favorites.", "jetons": 20, "xp_pass": 60, "si": "favoris"},
 ]
 
 const SEMAINE := [
-	{"id": "s_stade", "evt": "nouveau_stade", "n": 1, "titre": "Visite un nouveau stade", "texte": "Va au stade dans une enceinte jamais tamponnée.", "jetons": 60, "xp_pass": 250},
-	{"id": "s_stades2", "evt": "nouveau_stade", "n": 2, "titre": "Explorateur", "texte": "Ajoute 2 nouveaux tampons de stade à ton carnet.", "jetons": 90, "xp_pass": 300},
-	{"id": "s_stade3", "evt": "suivre", "cle": "stade", "n": 3, "titre": "Abonné du virage", "texte": "Suis 3 matchs au stade.", "jetons": 80, "xp_pass": 250},
-	{"id": "s_suivre7", "evt": "suivre", "n": 7, "titre": "Suis 7 matchs", "texte": "Une semaine bien remplie de football.", "jetons": 70, "xp_pass": 250},
-	{"id": "s_pays3", "evt": "suivre_pays", "distinct": true, "n": 3, "titre": "Tour du monde", "texte": "Suis des matchs dans 3 pays différents.", "jetons": 80, "xp_pass": 300},
-	{"id": "s_gagne5", "evt": "duel_gagne", "n": 5, "titre": "Gagne 5 duels", "texte": "Tous les modes comptent.", "jetons": 80, "xp_pass": 300},
-	{"id": "s_modes", "evt": "duel_joue", "distinct": true, "n": 3, "titre": "Touche-à-tout", "texte": "Joue au moins une fois l'ambiance, l'Arène et la Poussée.", "jetons": 70, "xp_pass": 250},
-	{"id": "s_duel10", "evt": "duel_joue", "n": 10, "titre": "Joue 10 duels", "texte": "Ta tribune ne s'arrête jamais !", "jetons": 70, "xp_pass": 250},
-	{"id": "s_prono3", "evt": "prono_bon", "n": 3, "titre": "Devin de la semaine", "texte": "Trouve le bon résultat de 3 matchs.", "jetons": 70, "xp_pass": 250},
-	{"id": "s_buvette5", "evt": "buvette", "n": 5, "titre": "Pilier de la buvette", "texte": "Fais 5 services de vendeur.", "jetons": 60, "xp_pass": 200},
-	{"id": "s_recolte5", "evt": "recolte", "n": 5, "titre": "Trésorier du club", "texte": "Récolte 5 fois la caisse du fan club.", "jetons": 50, "xp_pass": 400, "si": "club"},
-	{"id": "s_tournoi3", "evt": "tournoi", "n": 3, "titre": "Esprit de compétition", "texte": "Joue 3 duels du tournoi des fan clubs, le week-end.", "jetons": 60, "xp_pass": 300, "si": "tournoi"},
-	{"id": "s_fete2", "evt": "evenement", "n": 2, "titre": "Soirs de fête", "texte": "Joue 2 duels sur des matchs spéciaux : derby, finale, Grand Choc…", "jetons": 70, "xp_pass": 250, "si": "evenements"},
-	{"id": "s_soiree3", "evt": "soiree_but", "n": 3, "titre": "Soirs de match", "texte": "Vis 3 vrais buts en direct et lance une mini-ambiance à chaque fois.", "jetons": 70, "xp_pass": 250},
-	{"id": "s_favori5", "evt": "favori", "n": 5, "titre": "Fidèle au poste", "texte": "Soutiens 5 fois une de tes équipes favorites.", "jetons": 80, "xp_pass": 500, "si": "favoris"},
+	{"id": "s_stade", "evt": "nouveau_stade", "n": 1, "titre": "Visite un nouveau stade", "texte": "Va au stade dans une enceinte jamais tamponnée.", "jetons": 60, "xp_pass": 125},
+	{"id": "s_stades2", "evt": "nouveau_stade", "n": 2, "titre": "Explorateur", "texte": "Ajoute 2 nouveaux tampons de stade à ton carnet.", "jetons": 90, "xp_pass": 150},
+	{"id": "s_stade3", "evt": "suivre", "cle": "stade", "n": 3, "titre": "Abonné du virage", "texte": "Suis 3 matchs au stade.", "jetons": 80, "xp_pass": 125},
+	{"id": "s_suivre7", "evt": "suivre", "n": 7, "titre": "Suis 7 matchs", "texte": "Une semaine bien remplie de football.", "jetons": 70, "xp_pass": 125},
+	{"id": "s_pays3", "evt": "suivre_pays", "distinct": true, "n": 3, "titre": "Tour du monde", "texte": "Suis des matchs dans 3 pays différents.", "jetons": 80, "xp_pass": 150},
+	{"id": "s_gagne5", "evt": "duel_gagne", "n": 5, "titre": "Gagne 5 duels", "texte": "Tous les modes comptent.", "jetons": 80, "xp_pass": 150},
+	{"id": "s_modes", "evt": "duel_joue", "distinct": true, "n": 3, "titre": "Touche-à-tout", "texte": "Joue au moins une fois l'ambiance, l'Arène et la Poussée.", "jetons": 70, "xp_pass": 125},
+	{"id": "s_duel10", "evt": "duel_joue", "n": 10, "titre": "Joue 10 duels", "texte": "Ta tribune ne s'arrête jamais !", "jetons": 70, "xp_pass": 125},
+	{"id": "s_prono3", "evt": "prono_bon", "n": 3, "titre": "Devin de la semaine", "texte": "Trouve le bon résultat de 3 matchs.", "jetons": 70, "xp_pass": 125},
+	{"id": "s_buvette5", "evt": "buvette", "n": 5, "titre": "Pilier de la buvette", "texte": "Fais 5 services de vendeur.", "jetons": 60, "xp_pass": 100},
+	{"id": "s_recolte5", "evt": "recolte", "n": 5, "titre": "Trésorier du club", "texte": "Récolte 5 fois la caisse du fan club.", "jetons": 50, "xp_pass": 200, "si": "club"},
+	{"id": "s_tournoi3", "evt": "tournoi", "n": 3, "titre": "Esprit de compétition", "texte": "Joue 3 duels du tournoi des fan clubs, le week-end.", "jetons": 60, "xp_pass": 150, "si": "tournoi"},
+	{"id": "s_fete2", "evt": "evenement", "n": 2, "titre": "Soirs de fête", "texte": "Joue 2 duels sur des matchs spéciaux : derby, finale, Grand Choc…", "jetons": 70, "xp_pass": 125, "si": "evenements"},
+	{"id": "s_soiree3", "evt": "soiree_but", "n": 3, "titre": "Soirs de match", "texte": "Vis 3 vrais buts en direct et lance une mini-ambiance à chaque fois.", "jetons": 70, "xp_pass": 125},
+	{"id": "s_favori5", "evt": "favori", "n": 5, "titre": "Fidèle au poste", "texte": "Soutiens 5 fois une de tes équipes favorites.", "jetons": 80, "xp_pass": 250, "si": "favoris"},
 ]
 
 

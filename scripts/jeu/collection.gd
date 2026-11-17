@@ -160,7 +160,7 @@ static func _paliers(c: Dictionary, groupe: String, titre: String, texte: String
 	var res: Array = []
 	for p in paliers:
 		var seuil: int = p[0]
-		var t := (titre % seuil).replace(Trad.t("1 stades"), Trad.t("1 stade"))
+		var t := (Trad.t(titre) % seuil).replace(Trad.t("1 stades"), Trad.t("1 stade"))
 		res.append(_ligne(c, "%s:%d" % [groupe, seuil], t, texte, mini(n, seuil), seuil, p[1], groupe, couleur))
 		if n < seuil:
 			break

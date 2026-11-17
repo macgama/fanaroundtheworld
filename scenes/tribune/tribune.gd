@@ -115,7 +115,7 @@ func _colonne(i: int) -> Control:
 	pan.add_child(v)
 	var h := Ui.hbox(10)
 	h.add_child(Ui.label(tr(info["titre"]).to_upper(), 40, Ui.BLANC, true, 8))
-	var touche := Ui.pastille(tr("touche ") + info["touche"], Ui.NUIT_CLAIR, 16)
+	var touche := Ui.pastille(tr("touche ") + tr(info["touche"]), Ui.NUIT_CLAIR, 16)
 	touche.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	h.add_child(touche)
 	v.add_child(h)

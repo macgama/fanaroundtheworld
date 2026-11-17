@@ -126,14 +126,16 @@ un joueur riche en Jetons ne doit pas écraser les autres.
 - **Création** : nom, deux couleurs, écusson dessiné à partir des initiales. Les trois
   FANZZY de la tribune sont les membres fondateurs.
 - **Recrutement** : gratuit (pas de FANZZY contre des Jetons). Le nombre de places suit
-  le niveau du club : 3 au niveau 1, puis 2 de plus par niveau. On peut renvoyer un membre
+  le niveau du club : 3 au niveau 1, 2 de plus par niveau jusqu'au niveau 5, puis 1 par niveau. On peut renvoyer un membre
   qui n'est pas dans la tribune.
 - **Recettes**, en Jetons, qui tombent en continu dans la caisse du club :
-  - cotisations : 1 Jeton par heure et par membre ;
-  - buvette (5 niveaux, de 3 à 21 Jetons/h) : double pendant 3 h après un duel ;
-  - atelier d'écharpes (5 niveaux, de 1 à 6 écharpes/h, stock limité) : prix de vente
-    2 Jetons + 1 par tranche de 3 membres.
-- **Bonus de taille** : +5 % sur les cotisations et la buvette par membre au-delà du premier.
+  - cotisations : 0,25 Jeton par heure et par membre ;
+  - buvette (5 niveaux, de 1 à 4 Jetons/h) : double pendant 3 h après un duel ;
+  - atelier d'écharpes (5 niveaux, de 0,5 à 1,5 écharpe/h, stock limité) : prix de vente
+    1 Jeton + 1 par tranche de 6 membres.
+- **Bonus de taille** : +2 % sur les cotisations et la buvette par membre au-delà du premier.
+  (Recettes divisées par 4 environ le 17 nov. 2026 : elles faisaient les trois quarts des
+  Jetons d'un joueur, voir [equilibrage.md](equilibrage.md).)
   Renommée : Petit groupe, Bande de potes, Club de quartier, Tribune entière, Légende du virage.
 - La caisse garde **8 h** de recettes : il faut revenir récolter (pas de gain infini hors ligne).
 - Ouvrir et améliorer la buvette et l'atelier coûte des Jetons : c'est de l'équipement.
@@ -178,8 +180,8 @@ avec une commande (boisson, hot-dog, frites, gaufre) et une jauge de patience. C
 juste : 1 Jeton (+1 par tranche de 3 articles), +1 de pourboire si le service est rapide,
 +1 toutes les 5 commandes justes d'affilée. Erreur ou client lassé : rien et la série
 repart à zéro. À 30 s, la mi-temps : le rush (commandes plus grosses, moins de patience).
-Un bon service rapporte autour de 25 à 45 Jetons, moins qu'un bon duel au stade ; au-delà
-de 3 services dans la journée, la paye est divisée par deux pour que le petit boulot
+Un bon service rapporte autour de 25 à 45 Jetons, moins qu'un bon duel au stade ; à partir
+du 3e service dans la journée, la paye est divisée par deux (par quatre à partir du 6e) pour que le petit boulot
 complète les duels sans les remplacer. Chaque client servi donne aussi 2 XP au fan club.
 
 Petit boulot **speaker du stade** (≈ 1 min, 7 buts dont 2 des visiteurs). À chaque but local,
@@ -189,7 +191,7 @@ répond le nom (trois appels par but, jugés comme les notes du duel : parfait 3
 mauvais joueur ou hors tempo 0). Trois appels justes : +2. But des visiteurs : ne rien
 annoncer rapporte +1, annoncer quand même fait siffler. Le tempo monte de 96 à 120 BPM et
 les boutons sont mélangés à partir du 3e but. Match parfait ≈ 57 Jetons, joueur moyen ≈ 30 ;
-paye ÷ 2 après 3 matchs dans la journée ; 2 XP par but annoncé.
+paye ÷ 2 à partir du 3e match dans la journée, ÷ 4 à partir du 6e ; 2 XP par but annoncé.
 
 ## 8. Le PASS saisonnier
 
@@ -231,4 +233,5 @@ Maquettes v1 dans [docs/maquettes/](maquettes/) :
 - Duel contre d'autres joueurs en ligne, ou solo contre l'IA au lancement ?
 - Prix du jeu et prix du PASS.
 - Ville réelle des stades (à ajouter au relais de données).
-- Prix des billets et trajets, gains des duels : à équilibrer en jouant.
+- Prix des billets et trajets, gains des duels : premier équilibrage le 17 nov. 2026
+  ([equilibrage.md](equilibrage.md)), à affiner en jouant.

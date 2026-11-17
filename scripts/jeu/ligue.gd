@@ -41,11 +41,11 @@ const NOMS_DIVISIONS := ["Ligue Étoile", "Ligue Or", "Ligue Argent", "Ligue Bro
 const COULEURS_DIVISIONS := ["#ffd23f", "#ffb02e", "#c9d3e6", "#d08a4e", "#3ddc84"]
 ## Récompense de fin de saison selon la division (index 0 = division 1).
 const RECOMPENSES := [
-	{"jetons": 200, "xp_pass": 500},
-	{"jetons": 150, "xp_pass": 400},
-	{"jetons": 110, "xp_pass": 320},
-	{"jetons": 80, "xp_pass": 260},
-	{"jetons": 50, "xp_pass": 200},
+	{"jetons": 200, "xp_pass": 250},
+	{"jetons": 150, "xp_pass": 200},
+	{"jetons": 110, "xp_pass": 160},
+	{"jetons": 80, "xp_pass": 130},
+	{"jetons": 50, "xp_pass": 100},
 ]
 const BONUS_CHAMPION := 100
 const BONUS_MONTEE := 50
@@ -420,7 +420,12 @@ static func reclamer(s: Dictionary) -> Dictionary:
 ## « novembre 2026 » pour « 2026-11 ».
 static func saison_texte(saison: String) -> String:
 	var m := clampi(int(saison.substr(5, 2)), 1, 12)
-	return "%s %s" % [Trad.t(["janvier", "février", "mars", "avril", "mai", "juin", "juillet", "août", "septembre", "octobre", "novembre", "décembre"][m - 1]), saison.substr(0, 4)]
+	# « mars », « mai », « juin » et « août » servent aussi d'abréviations (dates
+	# courtes) : leurs clés de traduction donnent « Mar », « May »… d'où les
+	# noms anglais complets écrits ici.
+	if not Trad.est_source():
+		return "%s %s" % [["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"][m - 1], saison.substr(0, 4)]  # sans_traduction
+	return "%s %s" % [["janvier", "février", "mars", "avril", "mai", "juin", "juillet", "août", "septembre", "octobre", "novembre", "décembre"][m - 1], saison.substr(0, 4)]  # sans_traduction
 
 
 ## Code de duel : 16 chiffres hexadécimaux au hasard.

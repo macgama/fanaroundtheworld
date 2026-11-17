@@ -38,13 +38,18 @@ et `tests/test_pass_jeu.tscn`. Design validé : doc « PASS saisonnier FanAround
 
 | Source | XP | Remarque |
 |---|---|---|
-| Missions du jour / semaine | 50-75 / 200-300 | ×2 pendant le rattrapage (voir `docs/missions.md`) |
-| Duel (ambiance, Arène, Poussée) | 50 + 25 selon la perf. + 25 si victoire | même match rejoué le même jour : 100 %, 50 %, 25 %, puis 0 |
-| Premier tampon d'un stade | 200 | |
-| Pronostic juste | 30, ou 100 pour le score exact | |
-| Événement (derby, finale…) | prime du premier duel | voir `docs/evenements.md` |
+| Missions du jour / semaine | 25-60 / 100-250 | ×2 pendant le rattrapage (voir `docs/missions.md`) |
+| Duel (ambiance, Arène, Poussée) | 12 + 6 selon la perf. + 6 si victoire | même match rejoué le même jour : 100 %, 50 %, 25 %, puis 0 |
+| Premier tampon d'un stade | 100 | |
+| Arrivée d'un déplacement | ferveur du convoi (0 à 100) | |
+| Pronostic juste | 15, ou 50 pour le score exact | |
+| Événement (derby, finale…) | prime du premier duel (50 à 200) | voir `docs/evenements.md` |
 
-Valeurs de départ, à régler en test : constantes en tête de `PassSaison`.
+Réglé le 17 nov. 2026 (toutes les sources divisées par 2 à 4) : avant, un joueur régulier
+(1 h par jour) finissait les 100 paliers en 3 mois. Maintenant : vers avril (≈ 75 % de la
+saison) ; un joueur passionné (3 h par jour) vers fin novembre ; un joueur de 20 min par
+jour atteint le palier 75 à 80 grâce au rattrapage. Détails et modèle :
+[equilibrage.md](equilibrage.md). Constantes en tête de `PassSaison`.
 
 ## Ce qui reste à faire
 

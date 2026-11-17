@@ -126,7 +126,7 @@ func _fin_de_saison() -> void:
 	_v(r["saison"] == "2026-11" and int(r["rang"]) == 1 and int(r["mouvement"]) == 1, "1er : montée")
 	_v(int(s["division"]) == 2 and s["saison"] == "2026-12" and (s["duels"] as Array).is_empty() and not bool(s["inscrit"]), "décembre en Ligue Or")
 	var g := Ligue.recompense(r)
-	_v(int(g["jetons"]) == 110 + Ligue.BONUS_CHAMPION + Ligue.BONUS_MONTEE and int(g["xp_pass"]) == 320, "récompense Ligue Argent + champion + montée")
+	_v(int(g["jetons"]) == 110 + Ligue.BONUS_CHAMPION + Ligue.BONUS_MONTEE and int(g["xp_pass"]) == 160, "récompense Ligue Argent + champion + montée")
 	_v(int(Ligue.reclamer(s)["jetons"]) == 260 and Ligue.reclamer(s).is_empty(), "une seule fois")
 	_v((s["historique"] as Array).size() == 1, "historique")
 	_v(Ligue.recompense({"division": 1, "duels": 2}).get("jetons") == 0, "moins de 3 duels : rien")

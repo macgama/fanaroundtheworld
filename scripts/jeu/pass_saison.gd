@@ -39,12 +39,14 @@ const PRIX := "7,99 €"
 
 ## XP de PASS hors missions (valeurs de départ, à régler en test).
 ## Un duel rejoué sur le même match le même jour suit la règle des Jetons (100 %, 50 %, 25 %, 0).
-const XP_DUEL := 50
-const XP_DUEL_PERF := 25      # selon la performance (0 à 1)
-const XP_DUEL_GAGNE := 25
-const XP_NOUVEAU_STADE := 200
-const XP_PRONO_BON := 30
-const XP_PRONO_EXACT := 100
+## XP de PASS des actions : réglées le 17 nov. 2026 pour qu'un joueur régulier (1 h par jour)
+## finisse le PASS vers avril, pas en trois mois (docs/equilibrage.md).
+const XP_DUEL := 12
+const XP_DUEL_PERF := 6      # selon la performance (0 à 1)
+const XP_DUEL_GAGNE := 6
+const XP_NOUVEAU_STADE := 100
+const XP_PRONO_BON := 15
+const XP_PRONO_EXACT := 50
 
 ## Types d'objets d'apparence et leur libellé.
 const TYPES_OBJETS := {
@@ -278,6 +280,16 @@ static func skins_de(etat: Dictionary, fanzzy_id: String) -> Array:
 
 
 ## Phrase courte qui résume un gain (annonce à l'écran).
+## Nom d'un objet, d'un skin ou d'un chapitre du PASS dans la langue du jeu :
+## « Nom du FANZZY · Thème » est traduit morceau par morceau (les noms des
+## FANZZY restent en français, voir data/langues/en/pass_objets.json).
+static func nom_texte(nom: Variant) -> String:
+	var morceaux: Array = []
+	for m in str(nom).split(" · "):
+		morceaux.append(Trad.t(m))
+	return " · ".join(morceaux)
+
+
 static func resume(g: Dictionary) -> String:
 	var morceaux: Array = []
 	if g["fanzzy"].size() > 0:
@@ -287,7 +299,7 @@ static func resume(g: Dictionary) -> String:
 	if g["objets"].size() > 0:
 		morceaux.append(Trad.t("%d objet%s") % [g["objets"].size(), "s" if g["objets"].size() > 1 else ""])
 	if g["titres"].size() > 0:
-		morceaux.append(Trad.t("titre « %s »") % g["titres"][0])
+		morceaux.append(Trad.t("titre « %s »") % nom_texte(g["titres"][0]))
 	if int(g["jetons"]) > 0:
 		morceaux.append(Trad.t("%d Jetons") % int(g["jetons"]))
 	return ", ".join(morceaux)

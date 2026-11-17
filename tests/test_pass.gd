@@ -68,8 +68,8 @@ func _tester_paliers() -> void:
 	_verifier(PassSaison.palier(99_000) == 100 and PassSaison.palier(500_000) == 100, "100 paliers au plus")
 	_verifier(PassSaison.xp_dans_palier(1_250) == 250, "XP dans le palier")
 	_verifier(PassSaison.paliers_bonus(99_999) == 0 and PassSaison.paliers_bonus(100_000) == 1 and PassSaison.paliers_bonus(102_500) == 3, "paliers bonus")
-	_verifier(PassSaison.xp_duel(false, 0.0) == 50 and PassSaison.xp_duel(true, 1.0) == 100, "XP d'un duel")
-	_verifier(PassSaison.xp_duel(true, 1.0, 0.5) == 50 and PassSaison.xp_duel(true, 1.0, 0.0) == 0, "duel rejoué : XP réduite comme les Jetons")
+	_verifier(PassSaison.xp_duel(false, 0.0) == 12 and PassSaison.xp_duel(true, 1.0) == 24, "XP d'un duel")
+	_verifier(PassSaison.xp_duel(true, 1.0, 0.5) == 12 and PassSaison.xp_duel(true, 1.0, 0.0) == 0, "duel rejoué : XP réduite comme les Jetons")
 
 
 func _tester_dates(data: Dictionary) -> void:

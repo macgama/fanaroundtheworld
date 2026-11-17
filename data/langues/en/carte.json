@@ -43,7 +43,7 @@
 	"Championnat national": "National league",
 	"Tous": "All",
 	"Direct %d": "Live %d",
-	"Fêtes %d": "Parties %d",
+	"Fêtes %d": "Events %d",
 	"Auj.": "Today",
 	"Aucun match ici pour ce filtre. Essaie un autre jour, ou un autre niveau de la carte.": "No match here for this filter. Try another day, or another level of the map.",
 	"… et %d autres matchs : filtre par jour ou zoome sur un pays.": "… and %d more matches: filter by day or zoom in on a country.",
@@ -102,5 +102,6 @@
 	"Tournoi · récompense !": "Tournament · reward!",
 	"Tournoi · %d pts": "Tournament · %d pts",
 	"Tournoi · en cours": "Tournament · in progress",
-	"Tournoi des fan clubs : du vendredi au lundi midi, sur les vrais matchs du week-end": "Fan club tournament: from Friday to Monday noon, on the weekend's real matches"
+	"Tournoi des fan clubs : du vendredi au lundi midi, sur les vrais matchs du week-end": "Fan club tournament: from Friday to Monday noon, on the weekend's real matches",
+	"%d match": "%d match"
 }

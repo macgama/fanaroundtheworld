@@ -14,7 +14,7 @@ récompenses prêtes). Logique : `scripts/jeu/missions.gd`, écran :
   joueurs qui ont créé leur club ou choisi un favori.
 - Chaque mission rapporte des **Jetons** et de l'**XP de PASS**, à récupérer
   avec le bouton *Récupérer*. Les 3 missions récupérées donnent un bonus
-  (jour : +10 Jetons, +50 XP ; semaine : +50 Jetons, +250 XP).
+  (jour : +10 Jetons, +25 XP ; semaine : +50 Jetons, +125 XP).
 - Une mission du jour pas encore terminée peut être **changée une fois par jour**.
 - **Pas de connexion obligatoire** (PEGI 7) : une mission terminée mais oubliée
   est versée automatiquement au renouvellement, et les missions de la semaine
@@ -25,13 +25,14 @@ récompenses prêtes). Logique : `scripts/jeu/missions.gd`, écran :
 
 | | Jetons | XP de PASS |
 |---|---|---|
-| Mission du jour | 10 à 25 | 50 à 75 |
-| Mission de la semaine | 50 à 90 | 200 à 300 |
+| Mission du jour | 10 à 25 | 25 à 60 |
+| Mission de la semaine | 50 à 90 | 100 à 250 |
 
 Le PASS compte 100 paliers de 1 000 XP (`Game.xp_pass`, sauvegardé), d'août
 à fin mai. Avec les seules missions, un joueur qui vient tous les jours gagne
-environ 2 300 XP par semaine, un joueur du week-end environ 1 300 : les
-missions font à peu près la moitié du chemin sur la saison, le reste vient
+environ 1 300 XP par semaine (XP divisée par 2 le 17 nov. 2026, voir
+`docs/equilibrage.md`) : les missions font un peu plus de la moitié du chemin
+sur la saison pour un joueur régulier, le reste vient
 des duels, des nouveaux stades et des pronostics justes (voir `docs/pass.md`).
 Pendant le **rattrapage** du PASS (joueur en retard sur le rythme de la saison),
 l'XP des missions est doublée.

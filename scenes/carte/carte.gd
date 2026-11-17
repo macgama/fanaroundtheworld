@@ -484,7 +484,7 @@ func _construire_epingles() -> void:
 			for c in Geo.CONTINENTS:
 				var d: Dictionary = par_continent.get(c, {"n": 0, "direct": false})
 				ep.append({"type": "continent", "cle": c, "pos": Geo.CENTRES_CONTINENTS[c], "titre": tr(NOMS_CONTINENTS[c]),
-					"sous_titre": tr("%d matchs") % d["n"], "nombre": str(d["n"]), "couleur": Ui.VIOLET, "direct": d["direct"]})
+					"sous_titre": (tr("%d match") if int(d["n"]) == 1 else tr("%d matchs")) % d["n"], "nombre": str(d["n"]), "couleur": Ui.VIOLET, "direct": d["direct"]})
 			_ajouter_stades(ep, toutes.filter(func(f): return f["lieu"]["niveau"] == "monde"))
 		"continent":
 			var cles: Array = []
@@ -834,9 +834,9 @@ func _afficher_fiche() -> void:
 	v.add_child(grille)
 	if mode_suivi == "stade":
 		var trajet := tr("Déplacement de %s km à organiser") % _milliers(int(dist)) if dist >= 30 else tr("Tu es déjà sur place")
-		v.add_child(Ui.label(trajet + tr(" · gains ×%s") % str(Game.MODES_SUIVI[mode_suivi]["gain"]), 17, Ui.GRIS))
+		v.add_child(Ui.label(trajet + tr(" · gains ×%s") % Trad.decimal(Game.MODES_SUIVI[mode_suivi]["gain"]), 17, Ui.GRIS))
 	else:
-		v.add_child(Ui.label(tr("Pas de trajet · gains ×%s · pas de tampon") % str(Game.MODES_SUIVI[mode_suivi]["gain"]), 17, Ui.GRIS))
+		v.add_child(Ui.label(tr("Pas de trajet · gains ×%s · pas de tampon") % Trad.decimal(Game.MODES_SUIVI[mode_suivi]["gain"]), 17, Ui.GRIS))
 
 	var cout_final := Game.cout_suivi(mode_suivi, dist)
 	var go := Ui.bouton("C'EST PARTI !", Ui.JAUNE, 40)
@@ -958,7 +958,7 @@ func _bloc_prono(f: Dictionary) -> Control:
 			hp.add_child(b)
 		v.add_child(hp)
 	else:
-		var txt := "Aucun but" if impose == "aucun" else tr("%s marque en premier") % (f["dom"]["nom"] if impose == "home" else f["ext"]["nom"])
+		var txt := tr("Aucun but") if impose == "aucun" else tr("%s marque en premier") % (f["dom"]["nom"] if impose == "home" else f["ext"]["nom"])
 		v.add_child(Ui.label(tr("Premier but : ") + txt, 16, Ui.GRIS))
 
 	var multi := Pronostics.multiplicateur(Game.serie_pronos)
@@ -968,7 +968,7 @@ func _bloc_prono(f: Dictionary) -> Control:
 	lg.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	v.add_child(lg)
 	if Game.serie_pronos > 0:
-		v.add_child(Ui.label(tr("Série de %d · gains ×%s") % [Game.serie_pronos, str(multi)], 16, Ui.JAUNE, true))
+		v.add_child(Ui.label(tr("Série de %d · gains ×%s") % [Game.serie_pronos, Trad.decimal(multi)], 16, Ui.JAUNE, true))
 
 	var hb := Ui.hbox(8)
 	var deja := Game.pronos.has(id)

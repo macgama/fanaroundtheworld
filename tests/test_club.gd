@@ -45,15 +45,15 @@ func _tester_membres() -> void:
 
 func _tester_recettes() -> void:
 	var c := FanClub.nouveau(["A", "B", "C"], "#1e6bff", "#ffffff", T0)
-	# 3 membres : 3 x 1 J/h x 1,10 = 3,3 J/h
-	_verifier(_proche(FanClub.cotisations_heure(c), 3.3), "cotisations de 3 membres")
-	FanClub.avancer(c, T0 + 2 * H)
-	_verifier(FanClub.en_caisse(c) == 6, "2 h de cotisations (%d)" % FanClub.en_caisse(c))
-	var g := FanClub.recolter(c, T0 + 2 * H)
+	# 3 membres : 3 x 0,25 J/h x 1,04 = 0,78 J/h
+	_verifier(_proche(FanClub.cotisations_heure(c), 0.78), "cotisations de 3 membres")
+	FanClub.avancer(c, T0 + 8 * H)
+	_verifier(FanClub.en_caisse(c) == 6, "8 h de cotisations (%d)" % FanClub.en_caisse(c))
+	var g := FanClub.recolter(c, T0 + 8 * H)
 	_verifier(g == 6 and FanClub.en_caisse(c) == 0, "récolte vide la caisse")
 	# La caisse plafonne à HEURES_CAISSE heures.
 	FanClub.avancer(c, T0 + 2 * H + 100 * H)
-	_verifier(FanClub.en_caisse(c) <= int(3.3 * FanClub.HEURES_CAISSE) + 1, "plafond de la caisse")
+	_verifier(FanClub.en_caisse(c) <= int(FanClub.cotisations_heure(c) * FanClub.HEURES_CAISSE) + 1, "plafond de la caisse")
 	# Horloge reculée : rien ne bouge.
 	var avant := FanClub.en_caisse(c)
 	FanClub.avancer(c, T0)
@@ -84,8 +84,9 @@ func _tester_buvette_et_echarpes() -> void:
 	FanClub.avancer(sans, T0 + H)
 	_verifier(_proche(float(c["caisse_buvette"]), 2.0 * float(sans["caisse_buvette"])), "après-match double la buvette")
 	_verifier(FanClub.apres_match(c, T0 + H) and not FanClub.apres_match(c, T0 + 4 * H), "fenêtre d'après-match de 3 h")
-	# Écharpes : 1 par heure, stock limité.
-	_verifier(int(c["echarpes"]) == 1, "1 écharpe après 1 h (%s)" % str(c["echarpes"]))
+	# Écharpes : 1 toutes les 2 h avec l'atelier niveau 1, stock limité.
+	FanClub.avancer(c, T0 + 2 * H)
+	_verifier(int(c["echarpes"]) == 1, "1 écharpe après 2 h (%s)" % str(c["echarpes"]))
 	FanClub.avancer(c, T0 + 50 * H)
 	_verifier(int(c["echarpes"]) == FanClub.stock_max(c), "stock d'écharpes plafonné")
 	var gain := FanClub.vendre_echarpes(c, T0 + 50 * H)
@@ -102,5 +103,5 @@ func _tester_sauvegarde() -> void:
 	_verifier(not FanClub.reparer(null)["cree"], "pas de club dans une vieille sauvegarde")
 	var j: Variant = JSON.parse_string(JSON.stringify(FanClub.nouveau(["A"], "#1e6bff", "#ffffff", T0)))
 	var c := FanClub.reparer(j)
-	FanClub.avancer(c, T0 + H)
+	FanClub.avancer(c, T0 + 4 * H)
 	_verifier(FanClub.en_caisse(c) == 1, "club relu depuis le JSON")
