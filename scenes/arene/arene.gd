@@ -237,6 +237,8 @@ func _compte_a_rebours() -> void:
 	for t in ["3", "2", "1", "AU MÉGAPHONE !"]:
 		annoncer(t, Ui.JAUNE)
 		await get_tree().create_timer(0.75).timeout
+		if not is_inside_tree():
+			return  # écran quitté pendant le compte à rebours
 	en_cours = true
 	_lbl_annonce.text = ""
 

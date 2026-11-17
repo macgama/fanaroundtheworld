@@ -382,6 +382,8 @@ func _compte_a_rebours() -> void:
 		Ui.pop(l, 1.4, 0.3)
 		_jouer("tambour")
 		await get_tree().create_timer(0.7).timeout
+		if not is_inside_tree():
+			return  # écran quitté pendant le compte à rebours
 	l.queue_free()
 	_prochaine_mesure = 0.4
 	pret = true
