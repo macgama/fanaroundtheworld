@@ -164,12 +164,18 @@ static func _nombre(v: Variant) -> bool:
 
 ## Ce que l'autre joueur voit de toi. `equipe` : les skins affichés (noms d'image).
 ## `ids` : les FANZZY eux-mêmes (pour leur famille et leur super dans l'Arène).
-static func profil(nom: String, couleurs: Array, equipe: Array, niveau: int, ids: Array = []) -> Dictionary:
-	return msg("profil", {
+static func profil(nom: String, couleurs: Array, equipe: Array, niveau: int, ids: Array = [], ligue: Dictionary = {}) -> Dictionary:
+	var m := msg("profil", {
 		"nom": nom, "couleurs": couleurs.map(func(c): return c.to_html(false) if c is Color else str(c)),
 		"equipe": equipe.map(func(id): return str(id)), "niveau": niveau, "v": VERSION,
 		"ids": ids.map(func(id): return str(id)),
 	})
+	# Ligue des tribunes (champs facultatifs : une version plus ancienne les ignore) :
+	# identifiant public du classement et nom de ligue (deux numéros de listes).
+	if ligue.has("fan"):
+		m["fan"] = str(ligue["fan"])
+		m["lnom"] = ligue.get("nom", [0, 0])
+	return m
 
 
 ## Profil reçu, nettoyé : nom coupé, couleurs valides, au plus 3 FANZZY.
@@ -192,8 +198,17 @@ static func profil_propre(m: Dictionary) -> Dictionary:
 	for id in (recus as Array).slice(0, 3) if recus is Array else []:
 		var s := str(id)
 		ids.append(s if re.search(s) else "")
+	var fan := str(m.get("fan", ""))
 	return {"nom": nom, "couleurs": couleurs, "equipe": equipe, "ids": ids,
-		"niveau": clampi(int(m.get("niveau", 1)), 1, 999), "v": int(m.get("v", 0))}
+		"niveau": clampi(int(m.get("niveau", 1)), 1, 999), "v": int(m.get("v", 0)),
+		"fan": fan if fan.length() == 16 and fan.is_valid_hex_number() and fan == fan.to_lower() else "",
+		"ligue_nom": Tournoi.nom_valide(m.get("lnom"))}
+
+
+## Code du duel de Ligue envoyé par l'hôte avec « lancer » ("" s'il est absent ou mal formé).
+static func code_ligue(m: Dictionary) -> String:
+	var c: Variant = m.get("code", "")
+	return c if Ligue.code_valide(c) and c == c.to_lower() else ""
 
 
 static func meme_version(p: Dictionary) -> bool:

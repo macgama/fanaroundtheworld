@@ -62,6 +62,7 @@ var _ecrans := {
 	"classement": [Game.SCENE_CLASSEMENT, {}, []],
 	"pass": [Game.SCENE_PASS, {}, [KEY_RIGHT, KEY_LEFT, KEY_ESCAPE]],
 	"tournoi": [Game.SCENE_TOURNOI, {}, []],
+	"ligue": [Game.SCENE_LIGUE, {}, []],
 }
 
 var _compteur := Compteur.new()

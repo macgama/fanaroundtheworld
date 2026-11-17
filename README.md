@@ -107,6 +107,9 @@ Un favori peut changer une fois par semaine. Détails dans [docs/equipes-favorit
 **Tournoi des fan clubs** : chaque week-end (vendredi → lundi midi), ton fan club affronte ceux des autres joueurs
 sur les vrais matchs, 7 duels au plus, classement et récompenses le lundi. Détails dans [docs/tournoi.md](docs/tournoi.md).
 
+**Ligue des tribunes** : une saison par mois de duels en ligne entre fan clubs, journées sur les vrais week-ends de
+match, 5 divisions en poules de 10, montées et descentes en fin de mois. Détails dans [docs/ligue.md](docs/ligue.md).
+
 **Succès et sauvegarde** : 30 succès Steam (onglet **Succès** de la Collection), gardés
 dans la partie même sans Steam et envoyés à Steam dès qu'il est là. La sauvegarde va aussi
 dans Steam Cloud : la partie suit le joueur d'un PC à l'autre. Détails dans
@@ -132,7 +135,7 @@ Supprime ce fichier pour recommencer à zéro.
 
 | Dossier | Contenu |
 | --- | --- |
-| `scenes/` | Scènes Godot (`.tscn`) et leurs scripts, un sous-dossier par écran (`main/`, `carte/`, `voyage/`, `tribune/`, `duel/`, `pronostics/`, `favoris/`, `classement/`, `tournoi/`, `club/`, `buvette/`, `tifo/`, `echarpes/`, `ramasseur/`, `boulots/`) |
+| `scenes/` | Scènes Godot (`.tscn`) et leurs scripts, un sous-dossier par écran (`main/`, `carte/`, `voyage/`, `tribune/`, `duel/`, `pronostics/`, `favoris/`, `classement/`, `tournoi/`, `ligue/`, `club/`, `buvette/`, `tifo/`, `echarpes/`, `ramasseur/`, `boulots/`) |
 | `scripts/autoload/` | Scripts globaux chargés au démarrage (`Plateforme` : Steam, succès et Steam Cloud, `Game` : état du jeu et sauvegarde, `Donnees` : vrais matchs) |
 | `scripts/donnees/` | Noms fictifs (`fiction.gd`), placement sur la carte (`geo.gd`), fiche d'un match |
 | `scripts/jeu/` | Règles du jeu sans écran (pronostics, équipes favorites et popularité, missions, collection, événements des vrais matchs) |
@@ -155,7 +158,7 @@ Supprime ce fichier pour recommencer à zéro.
 | `tools/` | Scripts de préparation des données (carte du monde, repérage des bras des FANZZY) |
 | `mods/` | Format des mods Steam Workshop (noms et couleurs de clubs) |
 | `docs/` | Game design et maquettes |
-| `tests/` | Tests automatiques (`godot --headless --path . --script tests/test_logique.gd`, `tests/test_pronostics.gd`, `tests/test_club.gd`, `tests/test_supporters.gd`, `tests/test_classement.gd`, `tests/test_buvette.gd`, `tests/test_tifo.gd`, `tests/test_echarpes.gd`, `tests/test_speaker.gd`, `tests/test_ramasseur.gd`, `tests/test_collection.gd`, `tests/test_evenements.gd`, `tests/test_audio.gd`, `tests/test_langues.gd`, et le parcours complet : `godot --headless --path . res://tests/test_pronostics_jeu.tscn -- --hors-ligne`, le tutoriel : `res://tests/test_tutoriel.tscn -- --hors-ligne`, le classement en ligne : `res://tests/test_classement_jeu.tscn -- --hors-ligne`, le tournoi : `tests/test_tournoi.gd` et `res://tests/test_tournoi_jeu.tscn -- --hors-ligne`, le tour de tous les écrans (chaque bouton pressé, parties au clavier, pause) : `res://tests/test_ecrans.tscn -- --hors-ligne`) |
+| `tests/` | Tests automatiques (`godot --headless --path . --script tests/test_logique.gd`, `tests/test_pronostics.gd`, `tests/test_club.gd`, `tests/test_supporters.gd`, `tests/test_classement.gd`, `tests/test_buvette.gd`, `tests/test_tifo.gd`, `tests/test_echarpes.gd`, `tests/test_speaker.gd`, `tests/test_ramasseur.gd`, `tests/test_collection.gd`, `tests/test_evenements.gd`, `tests/test_audio.gd`, `tests/test_langues.gd`, et le parcours complet : `godot --headless --path . res://tests/test_pronostics_jeu.tscn -- --hors-ligne`, le tutoriel : `res://tests/test_tutoriel.tscn -- --hors-ligne`, le classement en ligne : `res://tests/test_classement_jeu.tscn -- --hors-ligne`, le tournoi : `tests/test_tournoi.gd` et `res://tests/test_tournoi_jeu.tscn -- --hors-ligne`, la Ligue : `tests/test_ligue.gd` et `res://tests/test_ligue_jeu.tscn -- --hors-ligne --maintenant=2026-11-21T15:00:00`, le tour de tous les écrans (chaque bouton pressé, parties au clavier, pause) : `res://tests/test_ecrans.tscn -- --hors-ligne`) |
 
 ## Règles du projet
 

@@ -326,6 +326,9 @@ func _charger_exemple() -> void:
 	if not d is Dictionary:
 		return
 	var maintenant := int(Time.get_unix_time_from_system())
+	for a in OS.get_cmdline_user_args():
+		if a.begins_with("--maintenant="):  # tests : même heure que Game.maintenant() · sans_traduction
+			maintenant = int(Time.get_unix_time_from_datetime_string(a.trim_prefix("--maintenant=")))  # sans_traduction
 	for m in d.get("matches", []):
 		var t := maintenant + int(float(m.get("decalage_h", 0)) * 3600.0)
 		t -= t % 900  # coups d'envoi au quart d'heure

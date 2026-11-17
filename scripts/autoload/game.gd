@@ -39,6 +39,7 @@ const SCENE_COLLECTION := "res://scenes/collection/collection.tscn"
 const SCENE_CLASSEMENT := "res://scenes/classement/classement.tscn"
 const SCENE_PASS := "res://scenes/pass/pass.tscn"
 const SCENE_TOURNOI := "res://scenes/tournoi/tournoi.tscn"
+const SCENE_LIGUE := "res://scenes/ligue/ligue.tscn"
 
 ## Paramètres passés d'un écran à l'autre (match choisi, camp supporté…).
 var params: Dictionary = {}
@@ -97,6 +98,8 @@ var sauve_le := 0
 var nb_evenements := 0
 ## Tournoi des fan clubs du week-end (règles dans Tournoi, réseau dans EnLigne).
 var tournoi: Dictionary = Tournoi.vide()
+## Ligue des tribunes (saison du mois, scripts/jeu/ligue.gd).
+var ligue: Dictionary = Ligue.vide()
 
 ## Où suivre le match. Au stade : billet + trajet, tampon du stade, plus de Jetons.
 const MODES_SUIVI := {
@@ -161,7 +164,7 @@ func _outils_de_test() -> void:
 			"arene": SCENE_ARENE, "poussee": SCENE_POUSSEE,
 			"pronos": SCENE_PRONOS, "missions": SCENE_MISSIONS, "favoris": SCENE_FAVORIS, "club": SCENE_CLUB, "creation": SCENE_CREATION_CLUB, "chant": SCENE_CHANT, "buvette": SCENE_BUVETTE, "boulots": SCENE_BOULOTS, "speaker": SCENE_SPEAKER, "tifo": SCENE_TIFO,
 			"salon": SCENE_SALON, "collection": SCENE_COLLECTION, "classement": SCENE_CLASSEMENT, "pass": SCENE_PASS,
-			"tournoi": SCENE_TOURNOI}
+			"tournoi": SCENE_TOURNOI, "ligue": SCENE_LIGUE}
 		for b in ListeBoulots.LISTE:
 			scenes[b["id"]] = b["scene"]  # chaque petit boulot : --scene=<id>
 		if args.has("onglet"):
@@ -324,8 +327,18 @@ func tamponner(cle: String, info: Dictionary) -> bool:
 
 # ---------------------------------------------------------------- fan club
 
+static var _decalage_test := 0
+static var _decalage_lu := false
+
+
+## Heure du jeu (secondes UTC). Tests : « -- --maintenant=2026-11-21T15:00:00 » fait comme si c'était ce moment.
 static func maintenant() -> int:
-	return int(Time.get_unix_time_from_system())
+	if not _decalage_lu:
+		_decalage_lu = true
+		for a in OS.get_cmdline_user_args():
+			if a.begins_with("--maintenant="):  # sans_traduction
+				_decalage_test = int(Time.get_unix_time_from_datetime_string(a.trim_prefix("--maintenant="))) - int(Time.get_unix_time_from_system())  # sans_traduction
+	return int(Time.get_unix_time_from_system()) + _decalage_test
 
 
 func club_cree() -> bool:
@@ -803,7 +816,7 @@ func couleurs_club_index() -> Array:
 ## Le club adverse si un duel sur ce match compte pour le tournoi, sinon {}.
 ## Les duels en ligne contre un vrai joueur ne comptent pas (ils ont leur salon).
 func adversaire_tournoi(m: Dictionary) -> Dictionary:
-	if m.is_empty() or bool(params.get("en_ligne", false)):
+	if m.is_empty() or bool(params.get("en_ligne", false)) or params.has("ligue_bot"):
 		return {}
 	actualiser_tournoi()
 	if Tournoi.raison_refus(tournoi, str(m.get("id", "")), Donnees.heure_unix(m), maintenant()) != "":
@@ -829,6 +842,121 @@ func noter_duel_tournoi(m: Dictionary, gagne: bool, mode_suivi: String) -> Dicti
 ## Récompense du tournoi fini (Jetons + XP de PASS). {} s'il n'y en a pas.
 func reclamer_tournoi() -> Dictionary:
 	var g := Tournoi.reclamer(tournoi)
+	if g.is_empty():
+		return {}
+	jetons += int(g["jetons"])
+	g["xp_pass"] = gagner_xp_pass(int(g["xp_pass"]))
+	sauver()
+	return g
+
+
+# ---------------------------------------------------------------- Ligue des tribunes
+
+## Passe à la saison du mois (la précédente attend sa récompense). Renvoie le calendrier.
+func actualiser_ligue() -> Dictionary:
+	var t := maintenant()
+	var change := Ligue.actualiser(ligue, t)
+	var avant := (ligue["duels"] as Array).map(func(d): return d["etat"])
+	Ligue.expirer(ligue, t)
+	if change or avant != (ligue["duels"] as Array).map(func(d): return d["etat"]):
+		sauver()
+	return Ligue.calendrier(t)
+
+
+## Entrée dans la saison : nom de tournoi (ou un nom tiré du fan club) et couleurs.
+func inscrire_ligue(nom: Variant = null, couleurs: Variant = null) -> bool:
+	actualiser_ligue()
+	if not club_cree():
+		return false
+	if nom == null:
+		nom = tournoi["nom"] if bool(tournoi["inscrit"]) or not (tournoi["historique"] as Array).is_empty() else ligue["nom"]
+		if not bool(ligue["inscrit"]) and nom == [0, 0]:
+			var rng := RandomNumberGenerator.new()
+			rng.seed = hash(fan_club_nom)
+			nom = Tournoi.nom_au_hasard(rng)
+	if couleurs == null:
+		couleurs = couleurs_club_index()
+	ligue["nom"] = Tournoi.nom_valide(nom)
+	ligue["couleurs"] = [clampi(int(couleurs[0]), 0, FanClub.COULEURS.size() - 1), clampi(int(couleurs[1]), 0, FanClub.COULEURS.size() - 1)]
+	ligue["inscrit"] = true
+	ligue["inscrit_serveur"] = false
+	sauver()
+	return true
+
+
+## Club du jeu de ta poule affronté dans ce duel (Game.params["ligue_bot"]), sinon {}.
+func bot_ligue() -> Dictionary:
+	if not params.has("ligue_bot") or bool(params.get("en_ligne", false)):
+		return {}
+	var k := int(params["ligue_bot"])
+	for b in Ligue.bots_de_la_poule(ligue, EnLigne.ligue_poule, maintenant()):
+		if str(b["id"]) == "bot:%d" % k:
+			return b
+	return {}
+
+
+## Fin d'un duel (trois modes). Compte pour la Ligue si c'est un duel en ligne
+## (code de l'hôte, adversaire connu du serveur) ou contre un club du jeu de ta poule,
+## pendant une journée et sur un match du week-end. Renvoie la ligne du duel ou {}.
+## `resultat` : 1 gagné, 0 nul, -1 perdu.
+func noter_duel_ligue(m: Dictionary, resultat: int) -> Dictionary:
+	if m.is_empty():
+		return {}
+	var c := actualiser_ligue()
+	if c["etat"] != "journee" or not Ligue.match_de_la_journee(Donnees.heure_unix(m), c):
+		return {}
+	var adv := {}
+	var code := ""
+	if bool(params.get("en_ligne", false)):
+		var fan := str(Reseau.adversaire.get("fan", ""))
+		code = str(params.get("code_ligue", ""))
+		if fan == "" or not Ligue.code_valide(code) or fan == str(EnLigne.identite["id"]):
+			return {}
+		adv = {"id": fan, "bot": false, "nom": Reseau.adversaire.get("ligue_nom", [0, 0]), "couleurs": [0, 7],
+			"nom_texte": str(Reseau.adversaire.get("nom", ""))}
+	else:
+		adv = bot_ligue()
+		if adv.is_empty():
+			return {}
+		var rng := RandomNumberGenerator.new()
+		rng.randomize()
+		code = Ligue.nouveau_code(rng)
+	if not bool(ligue["inscrit"]) and not inscrire_ligue():
+		return {}
+	var d := Ligue.noter_duel(ligue, code, adv, str(m.get("id", "")), Donnees.heure_unix(m), resultat, Donnees.en_direct(m), maintenant())
+	if d.is_empty():
+		return {}
+	if adv.has("nom_texte"):
+		d["nom_texte"] = adv["nom_texte"]
+	sauver()
+	EnLigne.synchroniser_ligue()
+	return d
+
+
+## Ce duel en ligne comptera-t-il pour la Ligue ? "" si oui, sinon la raison (pour le salon).
+func raison_hors_ligue(m: Dictionary) -> String:
+	var c := actualiser_ligue()
+	if not club_cree():
+		return "Crée ton fan club pour jouer la Ligue des tribunes"
+	if c["etat"] != "journee":
+		return "Pas de journée de Ligue en ce moment (du vendredi au lundi midi)"
+	if m.is_empty() or not Ligue.match_de_la_journee(Donnees.heure_unix(m), c):
+		return "Ce match n'est pas un match du week-end de la journée"
+	if str(Reseau.adversaire.get("fan", "")) == "" and Reseau.connecte():
+		return "L'adversaire n'a pas encore d'identité en ligne"
+	var r := Ligue.raison_refus(ligue if bool(ligue["inscrit"]) else _ligue_essai(), str(Reseau.adversaire.get("fan", "?")), Donnees.heure_unix(m), maintenant())
+	return r
+
+
+func _ligue_essai() -> Dictionary:
+	var s: Dictionary = ligue.duplicate(true)
+	s["inscrit"] = true
+	return s
+
+
+## Récompense de la saison finie (Jetons + XP de PASS). {} s'il n'y en a pas.
+func reclamer_ligue() -> Dictionary:
+	var g := Ligue.reclamer(ligue)
 	if g.is_empty():
 		return {}
 	jetons += int(g["jetons"])
@@ -1063,6 +1191,7 @@ func sauver() -> void:
 		"stats": stats,
 		"sauve_le": sauve_le,
 		"tournoi": tournoi,
+		"ligue": ligue,
 	}
 	var texte := JSON.stringify(d, "\t")
 	var f := FileAccess.open(CHEMIN_SAUVEGARDE, FileAccess.WRITE)
@@ -1133,6 +1262,7 @@ func _appliquer(d: Dictionary) -> void:
 	stats = Succes.reparer_stats(d.get("stats", null))
 	sauve_le = int(d.get("sauve_le", 0))
 	tournoi = Tournoi.reparer(d.get("tournoi", null))
+	ligue = Ligue.reparer(d.get("ligue", null))
 	# Un FANZZY retiré du catalogue ne doit pas casser la tribune.
 	for i in equipe.size():
 		if fanzzy_par_id(str(equipe[i])).is_empty():
@@ -1174,4 +1304,5 @@ func reinitialiser() -> void:
 	stats = {}
 	sauve_le = 0
 	tournoi = Tournoi.vide()
+	ligue = Ligue.vide()
 	equipe = equipe_par_defaut()
