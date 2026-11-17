@@ -97,3 +97,33 @@ se chevauchent aux articulations, sans étirer l'image. Actions : `marcher`, `co
 
 `--auto` fait jouer ton camp par l'IA, `--vitesse` accélère la partie.
 Tests : `tests/test_modes.gd` (règles) et `tests/test_squelette.gd` (squelette 2D).
+
+## Adversaire ordi : trois niveaux
+
+Options → « Adversaire ordi » : **Facile**, **Normal** (par défaut), **Difficile**
+(`Reglages.difficulte()`, réglages dans `scripts/duel/ia_niveau.gd`). Dans l'Arène,
+tes deux coéquipiers ordi jouent au même niveau que l'adversaire : c'est toi qui fais
+la différence. En ligne, les FANZZY ordi de l'Arène jouent en Normal.
+
+- **Facile** : l'ancienne IA, plus lente. Arène : vise le plus proche, mal et tard.
+  Poussée : défend quand le ballon entre chez lui, sinon joue une carte au hasard.
+- **Normal / Difficile** : Arène (`_ia` dans `scenes/arene/arene.gd`) : choisit sa cible
+  (affaiblie, au mégaphone, en vue), vise là où elle va, esquive les ballons (roulade si
+  débloquée), un porteur tient le mégaphone et les autres le couvrent, recule pour
+  souffler. Poussée (`scripts/duel/ia_poussee.gd`) : note chaque carte pour pousser le
+  ballon, défendre (la bonne réponse : canon ou chorale contre la mascotte, fumigène sur
+  un groupe, sans dépenser plus que l'attaque adverse) ou attaquer par vagues (gros
+  supporter devant, chanteurs derrière, Ola sur le groupe), garde sa Ferveur tant que
+  rien ne presse et protège une avance en fin de match.
+- Difficile réagit plus vite, vise plus juste, esquive plus, ne gaspille pas ses
+  ballons de loin et attend une Ferveur presque pleine pour attaquer.
+
+Matchs simulés ordi contre ordi (`tests/sim_ia.tscn`, ~6 s par match) :
+
+    godot --headless --path . --fixed-fps 30 res://tests/sim_ia.tscn -- --hors-ligne \
+      --jeu=poussee --n=24 --a=difficile --b=normal
+
+Résultats du 17 nov. 2026 (48 matchs par paire, camps échangés) : Poussée, Normal bat
+Facile 75 % du temps, Difficile bat Normal ~60 % ; Arène, Normal bat Facile 24 sur 24,
+Difficile bat Normal 77 %. Démo : `--difficulte=<niveau>` (adversaire),
+`--difficulte-moi=<niveau>` (ton camp avec `--auto`). Tests : `tests/test_ia.gd`.

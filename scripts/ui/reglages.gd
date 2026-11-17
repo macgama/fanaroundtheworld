@@ -1,6 +1,6 @@
 class_name Reglages
 extends RefCounted
-## Options du joueur (volumes, plein écran), gardées dans user://options.cfg,
+## Options du joueur (volumes, plein écran, niveau de l'adversaire ordi), gardées dans user://options.cfg,
 ## à part de la sauvegarde de la partie.
 
 const CHEMIN := "user://options.cfg"
@@ -28,6 +28,17 @@ static func volume(cle: String) -> float:
 
 static func plein_ecran() -> bool:
 	return bool(_fichier().get_value("ecran", "plein_ecran", false))
+
+
+## Niveau de l'adversaire ordi (Arène, Poussée) : voir IaNiveau.
+static func difficulte() -> String:
+	return IaNiveau.valide(str(_fichier().get_value("jeu", "difficulte", IaNiveau.PAR_DEFAUT)))
+
+
+static func regler_difficulte(n: String) -> void:
+	var c := _fichier()
+	c.set_value("jeu", "difficulte", IaNiveau.valide(n))
+	c.save(CHEMIN)
 
 
 static func regler_volume(cle: String, v: float) -> void:
