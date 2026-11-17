@@ -106,6 +106,8 @@ func _creer_joueurs() -> void:
 
 
 func _construire() -> void:
+	# l'écran entier laisse passer les clics jusqu'à _unhandled_input
+	mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_decor = Decor.new()
 	_decor.jeu = self
 	_decor.couche = 0

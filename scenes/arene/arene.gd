@@ -108,6 +108,8 @@ func _ready() -> void:
 # ------------------------------------------------------------------ construction
 
 func _construire() -> void:
+	# l'écran entier laisse passer les clics jusqu'à _unhandled_input (tir, super)
+	mouse_filter = Control.MOUSE_FILTER_IGNORE
 	var fond := ColorRect.new()
 	fond.color = Color("#1b5e3a")
 	fond.set_anchors_preset(Control.PRESET_FULL_RECT)

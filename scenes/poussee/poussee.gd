@@ -116,6 +116,9 @@ func _choisir_visuels() -> void:
 # ------------------------------------------------------------------ construction
 
 func _construire() -> void:
+	# l'écran entier laisse passer les clics : sinon il les garde pour lui et
+	# le clic sur le terrain (poser un FANZZY) n'arrive jamais à _unhandled_input
+	mouse_filter = Control.MOUSE_FILTER_IGNORE
 	var fond := ColorRect.new()
 	fond.color = Color("#2a2266")
 	fond.set_anchors_preset(Control.PRESET_FULL_RECT)
