@@ -30,6 +30,8 @@ static func enregistrer(gagne: bool, perf: float, fiche: Dictionary, camp: Strin
 	var g := gains(gagne, perf, mode_suivi, eg)
 	g["part"] = Game.noter_duel_match(str(fiche.get("id", fiche.get("m", {}).get("id", ""))))
 	g["jetons"] = int(round(g["jetons"] * g["part"]))
+	g["mult_depl"] = Game.bonus_deplacement(str(fiche.get("id", fiche.get("m", {}).get("id", ""))))
+	g["bonus_depl"] = int(round(g["jetons"] * (g["mult_depl"] - 1.0)))
 	g["equipe_gagne"] = eg
 	Game.duels_joues += 1
 	if gagne:
@@ -37,12 +39,19 @@ static func enregistrer(gagne: bool, perf: float, fiche: Dictionary, camp: Strin
 	Game.noter_duel_club()
 	g["popularite"] = Game.noter_duel_favori(fiche.get("m", {}), camp, gagne, mode_suivi)
 	g["equipe"] = fiche.get("dom" if camp == "home" else "ext", {}).get("nom", "")
-	Game.gagner_jetons(g["jetons"])
+	Game.gagner_jetons(g["jetons"] + g["bonus_depl"])
 	Game.ajouter_xp(g["xp"])
 	g["xp_pass"] = Game.xp_pass_duel(gagne, perf, g["part"])
 	g["evenement"] = Game.recompense_evenement(fiche.get("m", {}), int(g["jetons"]))
 	g["tournoi"] = Game.noter_duel_tournoi(fiche.get("m", {}), gagne, mode_suivi)
 	return g
+
+
+## Ligne « Ferveur du déplacement » du panneau de fin, ou [] sans déplacement ce jour.
+static func ligne_deplacement(mult: float, bonus: int) -> Array:
+	if mult <= 1.0 or bonus <= 0:
+		return []
+	return [[Trad.t("Ferveur du déplacement (×%s)") % str(mult).replace(".", ","), Trad.t("+%d Jetons") % bonus]]
 
 
 ## Ligne « Tournoi du week-end » du panneau de fin, ou [] si le duel n'y comptait pas.

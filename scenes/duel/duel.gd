@@ -882,13 +882,15 @@ func _finir() -> void:
 	var jetons := int(round((10.0 + points / 60.0 + (15.0 if gagne else 0.0)) * gain_mode * (1.3 if equipe_gagne else 1.0)))
 	var part := Game.noter_duel_match(str(fiche.get("id", fiche["m"].get("id", ""))))
 	jetons = int(round(jetons * part))  # même match rejoué : 100 %, 50 %, 25 %, puis rien
+	var mult_depl := Game.bonus_deplacement(str(fiche.get("id", fiche["m"].get("id", ""))))
+	var bonus_depl := int(round(jetons * (mult_depl - 1.0)))
 	var xp := 40 + points / 40 + (40 if gagne else 0)
 	Game.duels_joues += 1
 	if gagne:
 		Game.duels_gagnes += 1
 	Game.noter_duel_club()  # l'après-match fait tourner la buvette
 	var pop := Game.noter_duel_favori(fiche["m"], camp, gagne, mode)
-	Game.gagner_jetons(jetons)
+	Game.gagner_jetons(jetons + bonus_depl)  # + ferveur du déplacement fait aujourd'hui pour ce match
 	Game.ajouter_xp(xp)
 	var xp_pass := Game.xp_pass_duel(gagne, clampf(points / 2400.0, 0.0, 1.0), part)
 	var ev := Game.recompense_evenement(fiche["m"], jetons)
@@ -912,7 +914,7 @@ func _finir() -> void:
 	pan.set_anchors_preset(Control.PRESET_CENTER)
 	pan.offset_left = -460
 	pan.offset_right = 460
-	var demi_h := 330 + 24 * maxi(0, FinDuel.lignes_evenement(ev).size() + (1 if pop > 0 else 0) + FinDuel.ligne_tournoi(tour).size() - 1)
+	var demi_h := 330 + 24 * maxi(0, FinDuel.lignes_evenement(ev).size() + (1 if pop > 0 else 0) + FinDuel.ligne_tournoi(tour).size() + FinDuel.ligne_deplacement(mult_depl, bonus_depl).size() - 1)
 	pan.offset_top = -demi_h
 	pan.offset_bottom = demi_h
 	add_child(pan)
@@ -936,7 +938,7 @@ func _finir() -> void:
 		[Game.libelle_rejeu(part), "+%d" % jetons],
 		["XP du fan club", "+%d" % xp],
 		["XP du PASS", "+%d" % xp_pass],
-	] + FinDuel.ligne_popularite({"popularite": pop, "equipe": (fiche["dom"] if camp == "home" else fiche["ext"])["nom"]}) + FinDuel.lignes_evenement(ev) + FinDuel.ligne_tournoi(tour)
+	] + FinDuel.ligne_deplacement(mult_depl, bonus_depl) + FinDuel.ligne_popularite({"popularite": pop, "equipe": (fiche["dom"] if camp == "home" else fiche["ext"])["nom"]}) + FinDuel.lignes_evenement(ev) + FinDuel.ligne_tournoi(tour)
 	for l in lignes:
 		var h := Ui.hbox(10)
 		var a := Ui.label(l[0], 24, Ui.BLANC)
