@@ -137,7 +137,10 @@ func _traiter(m: Variant) -> void:
 
 func _envoyer_profil() -> void:
 	var skins: Array = Game.equipe.map(func(id): return Game.skin_de(str(id)))
-	envoyer(Protocole.profil(Game.fan_club_nom, Game.couleurs_club(), skins, Game.niveau(), Game.equipe))
+	var ligue := {}
+	if EnLigne.identite_connue() and not EnLigne.desactive:
+		ligue = {"fan": EnLigne.identite["id"], "nom": Game.ligue["nom"] if bool(Game.ligue["inscrit"]) else Game.tournoi["nom"]}
+	envoyer(Protocole.profil(Game.fan_club_nom, Game.couleurs_club(), skins, Game.niveau(), Game.equipe, ligue))
 
 
 ## Hôte : choisit le match du duel et l'envoie à l'invité.
