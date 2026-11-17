@@ -57,6 +57,7 @@ var _appui_tir := -1.0
 var _auto := false             # démo : ton FANZZY joue tout seul
 var _rng := RandomNumberGenerator.new()
 var _tactile: CommandesTactiles  # téléphone seulement
+var niveaux_ia := [IaNiveau.PAR_DEFAUT, IaNiveau.PAR_DEFAUT]  # ton équipe (coéquipiers, démo --auto), l'adversaire
 
 # --- en ligne : l'hôte simule tout (équipe 0 chez lui), l'invité dirige un FANZZY de
 # l'équipe 1. L'invité voit le terrain retourné : ses FANZZY sont à gauche (équipe 0 chez lui).
@@ -86,6 +87,8 @@ func _ready() -> void:
 	mode_suivi = p.get("mode", "stade")
 	_auto = p.get("auto", false)
 	actions = AreneRegles.actions_debloquees(Game.niveau())
+	if not en_ligne:
+		niveaux_ia = p.get("ia", [IaNiveau.moi(), IaNiveau.adversaire()])
 	_rng.seed = hash(str(fiche["id"]))
 	var dom: Dictionary = fiche["dom"]
 	var ext: Dictionary = fiche["ext"]
@@ -651,8 +654,94 @@ func vue_libre(a: Vector2, b: Vector2) -> bool:
 
 # ------------------------------------------------------------------ IA
 
+## Un FANZZY dirigé par l'ordi, selon son niveau (IaNiveau). Facile : vise le
+## plus proche, lentement et pas très juste. Normal et difficile : choisissent
+## leur cible (affaiblie, au mégaphone, en vue), visent là où elle va, esquivent
+## les ballons, se partagent le mégaphone et reculent pour souffler.
 func _ia(j: Joueur, delta: float) -> void:
 	j.pense -= delta
+	var p := IaNiveau.params(str(niveaux_ia[j.equipe]))
+	if not p["choix_cible"]:
+		_ia_simple(j, p)
+		return
+	var centre := TERRAIN.get_center()
+	var vers_centre := centre - j.position
+	var adv := _adversaires(j)
+	# --- la cible : proche, en vue, affaiblie, au mégaphone
+	var cible: Joueur = null
+	var meilleur := 1e9
+	var d_cible := 1e9
+	for o in adv:
+		var d: float = j.position.distance_to(o.position)
+		var note: float = d - (AreneRegles.PV - o.pv) * 2.5
+		if not vue_libre(j.position, o.position):
+			note += 350.0
+		if o.position.distance_to(centre) < AreneRegles.RAYON_MEGAPHONE:
+			note -= 140.0
+		if o.invulnerable > 0.0:
+			note += 300.0
+		if note < meilleur:
+			meilleur = note
+			cible = o
+			d_cible = d
+	# --- le mégaphone : qui le tient, qui y va
+	var dans := [0, 0]
+	for x in joueurs:
+		if x.actif() and x.position.distance_to(centre) < AreneRegles.RAYON_MEGAPHONE:
+			dans[x.equipe] += 1
+	var e := j.equipe
+	var en_retard: bool = banderole[1 - e] > banderole[e] + 8.0
+	var reste := AreneRegles.DUREE - temps
+	# le coéquipier le plus près du centre en est le porteur ; les autres le couvrent
+	var porteur := true
+	for x in joueurs:
+		if x != j and x.equipe == e and x.actif() and x.position.distance_to(centre) < j.position.distance_to(centre) - 20.0:
+			porteur = false
+	var poids_centre := 1.0 if porteur else 0.4
+	if dans[1 - e] > 0 and dans[e] == 0:
+		poids_centre += 0.5  # ils le tiennent seuls : aller le disputer
+	if en_retard or reste < 20.0:
+		poids_centre += 0.4
+	var dir := Vector2.ZERO
+	if cible and d_cible < 600.0:
+		var v: Vector2 = cible.position - j.position
+		var ideal := 320.0
+		var fatigue := j.pv < 35.0 and not porteur
+		if fatigue or j.munitions < 1.0:
+			ideal = 520.0  # souffler un peu en attendant ses ballons
+		dir = v.normalized() * clampf((v.length() - ideal) / 120.0, -1.0, 1.0)
+		dir += v.normalized().orthogonal() * sin(temps * 1.6 + j.graine) * 0.8
+		if vers_centre.length() > AreneRegles.RAYON_MEGAPHONE * (0.55 if porteur else 1.6):
+			dir += vers_centre.normalized() * poids_centre
+		var vue := vue_libre(j.position, cible.position)
+		if not vue:
+			dir += v.normalized().orthogonal() * (1.0 if sin(j.graine) > 0.0 else -1.0)
+		# niveau difficile : ne pas gaspiller ses ballons sur une cible lointaine qui peut esquiver
+		var bon_tir: bool = not p.get("economie", false) or d_cible < 430.0 or j.munitions >= AreneRegles.MUNITIONS - 0.2 \
+			or cible.etourdi > 0.0 or cible.ralenti > 0.0 or cible.position.distance_to(centre) < AreneRegles.RAYON_MEGAPHONE
+		if vue and bon_tir and j.pense <= 0.0 and d_cible < AreneRegles.PORTEE_BALLON * 0.9:
+			var charge: bool = p["tir_charge"] and "tir_charge" in _actions_de(j) and j.munitions >= 2.0 \
+				and (cible.etourdi > 0.0 or cible.ralenti > 0.0 or d_cible < 300.0)
+			tirer(j, _viser(j, cible, p, charge), charge)
+			j.pense = _rng.randf_range(p["reaction"][0], p["reaction"][1]) * (0.6 if j.munitions >= 2.0 else 1.0)
+		if j.charge_super >= 1.0 and _super_malin(j, cible, d_cible):
+			super_geste(j, _cible_super(j, cible))
+	else:
+		if vers_centre.length() > AreneRegles.RAYON_MEGAPHONE * (0.5 if porteur else 0.9):
+			dir = vers_centre.normalized()
+		else:
+			dir = Vector2.from_angle(temps * 0.8 + j.graine) * 0.4
+		if j.famille == "fide" and j.charge_super >= 1.0:
+			for a in joueurs:
+				if a.equipe == j.equipe and a.actif() and a.pv < 55.0 and a.position.distance_to(j.position) < 300.0:
+					super_geste(j, a.position)
+					break
+	dir += _esquive(j, p) * 1.8
+	j.direction = dir.limit_length(1.0)
+
+
+## L'ancienne IA, gardée pour le niveau facile.
+func _ia_simple(j: Joueur, p: Dictionary) -> void:
 	var centre := TERRAIN.get_center()
 	var cible: Joueur = null
 	var meilleur := 1e9
@@ -676,11 +765,8 @@ func _ia(j: Joueur, delta: float) -> void:
 		if not vue:
 			dir += v.normalized().orthogonal() * 0.9
 		if vue and j.pense <= 0.0 and meilleur < AreneRegles.PORTEE_BALLON * 0.9:
-			# vise devant la cible, avec une petite erreur
-			var avance: Vector2 = cible.direction * AreneRegles.VITESSE * cible.vitesse_actuelle() * (meilleur / AreneRegles.VITESSE_BALLON) * 0.6
-			var erreur := Vector2(_rng.randf_range(-40, 40), _rng.randf_range(-40, 40))
-			tirer(j, cible.position + avance + erreur, false)
-			j.pense = _rng.randf_range(0.5, 1.0)
+			tirer(j, _viser(j, cible, p, false), false)
+			j.pense = _rng.randf_range(p["reaction"][0], p["reaction"][1])
 		if j.charge_super >= 1.0 and _super_utile(j, cible, meilleur):
 			super_geste(j, cible.position)
 	else:
@@ -694,6 +780,92 @@ func _ia(j: Joueur, delta: float) -> void:
 					super_geste(j, a.position)
 					break
 	j.direction = dir.limit_length(1.0)
+
+
+## Actions débloquées du camp de j (en ligne, l'adversaire a les siennes).
+func _actions_de(j: Joueur) -> Array:
+	return _actions_adv if en_ligne and j.equipe == 1 else actions
+
+
+## Où lancer pour toucher la cible qui bouge : là où elle sera quand le
+## ballon arrivera (part « anticipe » du niveau), plus une petite erreur.
+func _viser(j: Joueur, cible: Joueur, p: Dictionary, charge: bool) -> Vector2:
+	var vb := AreneRegles.VITESSE_BALLON * (0.85 if charge else 1.0)
+	var vc: Vector2 = cible.direction * AreneRegles.VITESSE * cible.vitesse_actuelle()
+	var t := j.position.distance_to(cible.position) / vb
+	for _k in 3:
+		t = j.position.distance_to(cible.position + vc * t) / vb
+	var pt: Vector2 = cible.position + vc * t * float(p["anticipe"])
+	var err := float(p["erreur_tir"]) * clampf(j.position.distance_to(cible.position) / 450.0, 0.4, 1.4)
+	return pt + Vector2(_rng.randf_range(-err, err), _rng.randf_range(-err, err))
+
+
+## Un pas de côté (ou une roulade) devant un ballon qui arrive droit sur j.
+## Chaque ballon n'est vu qu'une fois : le niveau dit la chance de l'esquiver.
+func _esquive(j: Joueur, p: Dictionary) -> Vector2:
+	if float(p["esquive"]) <= 0.0:
+		return Vector2.ZERO
+	var res := Vector2.ZERO
+	for b in ballons:
+		if b["equipe"] == j.equipe or not b.has("vel"):
+			continue
+		var v: Vector2 = b["vel"]
+		var d: Vector2 = j.position - (b["pos"] + Vector2(0, 40))
+		var t := clampf(d.dot(v) / maxf(v.length_squared(), 1.0), 0.0, 0.7)
+		if t <= 0.0:
+			continue
+		var ecart := d - v * t
+		if ecart.length() > RAYON + float(b["rayon"]) + 18.0:
+			continue
+		var vus: Dictionary = b.get("vu", {})
+		b["vu"] = vus
+		var id := j.get_instance_id()
+		if not vus.has(id):
+			vus[id] = _rng.randf() < float(p["esquive"])
+		if not vus[id]:
+			continue
+		var cote := ecart.normalized() if ecart.length() > 1.0 else v.normalized().orthogonal()
+		res += cote
+		if p["roulade"] and "roulade" in _actions_de(j) and t < 0.22 and j.recharge_roulade <= 0.0:
+			j.direction = cote
+			j.rouler()
+	return res.limit_length(1.0)
+
+
+## Le super vaut-il le coup maintenant (niveaux normal et difficile) ?
+func _super_malin(j: Joueur, cible: Joueur, d: float) -> bool:
+	var adv := _adversaires(j)
+	match j.famille:
+		"voix":
+			var dir := (cible.position - j.position).normalized()
+			return adv.filter(func(o): var v: Vector2 = o.position - j.position; return v.length() < 380.0 and absf(v.angle_to(dir)) < 0.55).size() >= 1
+		"perc":
+			return adv.filter(func(o): return o.position.distance_to(j.position) < 210.0).size() >= 1
+		"fide":
+			var blesses := joueurs.filter(func(a): return a.equipe == j.equipe and a.actif() and a.pv < 60.0 and a.position.distance_to(j.position) < 320.0)
+			return blesses.size() >= 2 or j.pv < 45.0
+		"tifo":
+			# un mur quand des ballons arrivent, ou pour garder le mégaphone
+			var arrivent := ballons.filter(func(b): return b["equipe"] != j.equipe and (b["pos"] as Vector2).distance_to(j.position) < 450.0).size()
+			return arrivent >= 1 or (d < 450.0 and j.position.distance_to(TERRAIN.get_center()) < AreneRegles.RAYON_MEGAPHONE * 1.5)
+		"pyro":
+			return d < 450.0 or _megaphone_adverse(j)
+		_:
+			return d < 520.0 or cible.position.distance_to(TERRAIN.get_center()) < AreneRegles.RAYON_MEGAPHONE
+
+
+## Vers où lancer le super : le fumigène sur le mégaphone s'ils le tiennent.
+func _cible_super(j: Joueur, cible: Joueur) -> Vector2:
+	if j.famille == "pyro" and _megaphone_adverse(j):
+		return TERRAIN.get_center()
+	return cible.position
+
+
+func _megaphone_adverse(j: Joueur) -> bool:
+	for o in _adversaires(j):
+		if o.position.distance_to(TERRAIN.get_center()) < AreneRegles.RAYON_MEGAPHONE:
+			return true
+	return false
 
 
 func _super_utile(j: Joueur, cible: Joueur, d: float) -> bool:
