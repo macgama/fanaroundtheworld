@@ -25,6 +25,7 @@ config/icon="res://icon.svg"
 
 Langue="*res://scripts/autoload/langue.gd"
 Plateforme="*res://scripts/autoload/plateforme.gd"
+Mobile="*res://scripts/autoload/mobile.gd"
 Game="*res://scripts/autoload/game.gd"
 Donnees="*res://scripts/autoload/donnees.gd"
 Reseau="*res://scripts/autoload/reseau.gd"
@@ -54,6 +55,8 @@ pointing/emulate_touch_from_mouse=true
 locale/fallback="fr"
 
 [rendering]
+
+textures/vram_compression/import_etc2_astc=true
 
 renderer/rendering_method="gl_compatibility"
 renderer/rendering_method.mobile="gl_compatibility"

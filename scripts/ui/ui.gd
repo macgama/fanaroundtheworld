@@ -19,6 +19,10 @@ const OCEAN := Color("#2f8cff")
 const TERRE := Color("#6ee36a")
 
 static var _police_titre: Font
+## Taille de texte minimale (réglée par l'autoload Mobile sur téléphone, 0 sur PC).
+static var taille_mini := 0
+## Vrai sur téléphone (réglé par l'autoload Mobile) : voir `defilement`.
+static var petit_ecran := false
 static var _police_texte: Font
 
 
@@ -98,7 +102,7 @@ static func creer_theme() -> Theme:
 static func label(texte: String, taille := 22, couleur := BLANC, titre := false, contour := 0) -> Label:
 	var l := Label.new()
 	l.text = texte
-	l.add_theme_font_size_override("font_size", taille)
+	l.add_theme_font_size_override("font_size", maxi(taille, taille_mini))
 	l.add_theme_color_override("font_color", couleur)
 	if titre:
 		l.add_theme_font_override("font", police_titre())
@@ -111,7 +115,7 @@ static func label(texte: String, taille := 22, couleur := BLANC, titre := false,
 static func bouton(texte: String, couleur := BLEU, taille := 26) -> Button:
 	var b := Button.new()
 	b.text = texte
-	b.add_theme_font_size_override("font_size", taille)
+	b.add_theme_font_size_override("font_size", maxi(taille, taille_mini))
 	colorer_bouton(b, couleur)
 	b.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
 	return b
@@ -156,6 +160,21 @@ static func ecusson(sigle: String, couleur: Color, couleur2: Color, taille := 56
 	e.c2 = couleur2
 	e.custom_minimum_size = Vector2(taille, taille * 1.1)
 	return e
+
+
+## Sur téléphone, met `enfant` dans une liste qui défile de haut en bas (pour
+## les panneaux trop hauts pour l'écran) ; sur PC, rend `enfant` tel quel.
+static func defilement(enfant: Control) -> Control:
+	if not petit_ecran:
+		return enfant
+	var sc := ScrollContainer.new()
+	sc.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	sc.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	sc.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	enfant.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	enfant.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	sc.add_child(enfant)
+	return sc
 
 
 static func marge(enfant: Control, g := 0, h := 0, d := 0, b := 0) -> MarginContainer:
@@ -288,6 +307,30 @@ class Icone extends Control:
 			"direct":
 				draw_circle(c, s * 0.3, Ui.CONTOUR)
 				draw_circle(c, s * 0.22, Ui.ROUGE)
+			"car":
+				var r3 := Rect2(c - Vector2(s * 0.46, s * 0.3), Vector2(s * 0.92, s * 0.5))
+				draw_style_box(Ui.boite(Ui.ROSE, int(s * 0.12), int(maxf(2.0, lw * 0.8))), r3)
+				for k in 3:
+					draw_rect(Rect2(r3.position + Vector2(s * (0.08 + 0.27 * k), s * 0.08), Vector2(s * 0.2, s * 0.16)), Ui.BLANC)
+				draw_circle(c + Vector2(-s * 0.24, s * 0.22), s * 0.12, Ui.CONTOUR)
+				draw_circle(c + Vector2(s * 0.24, s * 0.22), s * 0.12, Ui.CONTOUR)
+			"train":
+				var r4 := Rect2(c - Vector2(s * 0.3, s * 0.44), Vector2(s * 0.6, s * 0.72))
+				draw_style_box(Ui.boite(Ui.BLEU, int(s * 0.16), int(maxf(2.0, lw * 0.8))), r4)
+				draw_rect(Rect2(r4.position + Vector2(s * 0.1, s * 0.1), Vector2(s * 0.4, s * 0.22)), Ui.BLANC)
+				draw_circle(c + Vector2(-s * 0.15, s * 0.12), s * 0.06, Ui.JAUNE)
+				draw_circle(c + Vector2(s * 0.15, s * 0.12), s * 0.06, Ui.JAUNE)
+				draw_line(c + Vector2(-s * 0.2, s * 0.3), c + Vector2(-s * 0.34, s * 0.48), Ui.CONTOUR, lw)
+				draw_line(c + Vector2(s * 0.2, s * 0.3), c + Vector2(s * 0.34, s * 0.48), Ui.CONTOUR, lw)
+			"avion":
+				var corps := PackedVector2Array([c + Vector2(-s * 0.46, s * 0.04), c + Vector2(s * 0.36, -s * 0.06), c + Vector2(s * 0.48, 0),
+					c + Vector2(s * 0.36, s * 0.06), c + Vector2(-s * 0.46, s * 0.12)])
+				var ailes := PackedVector2Array([c + Vector2(-s * 0.05, 0), c + Vector2(s * 0.12, 0), c + Vector2(-s * 0.12, s * 0.42), c + Vector2(-s * 0.24, s * 0.42)])
+				var ailes2 := PackedVector2Array([c + Vector2(-s * 0.05, 0), c + Vector2(s * 0.12, 0), c + Vector2(-s * 0.12, -s * 0.38), c + Vector2(-s * 0.24, -s * 0.38)])
+				draw_colored_polygon(ailes, Ui.CONTOUR)
+				draw_colored_polygon(ailes2, Ui.CONTOUR)
+				draw_colored_polygon(corps, Ui.BLANC)
+				draw_polyline(corps + PackedVector2Array([corps[0]]), Ui.CONTOUR, lw * 0.7, true)
 
 	func _ovale(col: Color) -> StyleBoxFlat:
 		var b := StyleBoxFlat.new()

@@ -73,7 +73,7 @@ func _ready() -> void:
 	p_infos.custom_minimum_size = Vector2(440, 0)
 	milieu.add_child(p_infos)
 	_infos = Ui.vbox(10)
-	p_infos.add_child(_infos)
+	p_infos.add_child(Ui.defilement(_infos))
 
 	var p_membres := Ui.panneau(Color(0.16, 0.13, 0.4, 0.92))
 	p_membres.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -103,7 +103,7 @@ func _ready() -> void:
 	p_caisse.custom_minimum_size = Vector2(500, 0)
 	milieu.add_child(p_caisse)
 	_caisse = Ui.vbox(12)
-	p_caisse.add_child(_caisse)
+	p_caisse.add_child(Ui.defilement(_caisse))
 
 	# --- bas : navigation
 	var bas := Ui.hbox(18)

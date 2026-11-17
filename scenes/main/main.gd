@@ -268,7 +268,10 @@ func _ouvrir_options() -> void:
 		pe.add_theme_stylebox_override(k, StyleBoxEmpty.new())
 	pe.button_pressed = Reglages.plein_ecran()
 	pe.toggled.connect(Reglages.regler_plein_ecran)
-	v.add_child(pe)
+	if Mobile.actif:
+		pe.queue_free()  # toujours plein écran sur téléphone
+	else:
+		v.add_child(pe)
 	# langue : un bouton par langue proposée (data/langues/<code>/)
 	var hl := Ui.hbox(14)
 	var ll := Ui.label("Langue", 24, Ui.BLANC, true)

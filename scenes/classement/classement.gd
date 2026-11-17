@@ -49,7 +49,7 @@ func _ready() -> void:
 	pg.custom_minimum_size = Vector2(620, 0)
 	corps.add_child(pg)
 	_gauche = Ui.vbox(14)
-	pg.add_child(_gauche)
+	pg.add_child(Ui.defilement(_gauche))
 	var pd := Ui.panneau()
 	pd.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	corps.add_child(pd)

@@ -23,6 +23,12 @@ var avatar: Texture2D
 var route_de := Vector2.INF
 var route_vers := Vector2.INF
 var route_avance := 0.0
+## Itinéraire à plusieurs étapes (lon, lat), prioritaire sur route_de / route_vers.
+var route_points := PackedVector2Array()
+## Autres itinéraires possibles, dessinés en pâle.
+var routes_autres: Array = []
+## Étapes nommées sur l'itinéraire : [{pos (lon, lat), nom}].
+var etapes_route: Array = []
 
 var _monde: Node2D
 var _calque: Control
@@ -185,8 +191,23 @@ func _dessiner_calque() -> void:
 			pts.append(pts[0])
 			_calque.draw_polyline(pts, Ui.CONTOUR, 3.0, true)
 
+	# itinéraire à étapes (déplacement du fan club)
+	if route_points.size() >= 2:
+		for autre in routes_autres:
+			_pointilles(_chemin(autre), Color(1, 1, 1, 0.45), Color(0, 0, 0, 0.0), 4.0)
+		var ch := _chemin(route_points)
+		_pointilles(ch, Ui.JAUNE, Ui.CONTOUR, 4.0)
+		for e in etapes_route:
+			var q := vers_ecran(e["pos"])
+			_calque.draw_circle(q, 13, Ui.CONTOUR)
+			_calque.draw_circle(q, 9, Ui.ROSE)
+			_etiquette(q + Vector2(0, -46), str(e.get("nom", "")), "", false)
+		var fin := vers_ecran(route_points[route_points.size() - 1])
+		_calque.draw_circle(fin, 15, Ui.CONTOUR)
+		_calque.draw_circle(fin, 11, Ui.VERT)
+		_dessiner_avatar(point_sur(ch, route_avance), 34.0)
 	# route du voyage (pointillés en arc)
-	if route_de != Vector2.INF and route_vers != Vector2.INF:
+	elif route_de != Vector2.INF and route_vers != Vector2.INF:
 		var a := vers_ecran(route_de)
 		var b := vers_ecran(route_vers)
 		var ctrl := (a + b) / 2.0 + Vector2(0, -maxf(60.0, a.distance_to(b) * 0.25))
@@ -264,6 +285,72 @@ func _dessiner_avatar(p: Vector2, r: float) -> void:
 	if avatar:
 		var tr := Rect2(p - Vector2(r, r) * 0.95, Vector2(r, r) * 1.9)
 		_calque.draw_texture_rect(avatar, tr, false)
+
+
+## Itinéraire en pixels écran : un petit arc entre chaque étape.
+func _chemin(points: PackedVector2Array) -> PackedVector2Array:
+	var res := PackedVector2Array()
+	for i in points.size() - 1:
+		var a := vers_ecran(points[i])
+		var b := vers_ecran(points[i + 1])
+		var ctrl := (a + b) / 2.0 + Vector2(0, -maxf(20.0, a.distance_to(b) * 0.18))
+		for k in 16:
+			res.append(_bezier(a, ctrl, b, k / 16.0))
+	if points.size() > 0:
+		res.append(vers_ecran(points[points.size() - 1]))
+	return res
+
+
+func _pointilles(ch: PackedVector2Array, couleur: Color, contour: Color, epaisseur: float) -> void:
+	# tirets réguliers de 16 px séparés de 10 px, quelle que soit la longueur des segments
+	var tirets: Array = []
+	var dans_tiret := true
+	var reste := 16.0
+	var courant := PackedVector2Array()
+	if ch.size() > 0:
+		courant.append(ch[0])
+	for i in ch.size() - 1:
+		var a := ch[i]
+		var b := ch[i + 1]
+		var seg := a.distance_to(b)
+		var fait := 0.0
+		while seg - fait > reste:
+			fait += reste
+			var q := a.lerp(b, fait / seg)
+			if dans_tiret:
+				courant.append(q)
+				tirets.append(courant)
+				courant = PackedVector2Array()
+			else:
+				courant = PackedVector2Array([q])
+			dans_tiret = not dans_tiret
+			reste = 16.0 if dans_tiret else 10.0
+		reste -= seg - fait
+		if dans_tiret:
+			courant.append(b)
+	if dans_tiret and courant.size() >= 2:
+		tirets.append(courant)
+	for t in tirets:
+		if contour.a > 0.0:
+			_calque.draw_polyline(t, contour, epaisseur + 3.0, true)
+	for t in tirets:
+		_calque.draw_polyline(t, couleur, epaisseur, true)
+
+
+## Point à la fraction t (0-1) de la longueur d'un chemin.
+static func point_sur(ch: PackedVector2Array, t: float) -> Vector2:
+	if ch.is_empty():
+		return Vector2.ZERO
+	var total := 0.0
+	for i in ch.size() - 1:
+		total += ch[i].distance_to(ch[i + 1])
+	var cible := clampf(t, 0.0, 1.0) * total
+	for i in ch.size() - 1:
+		var seg := ch[i].distance_to(ch[i + 1])
+		if cible <= seg and seg > 0.0:
+			return ch[i].lerp(ch[i + 1], cible / seg)
+		cible -= seg
+	return ch[ch.size() - 1]
 
 
 static func _bezier(a: Vector2, c: Vector2, b: Vector2, t: float) -> Vector2:

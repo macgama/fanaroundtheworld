@@ -121,6 +121,10 @@ dans la partie même sans Steam et envoyés à Steam dès qu'il est là. La sauv
 dans Steam Cloud : la partie suit le joueur d'un PC à l'autre. Détails dans
 [docs/succes-et-cloud.md](docs/succes-et-cloud.md).
 
+**Sur téléphone (Android, test)** : APK à installer à la main, construit à chaque push sur
+`main` ([dernière version](https://github.com/macgama/fanaroundtheworld/releases/download/android-test/FanAroundTheWorld.apk)).
+Interface agrandie, Arène au joystick, Steam coupé. Détails dans [docs/android.md](docs/android.md).
+
 **Le fan club** (bouton *Fan Club* en bas de la carte) :
 
 - **Recruter** des FANZZY : gratuit, mais le nombre de places dépend du niveau du club
