@@ -116,7 +116,27 @@ tribune ; c'est le pousseur de ballon. Les coûts en Ferveur ne changent pas.
 
 ### Parties complètes IA contre IA
 
-PARTIES_COMPLETES
+100 parties par ligne : un jeu privé d'une carte (à gauche) contre le jeu complet, IA des
+deux côtés. Si retirer la carte fait perdre, elle compte ; si ça fait gagner, l'IA la joue
+mal. Le témoin (jeu complet contre jeu complet) montre le bruit : environ ±7 points.
+
+| Jeu sans… | Victoires avant | Victoires après |
+|---|---|---|
+| (témoin) | 51 % | 44 % |
+| Petit Tambour | 30 % | 45 % |
+| Porte-Drapeau | 28 % | 35 % |
+| Lanceur de serpentins | 26 % | 19 % |
+| Chorale | 32 % | 33 % |
+| Mascotte géante | 23 % | 24 % |
+| Canon à confettis | 67 % | 75 % |
+| Fumigène | 58 % | 50 % |
+| Ola | 48 % | 38 % |
+
+Le Petit Tambour n'est plus la carte indispensable. Deux défauts restent, qui viennent de
+l'IA et pas des cartes : elle place mal le Canon (le retirer la fait gagner) et ne joue
+l'Ola et le Fumigène qu'en défense. Le Lanceur de serpentins pèse lourd en partie
+complète parce qu'il chante aussi contre la tribune de loin ; à surveiller quand l'IA
+sera revue.
 
 ## Ce qui reste à faire
 
