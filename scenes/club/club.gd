@@ -128,6 +128,11 @@ func _ready() -> void:
 	b_chant.tooltip_text = "Composer le chant que ta tribune chante en duel"
 	b_chant.pressed.connect(func(): Game.aller(Game.SCENE_CHANT))
 	bas.add_child(b_chant)
+	var b_local := Ui.bouton("Local", Ui.BLEU, 30)
+	b_local.custom_minimum_size = Vector2(210, 88)
+	b_local.tooltip_text = "Agrandir et décorer le local, matériel de tribune"
+	b_local.pressed.connect(func(): Game.aller(Game.SCENE_LOCAL))
+	bas.add_child(b_local)
 	var b_tournoi := Ui.bouton("Tournoi", Ui.ROSE, 30)
 	b_tournoi.custom_minimum_size = Vector2(210, 88)
 	b_tournoi.tooltip_text = "Tournoi des fan clubs du week-end"

@@ -167,8 +167,20 @@ D'où viennent les Jetons :
   de tifos, chauffeur du bus des supporters.
 - **Collection** : compléter une série de tampons de stades ou de FANZZY donne une prime.
 
-À quoi ils servent : billets, trajets, équipement (écharpes, drapeaux, tambours…).
-Les nouvelles actions de duel se débloquent par la progression, pas avec les Jetons.
+À quoi ils servent (détails dans `docs/usages-jetons.md`) :
+
+- **Billets et trajets** : le billet du stade suit l'importance du match (25 en
+  championnat, ≈ 60 pour un derby, 150 à 300 pour une finale).
+- **Boutique souvenirs** de chaque stade tamponné (fanion, écharpe, ballon dédicacé,
+  maillot rétro, maquette), moins chère sur place le jour du match ; ils remplissent la
+  **vitrine du club** (séries et primes, comme le carnet).
+- **Matériel de tribune** : écharpes, grands drapeaux, tambours, bâche, confettis aux
+  couleurs de l'équipe, visibles en duel, sans aucun effet sur le score.
+- **Grand Tour** : voyage organisé de 3 ou 5 stades d'un pays, plusieurs tampons d'un coup.
+- **Le local** : salle des chants, salle des trophées, parking du car, et leur déco.
+
+Ce sont des objets du club, pas des skins de FANZZY. Les nouvelles actions de duel se
+débloquent par la progression, pas avec les Jetons.
 Les skins s'obtiennent seulement par le PASS ou les événements.
 
 Pas de boutique en argent réel en plus du PASS pour le moment.

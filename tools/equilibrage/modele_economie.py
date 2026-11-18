@@ -10,6 +10,9 @@ Chaque jour joué, le profil fait un nombre fixe d'activités avec une réussite
 formules du jeu (voir les fichiers cités) ; quand une règle du jeu change, mettre à
 jour ce fichier et relancer. Les chiffres sont recopiés dans docs/equilibrage.md.
 
+Dépenses ajoutées le 18 nov. 2026 (usages des Jetons) : souvenirs des stades, billets plus
+chers pour les grands matchs, matériel de tribune, local agrandi et décoré, Grand Tour.
+
 Ce qui n'est pas modélisé : les événements (derbys, finales), le tournoi et la Ligue
 (au plus quelques centaines de Jetons par semaine), les primes de collection hors
 tampons de stades, l'album, les soirs de match (ajoutés en forfait au profil passionné).
@@ -107,6 +110,18 @@ PROFILS = {
 }
 REJEU = [1.0, 0.5, 0.25]
 
+# ---------------------------------------------------------------- achats (18 nov. 2026)
+# scripts/club/materiel.gd (3 niveaux par objet) et scripts/club/local_club.gd (salles + déco)
+MATERIEL = [150, 600, 2000, 200, 800, 2500, 250, 1000, 3000, 300, 1200, 3500, 400, 1600, 4500]
+LOCAL = [300, 2000, 400, 2500, 500, 3000] + [100, 150, 250, 350, 600, 150, 450, 900, 300, 500, 1200, 200, 400, 1500]
+# scripts/jeu/souvenirs.gd : le joueur moyen achète fanion + écharpe sur place dans chaque stade (40)
+SOUVENIRS_PAR_STADE = 40
+# scripts/jeu/evenements.gd : billet moyen du stade, derbys, chocs et coupes compris (≈ ×1,3)
+FACTEUR_BILLET_MOYEN = 1.3
+# scripts/jeu/grand_tour.gd : week-end de 3 stades ≈ 60 + 3 × 70 + trajets
+GRAND_TOUR = 330
+TOURS_SEMAINE = {"occasionnel (20 min)": 0, "régulier (1 h)": 1, "passionné (3 h)": 2}
+
 
 def jetons_duel(lieu, mode, rang):
     perf_j = R["duel_perf_ambiance"] if mode == "duel" else R["duel_perf"]
@@ -140,7 +155,9 @@ def simuler(nom, p, jours=303):
     buv = atel = 0
     stock = 0.0
     sources = {}
-    depenses = {"billets+trajets": 0, "local": 0}
+    depenses = {"billets+trajets": 0, "local": 0, "souvenirs": 0, "grand tour": 0, "matériel+déco": 0}
+    achats = [] if AVANT else sorted(MATERIEL + LOCAL)
+    jour_catalogue = None
     jour_max_local = None
     jours_niveau = {}
     jour_pass_100 = None
@@ -178,9 +195,14 @@ def simuler(nom, p, jours=303):
                     xp_pass += xp_pass_duel(rang)
             # stades : billet + trajet, prime de ferveur, x1,1 sur les duels du jour (forfait)
             st = p["stades_semaine"] / p["jours"]
-            cout = st * (R["billet_stade"] + p["trajet"] * R["trajet_facteur"])
+            billet = R["billet_stade"] * (1 if AVANT else FACTEUR_BILLET_MOYEN)
+            cout = st * (billet + p["trajet"] * R["trajet_facteur"])
             depenses["billets+trajets"] += cout
             jetons -= cout
+            if not AVANT:
+                sv = st * SOUVENIRS_PAR_STADE
+                depenses["souvenirs"] += sv
+                jetons -= sv
             gagner("déplacements", st * 14)
             xp += st * 30
             xp_pass += st * (50 * R["xp_pass_ferveur"] + R["xp_pass_stade"] * 0.7)  # 70 % de stades nouveaux
@@ -235,6 +257,18 @@ def simuler(nom, p, jours=303):
                 buv += 1
             else:
                 atel += 1
+        # Grand Tour le week-end, puis matériel et déco dès qu'il reste 150 Jetons de côté
+        if not AVANT and d % 7 == 5 and TOURS_SEMAINE.get(nom, 0) and jetons > 150 + GRAND_TOUR:
+            for _ in range(TOURS_SEMAINE[nom]):
+                if jetons - GRAND_TOUR >= 150:
+                    jetons -= GRAND_TOUR
+                    depenses["grand tour"] += GRAND_TOUR
+        while achats and jetons - achats[0] >= 150 and buv == 5 and atel == 5:
+            c = achats.pop(0)
+            jetons -= c
+            depenses["matériel+déco"] += c
+        if not achats and jour_catalogue is None and not AVANT:
+            jour_catalogue = d + 1
         if buv == 5 and atel == 5 and jour_max_local is None:
             jour_max_local = d + 1
         nv = niveau(xp)
@@ -250,6 +284,9 @@ def simuler(nom, p, jours=303):
           f" (dont fan club {sources.get('fan club', 0) / gains * 100:.0f} %, duels {sources.get('duels', 0) / gains * 100:.0f} %,"
           f" boulots {sources.get('petits boulots', 0) / gains * 100:.0f} %)")
     print(f"- Dépenses billets + trajets par jour joué : {depenses['billets+trajets'] / (semaines * p['jours']):.0f}")
+    if not AVANT:
+        print(f"- Nouveaux achats sur la saison : souvenirs {depenses['souvenirs']:.0f}, Grand Tour {depenses['grand tour']:.0f},"
+              f" matériel + local {depenses['matériel+déco']:.0f} (tout acheté au jour {jour_catalogue})")
     print(f"- Réserve en fin de saison : {jetons:.0f} Jetons ; local au maximum : jour {jour_max_local}")
     print(f"- Niveau du fan club : 6 au jour {jours_niveau.get(6)}, 10 au jour {jours_niveau.get(10)},"
           f" 13 au jour {jours_niveau.get(13)}, 25 au jour {jours_niveau.get(25)} ; niveau final {niveau(xp)}")
