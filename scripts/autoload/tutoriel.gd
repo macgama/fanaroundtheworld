@@ -53,8 +53,8 @@ const ETAPES := [
 		"texte": "Ton fan club organise le voyage : choisis le car ou le train, et ton itinéraire. En route, tes choix font monter la ferveur du convoi, qui rapporte une prime à l'arrivée !",
 		"cible": "EN ROUTE"},  # sans_traduction
 	{"id": "voyage", "scenes": [SC_VOYAGE], "titre": "En route !",
-		"texte": "Le car du fan club file vers le stade. Une fois arrivé, entre dans le stade !",
-		"cible": "ENTRER DANS LE STADE"},
+		"texte": "Arrivés au stade ! Plus tard, tu marcheras jusqu'au stade en cortège avec ton kop. Pour ton premier match, va direct en tribune !",
+		"cible": "Direct en tribune"},
 	{"id": "tribune", "scenes": [SC_TRIBUNE], "titre": "Ta tribune",
 		"texte": "Voici tes 3 FANZZY : un pour le Chant, un pour le Tifo, un pour l'Ola. Pour ton premier duel, lance le DUEL D'AMBIANCE !",
 		"cible": "DUEL D'AMBIANCE"},

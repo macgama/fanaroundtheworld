@@ -15,8 +15,10 @@ organise son déplacement. Règles : `scripts/jeu/deplacement.gd` (classe
 3. **En route** : le convoi avance sur la carte et s'arrête à chaque événement.
    2 ou 3 choix (clic ou touches 1, 2, 3). La ferveur monte ou baisse, et
    certains choix font perdre du temps.
-4. **Arrivée** : bilan (ferveur, à l'heure ou pas, prime), puis le tampon du
-   stade comme avant, et « Ta tribune ».
+4. **Arrivée** : bilan (ferveur, à l'heure ou pas, prime, nouveaux supporters du
+   kop, parfois un FANZZY rencontré en route), puis le tampon du stade, puis le
+   **cortège** depuis la gare ou le parking (la ferveur continue, voir
+   [kop-et-cortege.md](kop-et-cortege.md)) ou « Direct en tribune ».
 
 ## Transports et itinéraires
 

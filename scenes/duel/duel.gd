@@ -53,6 +53,7 @@ var _ola_fin := 0.0
 var _chant_adverse_fin := -1.0
 var _prochain_chant_adverse := 12.0
 var _bonus_score := 1.0
+var _chambre := false  # la tribune d'en face a été chambrée pendant le cortège
 var _score_vu := Vector2i(-1, -1)
 
 # chant du club (vide : motifs au hasard)
@@ -117,6 +118,11 @@ func _ready() -> void:
 	_construire()
 	_calculer_bonus_score(true)
 	Donnees.mis_a_jour.connect(func(): _calculer_bonus_score(false))
+	if not en_ligne:
+		# le kop (renommée) et le cortège du jour chauffent la tribune avant le coup d'envoi
+		var bd := Game.bonus_depart(str(fiche.get("id", m.get("id", ""))))
+		jauge = float(bd["total"])
+		_chambre = Game.adversaire_chambre(str(fiche.get("id", m.get("id", ""))))
 	if en_ligne:
 		_preparer_en_ligne()
 	else:
@@ -180,6 +186,7 @@ func _construire() -> void:
 	_decor.c_eux2 = eux["c2"]
 	_decor.mode = mode
 	_decor.texte_tifo = Game.fan_club_nom.to_upper()
+	_decor.remplissage = Kop.remplissage(Game.kop()) if Game.club_cree() else 1.0  # notre tribune se remplit avec le kop
 	_decor.materiel = Materiel.affiche(Game.materiel)
 
 	# FANZZY de la tribune, au premier plan
@@ -389,6 +396,10 @@ func _compte_a_rebours() -> void:
 	l.queue_free()
 	_prochaine_mesure = 0.4
 	pret = true
+	if jauge >= 1.0:
+		_annonce(tr("Ton kop chauffe la tribune : +%d d'ambiance") % int(jauge), Ui.VERT)
+	elif _chambre:
+		_annonce("Chambrés au cortège, ils sont remontés !", Ui.ROUGE)
 
 
 # ------------------------------------------------------------------ boucle
@@ -467,6 +478,8 @@ func _pression_ia(delta: float) -> void:
 		_decor.secousse_eux = 1.0
 	if temps < _chant_adverse_fin:
 		pression *= 3.0
+	if _chambre:
+		pression *= Cortege.CHAMBRAGE_PRESSION
 	jauge -= pression * delta * 1.6 / float(mods["holdBonus"])  # sans_traduction
 	jauge = clampf(jauge, -100.0, 100.0)
 
@@ -902,6 +915,7 @@ func _finir() -> void:
 	var tour := {} if en_ligne else Game.noter_duel_tournoi(fiche["m"], gagne, mode)
 	# Ligue des tribunes : pas sur un forfait (l'adversaire parti n'enverra pas son résultat).
 	var lig := {} if _forfait else Game.noter_duel_ligue(fiche["m"], 1 if gagne else -1)
+	var kop_r := Game.noter_kop_duel(gagne, part, mode)
 	if gagne:
 		_decor.confettis(300)
 		for mar in _fanzzy:
@@ -921,7 +935,7 @@ func _finir() -> void:
 	pan.set_anchors_preset(Control.PRESET_CENTER)
 	pan.offset_left = -460
 	pan.offset_right = 460
-	var demi_h := 330 + 24 * maxi(0, FinDuel.lignes_evenement(ev).size() + (1 if pop > 0 else 0) + FinDuel.ligne_tournoi(tour).size() + FinDuel.ligne_ligue(lig).size() + FinDuel.ligne_deplacement(mult_depl, bonus_depl).size() - 1)
+	var demi_h := 330 + 24 * maxi(0, FinDuel.lignes_evenement(ev).size() + (1 if pop > 0 else 0) + FinDuel.ligne_tournoi(tour).size() + FinDuel.ligne_ligue(lig).size() + FinDuel.ligne_deplacement(mult_depl, bonus_depl).size() + FinDuel.lignes_kop(kop_r).size() - 1)
 	pan.offset_top = -demi_h
 	pan.offset_bottom = demi_h
 	add_child(pan)
@@ -945,7 +959,7 @@ func _finir() -> void:
 		[Game.libelle_rejeu(part), "+%d" % jetons],
 		["XP du fan club", "+%d" % xp],
 		["XP du PASS", "+%d" % xp_pass],
-	] + FinDuel.ligne_deplacement(mult_depl, bonus_depl) + FinDuel.ligne_popularite({"popularite": pop, "equipe": (fiche["dom"] if camp == "home" else fiche["ext"])["nom"]}) + FinDuel.lignes_evenement(ev) + FinDuel.ligne_tournoi(tour) + FinDuel.ligne_ligue(lig)
+	] + FinDuel.ligne_deplacement(mult_depl, bonus_depl) + FinDuel.ligne_popularite({"popularite": pop, "equipe": (fiche["dom"] if camp == "home" else fiche["ext"])["nom"]}) + FinDuel.lignes_evenement(ev) + FinDuel.ligne_tournoi(tour) + FinDuel.ligne_ligue(lig) + FinDuel.lignes_kop(kop_r)
 	for l in lignes:
 		var h := Ui.hbox(10)
 		var a := Ui.label(l[0], 24, Ui.BLANC)
@@ -1191,6 +1205,8 @@ class Decor extends Control:
 	var _confettis: Array = []
 	var _ola_t := -10.0
 	var _graine := 12345
+	## Part des places de notre tribune occupées (le kop : Kop.remplissage).
+	var remplissage := 1.0
 
 	func confettis(n: int) -> void:
 		var cols := [Ui.JAUNE, Ui.ROSE, Ui.BLEU, Ui.VERT, Ui.VIOLET, c_nous]
@@ -1452,6 +1468,9 @@ class Decor extends Control:
 			var x := r.position.x + (pas / 2.0 if j % 2 == 1 else 0.0)
 			while x < r.end.x:
 				var ph := rng.randf() * TAU
+				if devant and rng.randf() > remplissage:
+					x += pas * echelle  # place vide : le kop n'est pas encore assez grand
+					continue
 				if sprites:
 					# supporters Quaternius : geste d'ambiance, ola quand la vague passe
 					var corps2: Color = c1 if rng.randf() < 0.75 else c2
