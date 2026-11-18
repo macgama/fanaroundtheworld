@@ -180,6 +180,7 @@ func _construire() -> void:
 	_decor.c_eux2 = eux["c2"]
 	_decor.mode = mode
 	_decor.texte_tifo = Game.fan_club_nom.to_upper()
+	_decor.materiel = Materiel.affiche(Game.materiel)
 
 	# FANZZY de la tribune, au premier plan
 	for i in 3:
@@ -1183,6 +1184,8 @@ class Decor extends Control:
 	var c_eux := Ui.ROUGE
 	var c_eux2 := Ui.BLANC
 	var texte_tifo := ""
+	## Matériel de tribune installé : {id: niveau} (Materiel.affiche). Décor seulement.
+	var materiel := {}
 	var secousse_eux := 0.0
 	var _t := 0.0
 	var _confettis: Array = []
@@ -1200,8 +1203,12 @@ class Decor extends Control:
 
 	func _process(delta: float) -> void:
 		_t += delta
+		var nc := int(materiel.get("confettis", 0))
+		if nc > 0 and duel != null and float(duel.jauge) > 40.0 and randf() < delta * (1.5 + nc * 1.5):
+			_confettis_club(6 + nc * 4)
 		secousse_eux = maxf(0.0, secousse_eux - delta * 0.4)
 		for c in _confettis:
+			c["v"].y += float(c.get("g", 0.0)) * delta
 			c["p"] += c["v"] * delta
 			c["r"] += c["vr"] * delta
 		_confettis = _confettis.filter(func(c): return c["p"].y < 1150)
@@ -1241,11 +1248,157 @@ class Decor extends Control:
 				_foule(Rect2(w * 0.72, 300, w * 0.28, 140), c_eux, c_eux2, ferveur_eux, 18.0, false)
 		# notre tribune
 		_foule(Rect2(0, 650, w, 430), c_nous, c_nous2, ferveur_nous, 18.0, true)
+		if not materiel.is_empty():
+			_materiel(ferveur_nous)
 		# confettis
 		for c in _confettis:
 			draw_set_transform(c["p"], c["r"], Vector2.ONE)
 			draw_rect(Rect2(-6, -3, 12, 6), c["c"])
 		draw_set_transform(Vector2.ZERO, 0, Vector2.ONE)
+
+	func _confettis_club(n: int) -> void:
+		## Confettis du matériel de tribune : seulement nos couleurs, lancés depuis notre tribune.
+		for i in n:
+			_confettis.append({"p": Vector2(randf() * size.x, randf_range(640, 720)), "v": Vector2(randf_range(-80, 80), randf_range(-420, -260)),
+				"c": c_nous if randf() < 0.6 else c_nous2, "r": randf() * TAU, "vr": randf_range(-8, 8), "g": 520.0})
+
+	# ---------------------------------------------------------- matériel de tribune
+
+	func _materiel(ferveur: float) -> void:
+		## Dessiné par-dessus notre tribune. Rien ici ne touche au score.
+		var w := size.x
+		var n_ech := int(materiel.get("echarpes", 0))
+		if n_ech > 0:
+			var nb: int = [0, 7, 12, 18][n_ech]
+			for i in nb:
+				var x := (i + 0.5) * w / nb + sin(i * 1.7) * 30.0
+				var y := 760.0 + (i % 3) * 34.0 - maxf(0.0, sin(_t * 4.0 + i)) * 14.0 * ferveur
+				_echarpe(Vector2(x, y), 150.0 + 20.0 * n_ech, i)
+		# drapeaux et tambours sur les côtés : le milieu reste à la piste de rythme et aux FANZZY
+		var n_dra := int(materiel.get("drapeaux", 0))
+		if n_dra > 0:
+			var xs: Array = [[], [160, 1760], [110, 290, 1630, 1810], [80, 210, 340, 1580, 1710, 1840]][n_dra]
+			# les hampes passent derrière la bâche, le tissu devant
+			for i in xs.size():
+				_drapeau(Vector2(xs[i], 960), 400.0 + (i % 2) * 30.0, 0.7 + 0.1 * n_dra, i, true)
+			_bache(int(materiel.get("bache", 0)))
+			for i in xs.size():
+				_drapeau(Vector2(xs[i], 960), 400.0 + (i % 2) * 30.0, 0.7 + 0.1 * n_dra, i, false)
+		else:
+			_bache(int(materiel.get("bache", 0)))
+		var n_tam := int(materiel.get("tambours", 0))
+		if n_tam > 0:
+			var pos: Array = [[], [Vector2(210, 880)], [Vector2(210, 880), Vector2(1710, 880)],
+				[Vector2(170, 880), Vector2(370, 900), Vector2(1710, 880)]][n_tam]
+			for i in pos.size():
+				_tambour(pos[i], 60.0 if (n_tam == 3 and i == 1) else 48.0, ferveur, i)
+
+	func _echarpe(c: Vector2, longueur: float, i: int) -> void:
+		var bandes := 6
+		var l := longueur / bandes
+		var a := sin(_t * 3.0 + i) * 0.08
+		for k in bandes:
+			var x0 := -longueur / 2.0 + k * l
+			var p0 := c + Vector2(x0, sin(k * 0.9 + _t * 5.0 + i) * 4.0).rotated(a)
+			var p1 := c + Vector2(x0 + l, sin((k + 1) * 0.9 + _t * 5.0 + i) * 4.0).rotated(a)
+			var h := Vector2(0, 26).rotated(a)
+			draw_colored_polygon(PackedVector2Array([p0, p1, p1 + h, p0 + h]), c_nous if k % 2 == 0 else c_nous2)
+		# franges
+		for s in [-1.0, 1.0]:
+			var bout := c + Vector2(s * longueur / 2.0, 0).rotated(a)
+			for f in 4:
+				draw_line(bout + Vector2(0, 4 + f * 6), bout + Vector2(s * 12, 6 + f * 6), c_nous2, 2.0)
+
+	func _drapeau(pied: Vector2, haut: float, echelle: float, i: int, hampe: bool) -> void:
+		var sommet := pied + Vector2(sin(_t * 1.3 + i) * 10.0, -haut)
+		if hampe:
+			draw_line(pied, sommet, Color("#3a2a1a"), 7.0)
+			return
+		draw_line(sommet, sommet.lerp(pied, 0.3), Color("#3a2a1a"), 7.0)
+		var lw := 180.0 * echelle
+		var lh := 120.0 * echelle
+		var cote := 1.0 if pied.x > size.x / 2.0 else -1.0  # flotte vers le bord
+		var pts := PackedVector2Array()
+		var pts_bas := PackedVector2Array()
+		var segs := 10
+		for k in segs + 1:
+			var u := float(k) / segs
+			var onde := sin(u * 5.0 - _t * 5.0 + i) * 14.0 * u * echelle
+			pts.append(sommet + Vector2(cote * u * lw, onde))
+			pts_bas.append(sommet + Vector2(cote * u * lw, lh + onde))
+		for k in segs:
+			var col := c_nous if (k * 2 / segs) % 2 == 0 else c_nous2
+			draw_colored_polygon(PackedVector2Array([pts[k], pts[k + 1], pts_bas[k + 1], pts_bas[k]]), col)
+		# bande centrale
+		for k in segs:
+			var m0 := pts[k].lerp(pts_bas[k], 0.4)
+			var m1 := pts[k + 1].lerp(pts_bas[k + 1], 0.4)
+			var m2 := pts[k + 1].lerp(pts_bas[k + 1], 0.6)
+			var m3 := pts[k].lerp(pts_bas[k], 0.6)
+			draw_colored_polygon(PackedVector2Array([m0, m1, m2, m3]), c_nous2 if (k * 2 / segs) % 2 == 0 else c_nous)
+		draw_circle(sommet, 8.0, Ui.JAUNE)
+
+	func _bache(n: int) -> void:
+		if n <= 0:
+			return
+		## Accrochée en haut de notre tribune, sur les côtés (le milieu est aux FANZZY) ;
+		## au niveau 3, d'un bout à l'autre avec des écussons.
+		var w := size.x
+		var morceaux: Array = [[], [Vector2(40, 500)], [Vector2(40, 500), Vector2(w - 500, w - 40)], [Vector2(20, w - 20)]][n]
+		var textes: Array = [[], [270.0], [270.0, w - 270.0], [300.0, w - 300.0]][n]
+		var y0 := 676.0
+		var haut := 56.0
+		for m in morceaux:
+			var pts := PackedVector2Array()
+			var segs := 16
+			for k in segs + 1:
+				pts.append(Vector2(lerpf(m.x, m.y, float(k) / segs), y0 + sin(k * 0.8 + _t * 2.0) * 2.0))
+			for k in segs + 1:
+				var j := segs - k
+				pts.append(Vector2(lerpf(m.x, m.y, float(j) / segs), y0 + haut + sin(j * 0.8 + _t * 2.0) * 2.0))
+			draw_colored_polygon(pts, c_nous)
+			draw_rect(Rect2(m.x, y0 + 5, m.y - m.x, 5), c_nous2)
+			draw_rect(Rect2(m.x, y0 + haut - 10, m.y - m.x, 5), c_nous2)
+			for x in [m.x + 8, m.y - 8]:
+				draw_circle(Vector2(x, y0 + 8), 5, Ui.CONTOUR)
+		if n == 3:
+			for x in [120.0, w - 120.0, w / 2.0 - 520.0, w / 2.0 + 520.0]:
+				draw_circle(Vector2(x, y0 + haut / 2.0), 22, c_nous2)
+				draw_circle(Vector2(x, y0 + haut / 2.0), 15, c_nous)
+		var f := Ui.police_titre()
+		var txt := texte_tifo if texte_tifo != "" else "ALLEZ !"
+		var fs := 34
+		var tw := minf(f.get_string_size(txt, HORIZONTAL_ALIGNMENT_LEFT, -1, fs).x, 400.0)
+		var clair := c_nous2 if c_nous2.get_luminance() > 0.5 and not c_nous2.is_equal_approx(c_nous) else Ui.BLANC
+		for cx in textes:
+			var pos := Vector2(cx - tw / 2.0, y0 + 40)
+			draw_string_outline(f, pos, txt, HORIZONTAL_ALIGNMENT_LEFT, 400, fs, 7, Ui.CONTOUR)
+			draw_string(f, pos, txt, HORIZONTAL_ALIGNMENT_LEFT, 400, fs, clair)
+
+	func _tambour(c: Vector2, rayon: float, ferveur: float, i: int) -> void:
+		var tempo := 2.0 + 4.0 * ferveur  # coups par seconde
+		var coup := fmod(_t * tempo + i * 0.5, 1.0)
+		var frappe := 1.0 - coup  # 1 juste après le coup
+		var e := 1.0 + 0.04 * frappe
+		var corps := Rect2(c + Vector2(-rayon, -rayon * 0.35) * e, Vector2(rayon * 2.0, rayon * 1.3) * e)
+		draw_rect(corps, c_nous)
+		for k in 5:
+			var x := corps.position.x + corps.size.x * (k + 0.5) / 5.0
+			draw_line(Vector2(x - 10, corps.position.y), Vector2(x + 10, corps.end.y), c_nous2, 4.0)
+		draw_rect(Rect2(corps.position.x, corps.end.y - 8, corps.size.x, 8), Ui.CONTOUR)
+		draw_set_transform(c + Vector2(0, -rayon * 0.35) * e, 0, Vector2(1.0, 0.35))
+		draw_circle(Vector2.ZERO, rayon * e, Color("#f4ead2"))
+		draw_arc(Vector2.ZERO, rayon * e, 0, TAU, 32, Ui.CONTOUR, 8.0)
+		draw_set_transform(Vector2.ZERO, 0, Vector2.ONE)
+		# deux baguettes qui frappent en alternance
+		for s in [-1.0, 1.0]:
+			var leve := (coup if s < 0 else fmod(coup + 0.5, 1.0))
+			var bout := c + Vector2(s * rayon * 0.35, -rayon * 0.4 - 40.0 * sin(leve * PI))
+			var main := bout + Vector2(s * 50, -30 - 30.0 * sin(leve * PI))
+			draw_line(main, bout, Color("#6b4226"), 6.0)
+			draw_circle(bout, 7, Ui.BLANC)
+		if frappe > 0.75:
+			draw_arc(c + Vector2(0, -rayon * 0.35), rayon * (1.1 + (1.0 - frappe) * 2.0), PI * 1.1, PI * 1.9, 16, Color(1, 1, 1, 0.6), 4.0)
 
 	func _ciel(haut: Color, bas: Color) -> void:
 		var pts := PackedVector2Array([Vector2(0, 0), Vector2(size.x, 0), Vector2(size.x, size.y), Vector2(0, size.y)])

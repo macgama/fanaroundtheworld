@@ -43,6 +43,7 @@ const SCENE_PASS := "res://scenes/pass/pass.tscn"
 const SCENE_TOURNOI := "res://scenes/tournoi/tournoi.tscn"
 const SCENE_LIGUE := "res://scenes/ligue/ligue.tscn"
 const SCENE_SOIREE := "res://scenes/soiree/soiree.tscn"
+const SCENE_LOCAL := "res://scenes/local/local.tscn"
 
 ## Paramètres passés d'un écran à l'autre (match choisi, camp supporté…).
 var params: Dictionary = {}
@@ -109,6 +110,8 @@ var deplacement: Dictionary = {}
 ## Stade où se trouve le fan club aujourd'hui (arrivée au stade) : {cle, jour}.
 ## Sert à la boutique souvenirs (prix sur place, voir Souvenirs).
 var stade_du_jour: Dictionary = {}
+## Matériel de tribune (voir Materiel) : {id: {niveau, actif}}. Décor seulement.
+var materiel: Dictionary = {}
 ## Ligue des tribunes (saison du mois, scripts/jeu/ligue.gd).
 var ligue: Dictionary = Ligue.vide()
 ## Soirs de match : buts déjà récompensés et fil des buts, par match (SoireeMatch).
@@ -181,7 +184,7 @@ func _outils_de_test() -> void:
 			"arene": SCENE_ARENE, "poussee": SCENE_POUSSEE,
 			"pronos": SCENE_PRONOS, "missions": SCENE_MISSIONS, "favoris": SCENE_FAVORIS, "club": SCENE_CLUB, "creation": SCENE_CREATION_CLUB, "chant": SCENE_CHANT, "buvette": SCENE_BUVETTE, "boulots": SCENE_BOULOTS, "speaker": SCENE_SPEAKER, "tifo": SCENE_TIFO,
 			"salon": SCENE_SALON, "collection": SCENE_COLLECTION, "classement": SCENE_CLASSEMENT, "pass": SCENE_PASS,
-			"tournoi": SCENE_TOURNOI, "ligue": SCENE_LIGUE, "soiree": SCENE_SOIREE}
+			"tournoi": SCENE_TOURNOI, "ligue": SCENE_LIGUE, "soiree": SCENE_SOIREE, "local": SCENE_LOCAL}
 		for b in ListeBoulots.LISTE:
 			scenes[b["id"]] = b["scene"]  # chaque petit boulot : --scene=<id>
 		if args.has("onglet"):
@@ -1256,6 +1259,23 @@ func acheter_souvenir(cle: String, type: String) -> bool:
 	return true
 
 
+## Achète (ou améliore) un objet de matériel de tribune. false si impossible ou trop cher.
+func acheter_materiel(id: String) -> bool:
+	var p := Materiel.prix_suivant(materiel, id)
+	if p < 0 or not depenser(p):
+		return false
+	Materiel.monter(materiel, id)
+	Succes.compter(stats, "materiel", id, 1)
+	sauver()
+	return true
+
+
+## Range ou ressort un objet de matériel déjà acheté.
+func basculer_materiel(id: String) -> void:
+	Materiel.basculer(materiel, id)
+	sauver()
+
+
 ## Réclame la prime d'une série complète. Renvoie les Jetons gagnés (0 sinon).
 func reclamer_prime(id: String) -> int:
 	for s in series_carnet() + series_album() + series_vitrine():
@@ -1439,6 +1459,7 @@ func sauver() -> void:
 		"demo_fin_vue": demo_fin_vue,
 		"deplacement": deplacement,
 		"stade_du_jour": stade_du_jour,
+		"materiel": materiel,
 		"ligue": ligue,
 		"soirees": soirees,
 	}
@@ -1516,6 +1537,7 @@ func _appliquer(d: Dictionary) -> void:
 	deplacement = dp if dp is Dictionary else {}
 	var sj: Variant = d.get("stade_du_jour", {})
 	stade_du_jour = sj if sj is Dictionary else {}
+	materiel = Materiel.reparer(d.get("materiel", null))
 	ligue = Ligue.reparer(d.get("ligue", null))
 	soirees = SoireeMatch.reparer(d.get("soirees", null))
 	# Un FANZZY retiré du catalogue ne doit pas casser la tribune.
@@ -1562,6 +1584,7 @@ func reinitialiser() -> void:
 	demo_fin_vue = false
 	deplacement = {}
 	stade_du_jour = {}
+	materiel = {}
 	ligue = Ligue.vide()
 	soirees = SoireeMatch.vide()
 	equipe = equipe_par_defaut()

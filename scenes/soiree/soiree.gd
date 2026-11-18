@@ -134,6 +134,8 @@ func _construire() -> void:
 		_decor.c_eux = Ui.ROUGE if not _decor.c_nous.is_equal_approx(Ui.ROUGE) else Ui.JAUNE
 	_decor.c_eux2 = eux["c2"]
 	_decor.mode = mode
+	_decor.texte_tifo = Game.fan_club_nom.to_upper()
+	_decor.materiel = Materiel.affiche(Game.materiel)
 	add_child(_decor)
 
 	for i in 3:
