@@ -1309,10 +1309,11 @@ func acheter_souvenir(cle: String, type: String) -> bool:
 
 ## Achète (ou améliore) un objet de matériel de tribune. false si impossible ou trop cher.
 func acheter_materiel(id: String) -> bool:
-	var p := Materiel.prix_suivant(materiel, id)
+	var mois := int(Time.get_date_dict_from_system()["month"])
+	var p := Materiel.prix_suivant(materiel, id, mois)
 	if p < 0 or not depenser(p):
 		return false
-	Materiel.monter(materiel, id)
+	Materiel.monter(materiel, id, mois)
 	Succes.compter(stats, "materiel", id, 1)
 	sauver()
 	return true

@@ -13,7 +13,7 @@ const HEURES_CAISSE := 8.0
 ## Chaque membre verse cette cotisation, en Jetons par heure.
 ## Équilibrage du 17 nov. 2026 (docs/equilibrage.md) : le fan club rapportait
 ## les trois quarts des Jetons d'un joueur ; il doit compléter les duels.
-const COTISATION_HEURE := 0.25
+const COTISATION_HEURE := 0.17
 ## Bonus de taille : +2 % de recettes par membre au-delà du premier.
 const BONUS_PAR_MEMBRE := 0.02
 ## Places : 3 au niveau 1, 2 de plus par niveau jusqu'au niveau 5, puis 1 par niveau.
@@ -28,12 +28,12 @@ const HEURES_APRES_MATCH := 3.0
 const LOCAL := {
 	"buvette": {
 		"titre": "Buvette",
-		"recette": [0.0, 1.0, 1.5, 2.0, 3.0, 4.0],
+		"recette": [0.0, 0.7, 1.0, 1.4, 2.0, 2.7],
 		"cout": [40, 100, 220, 450, 900],
 	},
 	"atelier": {
 		"titre": "Atelier d'écharpes",
-		"recette": [0.0, 0.5, 0.75, 1.0, 1.25, 1.5],
+		"recette": [0.0, 0.35, 0.5, 0.7, 0.85, 1.0],
 		"cout": [30, 80, 180, 380, 800],
 	},
 }

@@ -42,9 +42,13 @@ static func part_du_jour(deja: int) -> float:
 	return 0.5 if deja < DEMI_TARIF else 0.25
 
 
+## Paye des petits boulots × 2/3 (choix de Gaël le 18 nov. 2026 : trop de Jetons).
+const FACTEUR_PAYE := 0.67
+
+
 ## Paye d'une partie, arrondie au-dessus (une partie rapporte toujours au moins 1 Jeton si brut > 0).
 static func paye_du_jour(brut: int, deja: int) -> int:
-	return int(ceil(brut * part_du_jour(deja)))
+	return int(ceil(brut * part_du_jour(deja) * FACTEUR_PAYE))
 
 
 ## Ligne « Fatigue » du panneau de fin (texte à passer à tr()).

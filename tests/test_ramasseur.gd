@@ -62,8 +62,8 @@ func _tester_paye() -> void:
 	_verifier(RamasseurRegles.paye_prise(false, RamasseurRegles.SERIE_BONUS + 1)["bonus"] == 0, "bonus une fois par tranche")
 	_verifier(RamasseurRegles.paye_remise(0.5) == 1, "remise rapide payée")
 	_verifier(RamasseurRegles.paye_remise(RamasseurRegles.REMISE_RAPIDE + 0.1) == 0, "remise lente : rien")
-	_verifier(RamasseurRegles.paye_finale(40, 0) == 40, "plein tarif à la 1re partie")
-	_verifier(RamasseurRegles.paye_finale(41, RamasseurRegles.PARTIES_PLEIN_TARIF) == 21, "paye ÷ 2 après %d parties" % RamasseurRegles.PARTIES_PLEIN_TARIF)
+	_verifier(RamasseurRegles.paye_finale(40, 0) == 27, "plein tarif à la 1re partie")
+	_verifier(RamasseurRegles.paye_finale(41, RamasseurRegles.PARTIES_PLEIN_TARIF) == 14, "paye ÷ 2 après %d parties" % RamasseurRegles.PARTIES_PLEIN_TARIF)
 
 
 ## Partie simulée : un robot parfait, puis un joueur moyen (rate 1 ballon sur 4,

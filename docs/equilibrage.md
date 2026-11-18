@@ -52,6 +52,30 @@ Jetons ; même match rejoué : 100 %, 50 %, 25 %, puis 0 le reste du jour ; pron
 Ce qui ne change pas : les Jetons des duels d'ambiance, le rejeu 100/50/25/0, les
 pronostics, les primes de collection, les Jetons du PASS, les 1 000 XP par palier.
 
+## Baisse des gains du 18 nov. 2026
+
+Choix de Gaël (« les deux, en douceur ») après l'ajout des usages des Jetons
+([usages-jetons.md](usages-jetons.md)) : gains baissés d'environ un tiers, et une guirlande
+de la saison à acheter chaque mois (1 500 Jetons, en vente seulement pendant son mois).
+
+| Où | Avant | Après |
+|---|---|---|
+| Jetons des duels, Arène, Poussée (`FinDuel.FACTEUR_GAINS`) | ×1 | ×0,67 |
+| Paye des petits boulots (`ListeBoulots.FACTEUR_PAYE`) | ×1 | ×0,67 |
+| Cotisation (`FanClub.COTISATION_HEURE`) | 0,25 | 0,17 |
+| Buvette (Jetons/h, niv. 1 → 5) | 1, 1,5, 2, 3, 4 | 0,7, 1, 1,4, 2, 2,7 |
+| Atelier (écharpes/h, niv. 1 → 5) | 0,5, 0,75, 1, 1,25, 1,5 | 0,35, 0,5, 0,7, 0,85, 1 |
+
+| Joueur | Jetons par jour joué | Réserve en fin de saison | Tout le matériel et le local |
+|---|---|---|---|
+| Occasionnel (20 min) | 519 → 414 | 66 000 → 33 000 | jour 119 → 161 |
+| Régulier (1 h) | 1 077 → 787 | 200 000 → 114 000 | jour 52 → 75 |
+| Passionné (3 h) | 1 898 → 1 368 | 438 000 → 263 000 | jour 26 → 39 |
+
+Par minute : duel 10,7 Jetons, Arène 8,8, Poussée 8,9, petit boulot 12,5 (plein tarif).
+`python3 tools/equilibrage/modele_economie.py --sans-baisse` redonne les chiffres d'avant
+cette baisse. Le PASS et le niveau du fan club ne changent pas (l'XP n'a pas bougé).
+
 ## Les trois joueurs du modèle
 
 Joueur moyen : 50 % de réussite, 55 % de victoires. Les profils (nombre de duels, de
@@ -140,11 +164,9 @@ sera revue.
 
 ## Ce qui reste à faire
 
-- **Les Jetons s'accumulent encore** : un joueur régulier gagne ≈ 1 000 Jetons par jour. Les
-  achats ajoutés le 18 nov. (souvenirs, billets selon le match, matériel de tribune, Grand
-  Tour, local agrandi : voir [usages-jetons.md](usages-jetons.md)) occupent ses deux premiers
-  mois, mais il finit encore la saison avec ≈ 200 000 Jetons. Prochain levier : baisser les
-  gains ou ajouter des achats qui reviennent. Question posée à Gaël.
+- **Réserve en fin de saison** : après la baisse du 18 nov., un joueur régulier garde encore
+  ≈ 114 000 Jetons. À revoir avec de vrais joueurs ; d'autres achats qui reviennent sont
+  possibles (objets des événements, souvenirs des nouveaux stades).
 - Mesurer les vraies réussites des joueurs (les profils sont des estimations) : nombre de
   duels par session, réussite moyenne, durée des menus.
 - L'IA de la Poussée ne joue jamais l'Ola en attaque et peu le Fumigène : à revoir avec
