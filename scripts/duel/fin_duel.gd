@@ -53,7 +53,21 @@ static func enregistrer(gagne: bool, perf: float, fiche: Dictionary, camp: Strin
 	g["evenement"] = Game.recompense_evenement(fiche.get("m", {}), int(g["jetons"]))
 	g["tournoi"] = Game.noter_duel_tournoi(fiche.get("m", {}), gagne, mode_suivi)
 	g["ligue"] = Game.noter_duel_ligue(fiche.get("m", {}), 1 if gagne else -1)
+	g["kop"] = Game.noter_kop_duel(gagne, g["part"], mode_suivi)
 	return g
+
+
+## Lignes « Nouveaux supporters » et « Rencontre » du panneau de fin (le kop).
+static func lignes_kop(d: Variant) -> Array:
+	if not d is Dictionary:
+		return []
+	var res: Array = []
+	if int(d.get("kop", 0)) > 0:
+		res.append([Trad.t("Nouveaux supporters au kop"), "+%s" % Kop.texte(int(d["kop"]))])
+	var id := str(d.get("rencontre", ""))
+	if id != "":
+		res.append([Trad.t("Rencontre : %s veut rejoindre le club") % Trad.t(str(Game.fanzzy_par_id(id).get("nom", id))), Trad.t("au Fan club")])
+	return res
 
 
 ## Ligne « Ferveur du déplacement » du panneau de fin, ou [] sans déplacement ce jour.

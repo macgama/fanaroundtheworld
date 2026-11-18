@@ -41,6 +41,17 @@ static func regler_difficulte(n: String) -> void:
 	c.save(CHEMIN)
 
 
+## Cortège : petite marche en rythme entre les arrêts (activée par défaut).
+static func marche_rythme() -> bool:
+	return bool(_fichier().get_value("jeu", "marche_rythme", true))
+
+
+static func regler_marche_rythme(oui: bool) -> void:
+	var c := _fichier()
+	c.set_value("jeu", "marche_rythme", oui)
+	c.save(CHEMIN)
+
+
 static func regler_volume(cle: String, v: float) -> void:
 	var c := _fichier()
 	c.set_value("son", cle, clampf(v, 0.0, 1.0))

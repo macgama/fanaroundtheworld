@@ -70,6 +70,9 @@ func _ready() -> void:
 		Game.aller(Game.SCENE_CARTE)
 		return
 	fiche = FicheMatch.de(m)
+	if not en_ligne:
+		# le kop et le cortège du jour : un peu de ferveur en plus au coup d'envoi
+		ferveur[0] += float(mini(3, int(Game.bonus_depart(str(fiche.get("id", m.get("id", ""))))["total"]) / 6))
 	camp = p.get("camp", "home")
 	mode_suivi = p.get("mode", "stade")
 	_auto = p.get("auto", false)
@@ -869,7 +872,7 @@ func _finir(res: int, pourquoi: String) -> void:
 		[Game.libelle_rejeu(g["part"]), "+%d" % g["jetons"]],
 		["XP du fan club", "+%d" % g["xp"]],
 		["XP du PASS", "+%d" % g["xp_pass"]],
-	] + FinDuel.ligne_deplacement(g["mult_depl"], g["bonus_depl"]) + FinDuel.ligne_popularite(g) + FinDuel.lignes_evenement(g["evenement"]) + FinDuel.ligne_tournoi(g["tournoi"]) + FinDuel.ligne_ligue(g["ligue"]), Game.SCENE_SALON if en_ligne and Reseau.connecte() else Game.SCENE_POUSSEE)
+	] + FinDuel.ligne_deplacement(g["mult_depl"], g["bonus_depl"]) + FinDuel.ligne_popularite(g) + FinDuel.lignes_evenement(g["evenement"]) + FinDuel.ligne_tournoi(g["tournoi"]) + FinDuel.ligne_ligue(g["ligue"]) + FinDuel.lignes_kop(g["kop"]), Game.SCENE_SALON if en_ligne and Reseau.connecte() else Game.SCENE_POUSSEE)
 
 
 # ================================================================== classes

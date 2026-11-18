@@ -116,12 +116,29 @@ func _arrive() -> void:
 	if bilan is Dictionary:
 		bas.offset_top = -330
 		bas.add_child(_ligne_bilan(bilan))
-	var b := Ui.bouton("ENTRER DANS LE STADE", Ui.VERT, 36)
-	Ui.colorer_bouton(b, Ui.VERT, true)
-	b.custom_minimum_size = Vector2(560, 96)
-	b.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
-	b.pressed.connect(func(): Game.aller(Game.SCENE_TRIBUNE, Game.params))
-	bas.add_child(b)
+	var match_id := str(_fiche["id"])
+	if Game.club_cree() and not Game.cortege_fait(match_id):
+		# le dernier kilomètre se fait à pied, avec tout le kop
+		var hb := Ui.hbox(18)
+		hb.alignment = BoxContainer.ALIGNMENT_CENTER
+		var c := Ui.bouton("PARTIR EN CORTÈGE", Ui.VERT, 36)
+		Ui.colorer_bouton(c, Ui.VERT, true)
+		c.custom_minimum_size = Vector2(520, 96)
+		c.tooltip_text = "Marche jusqu'au stade avec ton kop : ferveur, nouveaux supporters et bonus de départ"
+		c.pressed.connect(func(): Game.aller(Game.SCENE_CORTEGE, Game.params))
+		hb.add_child(c)
+		var d := Ui.bouton("Direct en tribune", Ui.NUIT, 24)
+		d.custom_minimum_size = Vector2(0, 96)
+		d.pressed.connect(func(): Game.aller(Game.SCENE_TRIBUNE, Game.params))
+		hb.add_child(d)
+		bas.add_child(hb)
+	else:
+		var b := Ui.bouton("ENTRER DANS LE STADE", Ui.VERT, 36)
+		Ui.colorer_bouton(b, Ui.VERT, true)
+		b.custom_minimum_size = Vector2(560, 96)
+		b.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+		b.pressed.connect(func(): Game.aller(Game.SCENE_TRIBUNE, Game.params))
+		bas.add_child(b)
 	bas.modulate.a = 0.0
 	create_tween().tween_property(bas, "modulate:a", 1.0, 0.3).set_delay(0.7)
 
@@ -140,6 +157,15 @@ func _ligne_bilan(b: Dictionary) -> Control:
 		int(b["jetons"]), int(b["xp_pass"]), Trad.decimal(b["mult"])], 18, Ui.BLANC)
 	l2.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	v.add_child(l2)
+	var extra: Array = []
+	if int(b.get("kop", 0)) > 0:
+		extra.append(tr("+%s supporters au kop") % Kop.texte(int(b["kop"])))
+	if str(b.get("rencontre", "")) != "":
+		extra.append(tr("%s a voyagé avec vous et veut rejoindre le club") % tr(str(Game.fanzzy_par_id(str(b["rencontre"])).get("nom", ""))))
+	if not extra.is_empty():
+		var l3 := Ui.label(" · ".join(extra), 18, Ui.VERT, true, 4)
+		l3.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		v.add_child(l3)
 	return pan
 
 

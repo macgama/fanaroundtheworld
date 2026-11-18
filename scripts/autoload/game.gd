@@ -21,6 +21,8 @@ const SCENE_TITRE := "res://scenes/main/main.tscn"
 const SCENE_CARTE := "res://scenes/carte/carte.tscn"
 const SCENE_VOYAGE := "res://scenes/voyage/voyage.tscn"
 const SCENE_DEPLACEMENT := "res://scenes/deplacement/deplacement.tscn"
+const SCENE_CORTEGE := "res://scenes/cortege/cortege.tscn"
+const SCENE_DEFI := "res://scenes/recrutement/defi.tscn"
 const SCENE_TRIBUNE := "res://scenes/tribune/tribune.tscn"
 const SCENE_DUEL := "res://scenes/duel/duel.tscn"
 const SCENE_ARENE := "res://scenes/arene/arene.tscn"
@@ -106,6 +108,11 @@ var demo_fin_vue := false
 ## Dernier déplacement fait (voir Deplacement) : {match, jour, mult, ferveur}.
 ## Ses Jetons de duel sont multipliés par « mult » le jour même.
 var deplacement: Dictionary = {}
+## Dernier cortège : {match, jour, ferveur, bonus, chambre, a_l_heure} (règles dans Cortege).
+var cortege: Dictionary = {}
+## Matchs dont le cortège est déjà fait (une fois par vrai match) : id -> jour.
+var corteges_faits: Dictionary = {}
+const MAX_CORTEGES_FAITS := 80
 ## Ligue des tribunes (saison du mois, scripts/jeu/ligue.gd).
 var ligue: Dictionary = Ligue.vide()
 ## Soirs de match : buts déjà récompensés et fil des buts, par match (SoireeMatch).
@@ -178,9 +185,14 @@ func _outils_de_test() -> void:
 			"arene": SCENE_ARENE, "poussee": SCENE_POUSSEE,
 			"pronos": SCENE_PRONOS, "missions": SCENE_MISSIONS, "favoris": SCENE_FAVORIS, "club": SCENE_CLUB, "creation": SCENE_CREATION_CLUB, "chant": SCENE_CHANT, "buvette": SCENE_BUVETTE, "boulots": SCENE_BOULOTS, "speaker": SCENE_SPEAKER, "tifo": SCENE_TIFO,
 			"salon": SCENE_SALON, "collection": SCENE_COLLECTION, "classement": SCENE_CLASSEMENT, "pass": SCENE_PASS,
-			"tournoi": SCENE_TOURNOI, "ligue": SCENE_LIGUE, "soiree": SCENE_SOIREE}
+			"tournoi": SCENE_TOURNOI, "ligue": SCENE_LIGUE, "soiree": SCENE_SOIREE,
+			"cortege": SCENE_CORTEGE, "defi": SCENE_DEFI}
 		for b in ListeBoulots.LISTE:
 			scenes[b["id"]] = b["scene"]  # chaque petit boulot : --scene=<id>
+		if args.has("fanzzy"):
+			p["id"] = args["fanzzy"]  # défi de recrutement : --scene=defi --fanzzy=TR3
+			if args.has("auto"):
+				p["auto"] = true
 		if args.has("onglet"):
 			p["onglet"] = args["onglet"]  # collection : « carnet » ou « album »
 		if args.has("salon"):
@@ -192,6 +204,11 @@ func _outils_de_test() -> void:
 	if args.has("depuis"):
 		var ll: PackedStringArray = str(args["depuis"]).split(",")  # --depuis=lon,lat : point de départ du fan club
 		position_club = {"nom": "Test", "lon": float(ll[0]), "lat": float(ll[1])}  # sans_traduction
+	if args.has("kop"):
+		# --kop=N : un fan club avec N supporters (captures, démo du cortège)
+		if not club_cree():
+			creer_club(fan_club_nom, FanClub.COULEURS[0], FanClub.COULEURS[7])
+		club["kop"] = maxi(0, int(args["kop"]))
 	if args.has("xp-pass"):
 		xp_pass = int(args["xp-pass"])  # captures et tests du PASS
 	if args.has("premium"):
@@ -315,10 +332,21 @@ func finir_deplacement(match_id: String, b: Dictionary) -> Dictionary:
 	jetons += int(b["jetons"])
 	xp += int(b["xp"])
 	r["xp_pass"] = gagner_xp_pass(int(b["xp_pass"]))
-	deplacement = {"match": match_id, "jour": Time.get_date_string_from_system(), "mult": float(b["mult"]), "ferveur": int(b["ferveur"])}
+	deplacement = {"match": match_id, "jour": Time.get_date_string_from_system(), "mult": float(b["mult"]), "ferveur": int(b["ferveur"]),
+		"transport": str(b.get("transport", "car"))}
 	Succes.compter(stats, "deplacement", str(b.get("transport", "")), 1)
+	# le kop grossit avec la ferveur du voyage, et l'on croise parfois un FANZZY
+	r["kop"] = gagner_kop(Kop.recrues(Kop.base_deplacement(int(b["ferveur"])), kop()))
+	r["rencontre"] = rencontrer("deplacement") if randf() < Rencontres.CHANCE_DEPLACEMENT else ""
 	sauver()
 	return r
+
+
+## Le déplacement fait aujourd'hui pour ce match ({} sinon).
+func deplacement_du_jour(match_id: String) -> Dictionary:
+	if match_id == "" or str(deplacement.get("match", "")) != match_id or str(deplacement.get("jour", "")) != Time.get_date_string_from_system():
+		return {}
+	return deplacement
 
 
 ## Multiplicateur des Jetons de duel sur ce match (×1 sans déplacement le jour même).
@@ -453,6 +481,7 @@ func creer_club(nom: String, c1: String, c2: String) -> void:
 	fan_club_nom = nom.strip_edges().substr(0, 28)
 	var fondateurs := equipe.filter(func(id): return not fanzzy_par_id(str(id)).is_empty())
 	club = FanClub.nouveau(fondateurs, c1, c2, maintenant())
+	_offrir_rencontres_depart()
 	sauver()
 
 
@@ -492,6 +521,129 @@ func renvoyer(id: String) -> bool:
 	if ok:
 		sauver()
 	return ok
+
+
+# ---------------------------------------------------------------- kop et rencontres
+
+## Supporters du kop (0 tant que le fan club n'est pas créé).
+func kop() -> int:
+	return Kop.valeur(club) if club_cree() else 0
+
+
+## Ajoute des supporters au kop (il ne baisse jamais). Rend le nombre ajouté.
+func gagner_kop(n: int) -> int:
+	if not club_cree() or n <= 0:
+		return 0
+	return Kop.ajouter(club, n)
+
+
+## Fin d'un duel (les trois modes) : nouveaux supporters, et parfois une rencontre.
+## `part` : part des Jetons versée (match rejoué : 100 / 50 / 25 %).
+func noter_kop_duel(gagne: bool, part: float, mode_suivi: String) -> Dictionary:
+	var res := {"kop": 0, "rencontre": ""}
+	if not club_cree():
+		return res
+	res["kop"] = gagner_kop(Kop.recrues(Kop.base_duel(gagne, part, mode_suivi), kop()))
+	if part > 0.0 and randf() < float(Rencontres.CHANCE_DUEL.get(mode_suivi, 0.0)):
+		res["rencontre"] = rencontrer("stade" if mode_suivi == "stade" else "tribune")
+	sauver()
+	return res
+
+
+## Croise un FANZZY à cet endroit : il rejoint la liste des rencontres.
+## Rend son identifiant, ou "" (personne à croiser, liste pleine).
+func rencontrer(lieu: String, tirage := -1.0) -> String:
+	if not club_cree():
+		return ""
+	var z := Rencontres.tirer(club, fanzzy, lieu, randf() if tirage < 0.0 else tirage)
+	if z.is_empty() or not Rencontres.ajouter(club, str(z["id"]), lieu, maintenant()):
+		return ""
+	sauver()
+	return str(z["id"])
+
+
+## Ajoute ce FANZZY précis aux rencontres (croisé pendant le cortège).
+func rencontrer_fanzzy(id: String, lieu: String) -> bool:
+	if not club_cree() or fanzzy_par_id(id).is_empty():
+		return false
+	var ok := Rencontres.ajouter(club, id, lieu, maintenant())
+	if ok:
+		sauver()
+	return ok
+
+
+## Le défi de recrutement est fini : réussi, le FANZZY rejoint le club (s'il
+## reste une place) ; raté, il reviendra plus tard.
+func convaincre(id: String, reussi: bool) -> bool:
+	if not Rencontres.en_attente(club, id):
+		return false
+	if not reussi:
+		Rencontres.noter_echec(club, id, maintenant())
+		sauver()
+		return false
+	if not recruter(id):
+		return false
+	Rencontres.retirer(club, id)
+	Succes.compter(stats, "recrue", "", 1)
+	sauver()
+	return true
+
+
+## Les recrues du PASS débloquées qui ne sont pas encore au club (sans défi).
+func recrues_pass() -> Array:
+	return fanzzy.filter(func(z): return Rencontres.sans_defi(z) and not FanClub.est_membre(club, str(z["id"])))
+
+
+## Quelques FANZZY du quartier à la création du club (et pour les anciennes sauvegardes).
+func _offrir_rencontres_depart() -> void:
+	club.erase("rencontres_offertes")
+	for i in Rencontres.RENCONTRES_DEPART:
+		rencontrer("quartier", float(i) / Rencontres.RENCONTRES_DEPART + 0.13)
+
+
+# ---------------------------------------------------------------- cortège
+
+func cortege_fait(match_id: String) -> bool:
+	return corteges_faits.has(match_id)
+
+
+## Le cortège de ce match, fait aujourd'hui ({} sinon).
+func cortege_du_jour(match_id: String) -> Dictionary:
+	if match_id == "" or str(cortege.get("match", "")) != match_id or str(cortege.get("jour", "")) != Time.get_date_string_from_system():
+		return {}
+	return cortege
+
+
+## Arrivée du cortège au stade : supporters, primes, bonus de départ du duel.
+func finir_cortege(match_id: String, b: Dictionary, id_rencontre := "") -> Dictionary:
+	var r := b.duplicate()
+	r["kop"] = gagner_kop(int(b["recrues"]))
+	jetons += int(b["jetons"])
+	xp += int(b["xp"])
+	r["xp_pass"] = gagner_xp_pass(int(b["xp_pass"]))
+	r["rencontre"] = id_rencontre if b.get("rencontre", false) and id_rencontre != "" and rencontrer_fanzzy(id_rencontre, "cortege") else ""
+	var jour := Time.get_date_string_from_system()
+	cortege = {"match": match_id, "jour": jour, "ferveur": int(b["ferveur"]), "bonus": int(b["bonus"]),
+		"chambre": bool(b["chambre"]), "a_l_heure": bool(b["a_l_heure"])}
+	corteges_faits.erase(match_id)
+	corteges_faits[match_id] = jour
+	while corteges_faits.size() > MAX_CORTEGES_FAITS:
+		corteges_faits.erase(corteges_faits.keys()[0])
+	Succes.compter(stats, "cortege", "", 1)
+	sauver()
+	return r
+
+
+## Bonus de départ sur la jauge d'ambiance : kop (renommée) + cortège du jour pour ce match.
+func bonus_depart(match_id: String) -> Dictionary:
+	var k := Kop.bonus_jauge(kop())
+	var c := int(cortege_du_jour(match_id).get("bonus", 0))
+	return {"kop": k, "cortege": c, "total": k + c}
+
+
+## La tribune d'en face a-t-elle été chambrée pendant le cortège de ce match ?
+func adversaire_chambre(match_id: String) -> bool:
+	return bool(cortege_du_jour(match_id).get("chambre", false))
 
 
 func recolter_caisse() -> int:
@@ -1389,6 +1541,8 @@ func sauver() -> void:
 		"tournoi": tournoi,
 		"demo_fin_vue": demo_fin_vue,
 		"deplacement": deplacement,
+		"cortege": cortege,
+		"corteges_faits": corteges_faits,
 		"ligue": ligue,
 		"soirees": soirees,
 	}
@@ -1464,6 +1618,10 @@ func _appliquer(d: Dictionary) -> void:
 	tournoi = Tournoi.reparer(d.get("tournoi", null))
 	var dp: Variant = d.get("deplacement", {})
 	deplacement = dp if dp is Dictionary else {}
+	var co: Variant = d.get("cortege", {})
+	cortege = co if co is Dictionary else {}
+	var cf: Variant = d.get("corteges_faits", {})
+	corteges_faits = cf if cf is Dictionary else {}
 	ligue = Ligue.reparer(d.get("ligue", null))
 	soirees = SoireeMatch.reparer(d.get("soirees", null))
 	# Un FANZZY retiré du catalogue ne doit pas casser la tribune.
@@ -1471,6 +1629,9 @@ func _appliquer(d: Dictionary) -> void:
 		if fanzzy_par_id(str(equipe[i])).is_empty():
 			equipe = []
 			break
+	Rencontres.reparer(club, func(id): return not fanzzy_par_id(str(id)).is_empty())
+	if club_cree() and club.has("rencontres_offertes"):
+		_offrir_rencontres_depart()
 
 
 func reinitialiser() -> void:
@@ -1509,6 +1670,8 @@ func reinitialiser() -> void:
 	tournoi = Tournoi.vide()
 	demo_fin_vue = false
 	deplacement = {}
+	cortege = {}
+	corteges_faits = {}
 	ligue = Ligue.vide()
 	soirees = SoireeMatch.vide()
 	equipe = equipe_par_defaut()
