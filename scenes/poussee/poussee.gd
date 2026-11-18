@@ -990,6 +990,9 @@ class Unite extends Node2D:
 class Sol extends Node2D:
 	var jeu
 
+	func _ready() -> void:
+		texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR_WITH_MIPMAPS  # supporters réduits proprement
+
 	func _draw() -> void:
 		var t: Rect2 = TERRAIN
 		var cy := t.get_center().y
@@ -1001,11 +1004,24 @@ class Sol extends Node2D:
 			draw_rect(r, Color("#3a3290"))
 			var conquis: float = 1.0 - clampf(jeu.tribune[e] / PousseeRegles.TRIBUNE_PV, 0.0, 1.0)
 			var n := 0
-			for yy in range(int(r.position.y) + 18, int(r.end.y) - 8, 26):
+			var sprites := FouleSprites.disponible()
+			for yy in range(int(r.position.y) + (30 if sprites else 18), int(r.end.y) - 8, 26):
+				if sprites and n > 0:  # la marche du rang précédent
+					draw_rect(Rect2(r.position.x, yy - 12, r.size.x, 16), Color("#2a2357", 0.9))
+					draw_rect(Rect2(r.position.x, yy - 12, r.size.x, 3), Color("#8b7dff", 0.8))
 				for xx in range(int(r.position.x) + 16, int(r.end.x) - 8, 26):
 					n += 1
 					var h := fposmod(sin(n * 12.9898) * 43758.5453, 1.0)
 					var col: Color = jeu.couleurs[1 - e] if h < conquis else jeu.couleurs[e]
+					if sprites:
+						# les envahisseurs exultent, les locaux tiennent bon (ou dépriment)
+						var envahi := h < conquis
+						var ga := FouleSprites.geste_ambiance(0.9 if envahi else 0.75 - conquis * 0.5, h, ms)
+						if not envahi and conquis > 0.5 and fposmod(h * 13.0, 1.0) < conquis - 0.3:
+							ga = [&"depit", ms + h]
+						FouleSprites.dessiner(self, Vector2(xx, yy + 18), 40.0, ga[0], ga[1], col, jeu.couleurs[1 - e] if envahi else Ui.BLANC,
+							FouleSprites.PEAUX[n % FouleSprites.PEAUX.size()], n % 3)
+						continue
 					var saut := absf(sin(ms * 6.0 + n)) * 4.0
 					draw_circle(Vector2(xx, yy - saut), 9, col.darkened(0.15 * fposmod(h * 7.0, 1.0)))
 		draw_rect(t.grow(10), Ui.CONTOUR)
