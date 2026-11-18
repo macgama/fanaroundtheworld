@@ -92,6 +92,14 @@ onglet « Le local ».
 
 La salle des trophées affiche la vraie collection (tampons, souvenirs, succès).
 
+## 6. Guirlande du mois (achat qui revient)
+
+Ajoutée le 18 nov. 2026 avec la baisse des gains (choix de Gaël « les deux, en douceur »).
+Une guirlande par mois (fanions et motifs : flocons, cœurs, fleurs, soleils, feuilles,
+étoiles), 1 500 Jetons, **en vente seulement pendant son mois**, gardée ensuite. Une seule
+à la fois dans la tribune (`Materiel.SAISON`, encadré « Guirlande du mois » de l'onglet
+Matériel de tribune).
+
 ## Effet sur l'économie
 
 Modèle : `python3 tools/equilibrage/modele_economie.py` (voir [equilibrage.md](equilibrage.md)).
@@ -103,7 +111,6 @@ Matériel et local valent 37 750 Jetons en tout.
 | Régulier (1 h) | jour 52 | ≈ 21 000 | 200 000 (260 000) |
 | Passionné (3 h) | jour 26 | ≈ 46 000 | 438 000 (525 000) |
 
-Les nouveaux achats occupent les deux premiers mois, mais **les Jetons s'accumulent encore** :
-un joueur régulier gagne ≈ 1 000 Jetons par jour. Pour que l'argent garde sa valeur toute la
-saison, il faudra soit baisser les gains (duels, fan club), soit des achats qui reviennent
-(souvenirs des nouveaux stades, Grand Tours, objets d'événements). Question pour Gaël.
+Le tableau ci-dessus est d'avant la baisse des gains. Après la baisse (gains ÷ 1,5 environ)
+et avec la guirlande du mois, le joueur régulier gagne ≈ 790 Jetons par jour, a tout acheté
+vers le jour 75 et finit la saison avec ≈ 114 000 Jetons (voir [equilibrage.md](equilibrage.md)).

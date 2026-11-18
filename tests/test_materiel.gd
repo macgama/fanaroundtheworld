@@ -39,6 +39,21 @@ func _tester_regles() -> void:
 	var r := Materiel.reparer({"bache": {"niveau": 9}, "jetpack": {"niveau": 1}, "echarpes": 3, "tambours": {"niveau": 0}})
 	_verifier(r.size() == 1 and Materiel.niveau(r, "bache") == 3 and Materiel.actif(r, "bache"), "sauvegarde réparée")
 	_verifier(Materiel.reparer(null).is_empty(), "pas de sauvegarde")
+	# guirlandes de la saison : seulement pendant leur mois, une à la fois
+	var s := {}
+	_verifier(Materiel.prix_suivant(s, "saison_03", 4) == -1 and Materiel.prix_suivant(s, "saison_03", 3) == Materiel.PRIX_SAISON, "guirlande en vente seulement pendant son mois")
+	Materiel.monter(s, "saison_03", 4)
+	_verifier(s.is_empty(), "hors de son mois : pas d'achat")
+	Materiel.monter(s, "saison_03", 3)
+	Materiel.monter(s, "saison_04", 4)
+	_verifier(Materiel.prix_suivant(s, "saison_03", 3) == -1, "une seule fois")
+	_verifier(Materiel.affiche(s).get("guirlande") == "saison_04" and not Materiel.actif(s, "saison_03"), "une guirlande à la fois")
+	Materiel.basculer(s, "saison_03")
+	_verifier(Materiel.affiche(s).get("guirlande") == "saison_03" and not Materiel.actif(s, "saison_04"), "on ressort l'ancienne")
+	_verifier(Materiel.guirlandes(s).size() == 2 and Materiel.valeur(s) == 2 * Materiel.PRIX_SAISON, "guirlandes gardées")
+	_verifier(Materiel.reparer({"saison_05": {"niveau": 4}}).get("saison_05", {}).get("niveau") == 1, "guirlande réparée")
+	for m in range(1, 13):
+		_verifier(not Materiel.du_mois(m).is_empty(), "une guirlande pour le mois %d" % m)
 
 
 func _tester_jeu() -> void:

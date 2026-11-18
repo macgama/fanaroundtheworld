@@ -65,8 +65,8 @@ func _tester_paye() -> void:
 	_verifier(BuvetteRegles.paye(cmd, 0.5, BuvetteRegles.SERIE_BONUS * 2)["bonus"] == 1, "bonus à chaque tranche")
 	var p := BuvetteRegles.paye(cmd, 0.7, 10)
 	_verifier(p["total"] == p["salaire"] + p["pourboire"] + p["bonus"], "total = salaire + pourboire + bonus")
-	_verifier(BuvetteRegles.paye_finale(41, 0) == 41, "plein tarif au 1er service")
-	_verifier(BuvetteRegles.paye_finale(41, BuvetteRegles.SERVICES_PLEIN_TARIF) == 21, "paye ÷ 2 après %d services" % BuvetteRegles.SERVICES_PLEIN_TARIF)
+	_verifier(BuvetteRegles.paye_finale(41, 0) == 28, "plein tarif au 1er service")
+	_verifier(BuvetteRegles.paye_finale(41, BuvetteRegles.SERVICES_PLEIN_TARIF) == 14, "paye ÷ 2 après %d services" % BuvetteRegles.SERVICES_PLEIN_TARIF)
 	# Ordre de grandeur : même un service parfait (robot) rapporte moins qu'un bon duel au stade.
 	var r := BuvetteRegles.new(7)
 	var total := 0

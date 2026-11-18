@@ -37,8 +37,8 @@ const BOUCHE_A_OREILLE := 1000.0
 ## Tribune du duel : remplie à 30 % au départ, pleine à partir de PLEIN supporters.
 const REMPLISSAGE_MIN := 0.3
 const PLEIN := 3000.0
-## Cotisations du kop : COTISATION × racine(kop) Jetons par heure (2,5 J/h à 10 000).
-const COTISATION := 0.025
+## Cotisations du kop : COTISATION × racine(kop) Jetons par heure (1,7 J/h à 10 000).
+const COTISATION := 0.017
 
 
 static func valeur(c: Dictionary) -> int:

@@ -19,12 +19,46 @@ const OBJETS := [
 ]
 const NIVEAU_MAX := 3
 
+## Guirlandes de la saison : une par mois, achetable SEULEMENT pendant son mois,
+## gardée pour toujours. Une seule à la fois dans la tribune. (Achats qui reviennent,
+## choix de Gaël le 18 nov. 2026.) motif : flocon, coeur, fleur, soleil, feuille, etoile.
+const PRIX_SAISON := 1500
+const SAISON := [
+	{"id": "saison_01", "mois": 1, "nom": "Guirlande des neiges", "motif": "flocon", "couleur": "#bfe6ff"},
+	{"id": "saison_02", "mois": 2, "nom": "Guirlande des cœurs", "motif": "coeur", "couleur": "#ff6f9c"},
+	{"id": "saison_03", "mois": 3, "nom": "Guirlande du printemps", "motif": "fleur", "couleur": "#ffd23f"},
+	{"id": "saison_04", "mois": 4, "nom": "Guirlande des bourgeons", "motif": "feuille", "couleur": "#7ddc6a"},
+	{"id": "saison_05", "mois": 5, "nom": "Guirlande des finales", "motif": "etoile", "couleur": "#ffcf33"},
+	{"id": "saison_06", "mois": 6, "nom": "Guirlande de l'été", "motif": "soleil", "couleur": "#ff9a2b"},
+	{"id": "saison_07", "mois": 7, "nom": "Guirlande des vacances", "motif": "soleil", "couleur": "#2fc6d6"},
+	{"id": "saison_08", "mois": 8, "nom": "Guirlande de la reprise", "motif": "etoile", "couleur": "#3ddc84"},
+	{"id": "saison_09", "mois": 9, "nom": "Guirlande de la rentrée", "motif": "feuille", "couleur": "#ffb347"},
+	{"id": "saison_10", "mois": 10, "nom": "Guirlande d'automne", "motif": "feuille", "couleur": "#e0662a"},
+	{"id": "saison_11", "mois": 11, "nom": "Guirlande des brumes", "motif": "fleur", "couleur": "#b39ddb"},
+	{"id": "saison_12", "mois": 12, "nom": "Guirlande des fêtes", "motif": "flocon", "couleur": "#ff4b4b"},
+]
+
 
 static func objet(id: String) -> Dictionary:
-	for o in OBJETS:
+	for o in OBJETS + SAISON:
 		if o["id"] == id:
 			return o
 	return {}
+
+
+static func est_saison(id: String) -> bool:
+	return id.begins_with("saison_")
+
+
+static func du_mois(mois: int) -> Dictionary:
+	for o in SAISON:
+		if int(o["mois"]) == mois:
+			return o
+	return {}
+
+
+static func niveau_max(id: String) -> int:
+	return 1 if est_saison(id) else NIVEAU_MAX
 
 
 static func ids() -> Array:
@@ -39,7 +73,7 @@ static func reparer(v: Variant) -> Dictionary:
 		var e: Variant = v[id]
 		if objet(str(id)).is_empty() or not e is Dictionary:
 			continue
-		var n := clampi(int(e.get("niveau", 0)), 0, NIVEAU_MAX)
+		var n := clampi(int(e.get("niveau", 0)), 0, niveau_max(str(id)))
 		if n > 0:
 			res[str(id)] = {"niveau": n, "actif": bool(e.get("actif", true))}
 	return res
@@ -54,26 +88,44 @@ static func actif(etat: Dictionary, id: String) -> bool:
 	return niveau(etat, id) > 0 and bool(etat[id].get("actif", true))
 
 
-## Prix du niveau suivant, -1 si l'objet est inconnu ou au maximum.
-static func prix_suivant(etat: Dictionary, id: String) -> int:
+## Prix du niveau suivant, -1 si l'objet est inconnu ou au maximum, ou si c'est une
+## guirlande de la saison hors de son mois (mois = mois du jour, 1-12).
+static func prix_suivant(etat: Dictionary, id: String, mois := 0) -> int:
 	var o := objet(id)
 	var n := niveau(etat, id)
-	if o.is_empty() or n >= NIVEAU_MAX:
+	if o.is_empty() or n >= niveau_max(id):
 		return -1
+	if est_saison(id):
+		return PRIX_SAISON if int(o["mois"]) == mois else -1
 	return int(o["prix"][n])
 
 
 ## Passe l'objet au niveau suivant (le paiement est fait par Game.acheter_materiel).
 ## Un objet acheté ou amélioré est installé dans la tribune.
-static func monter(etat: Dictionary, id: String) -> void:
-	if prix_suivant(etat, id) < 0:
+static func monter(etat: Dictionary, id: String, mois := 0) -> void:
+	if prix_suivant(etat, id, mois) < 0:
 		return
 	etat[id] = {"niveau": niveau(etat, id) + 1, "actif": true}
+	if est_saison(id):
+		_une_seule_guirlande(etat, id)
 
 
 static func basculer(etat: Dictionary, id: String) -> void:
 	if niveau(etat, id) > 0:
 		etat[id]["actif"] = not actif(etat, id)
+		if est_saison(id) and actif(etat, id):
+			_une_seule_guirlande(etat, id)
+
+
+static func _une_seule_guirlande(etat: Dictionary, garder: String) -> void:
+	for o in SAISON:
+		if o["id"] != garder and niveau(etat, o["id"]) > 0:
+			etat[o["id"]]["actif"] = false
+
+
+## Guirlandes de la saison possédées.
+static func guirlandes(etat: Dictionary) -> Array:
+	return SAISON.filter(func(o): return niveau(etat, o["id"]) > 0)
 
 
 ## Ce que la tribune affiche : {id: niveau} des objets installés.
@@ -82,6 +134,9 @@ static func affiche(etat: Dictionary) -> Dictionary:
 	for id in ids():
 		if actif(etat, id):
 			res[id] = niveau(etat, id)
+	for o in SAISON:
+		if actif(etat, o["id"]):
+			res["guirlande"] = o["id"]  # la guirlande de la saison affichée
 	return res
 
 
@@ -91,4 +146,4 @@ static func valeur(etat: Dictionary) -> int:
 	for o in OBJETS:
 		for i in niveau(etat, o["id"]):
 			t += int(o["prix"][i])
-	return t
+	return t + guirlandes(etat).size() * PRIX_SAISON

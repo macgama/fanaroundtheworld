@@ -135,9 +135,9 @@ un joueur riche en Jetons ne doit pas écraser les autres.
   quelques cotisations. Avant d'entrer au stade, le **cortège** (marche jusqu'au stade avec
   des arrêts à choix) le fait grandir.
 - **Recettes**, en Jetons, qui tombent en continu dans la caisse du club :
-  - cotisations : 0,25 Jeton par heure et par membre ;
-  - buvette (5 niveaux, de 1 à 4 Jetons/h) : double pendant 3 h après un duel ;
-  - atelier d'écharpes (5 niveaux, de 0,5 à 1,5 écharpe/h, stock limité) : prix de vente
+  - cotisations : 0,17 Jeton par heure et par membre ;
+  - buvette (5 niveaux, de 0,7 à 2,7 Jetons/h) : double pendant 3 h après un duel ;
+  - atelier d'écharpes (5 niveaux, de 0,35 à 1 écharpe/h, stock limité) : prix de vente
     1 Jeton + 1 par tranche de 6 membres.
 - **Bonus de taille** : +2 % sur les cotisations et la buvette par membre au-delà du premier.
   (Recettes divisées par 4 environ le 17 nov. 2026 : elles faisaient les trois quarts des
@@ -184,6 +184,7 @@ D'où viennent les Jetons :
   couleurs de l'équipe, visibles en duel, sans aucun effet sur le score.
 - **Grand Tour** : voyage organisé de 3 ou 5 stades d'un pays, plusieurs tampons d'un coup.
 - **Le local** : salle des chants, salle des trophées, parking du car, et leur déco.
+- **Guirlande du mois** pour la tribune : en vente seulement pendant son mois, gardée ensuite.
 
 Ce sont des objets du club, pas des skins de FANZZY. Les nouvelles actions de duel se
 débloquent par la progression, pas avec les Jetons.

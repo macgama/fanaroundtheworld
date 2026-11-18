@@ -43,8 +43,8 @@ Effets :
   (club neuf) à 100 % (3 000 supporters) ; les places vides restent vides.
 - **Bonus de départ** : la jauge d'ambiance démarre à +bonus (duel hors ligne).
   En Poussée : +1 de ferveur par tranche de 6 points de bonus (3 au plus).
-- **Cotisations** : le kop verse 0,025 × √kop Jetons/h dans la caisse
-  (0,5 J/h à 400, 2,5 J/h à 10 000).
+- **Cotisations** : le kop verse 0,017 × √kop Jetons/h dans la caisse
+  (0,34 J/h à 400, 1,7 J/h à 10 000 ; baissé d’un tiers le 18 nov.).
 
 ### Recruter un FANZZY (`scripts/club/rencontres.gd`, classe `Rencontres`)
 

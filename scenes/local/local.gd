@@ -170,9 +170,53 @@ func _remplir() -> void:
 	_titre_gauche.text = tr("TA TRIBUNE EN DUEL")
 	_aide.text = tr("Pur décor : le matériel ne change ni la jauge, ni les points. En duel, il prend les couleurs de l'équipe que tu soutiens.")
 	_decor.materiel = Materiel.affiche(Game.materiel)
+	_liste.add_child(_carte_saison())
 	_liste.add_child(Ui.label("MATÉRIEL DE TRIBUNE", 34, Ui.JAUNE, true, 6))
 	for o in Materiel.OBJETS:
 		_liste.add_child(_carte_objet(o))
+
+
+## Guirlande du mois (seulement ce mois-ci) et guirlandes déjà achetées.
+func _carte_saison() -> Control:
+	var mois := int(Time.get_date_dict_from_system()["month"])
+	var o := Materiel.du_mois(mois)
+	var p := Ui.panneau(Color("#3a2a7a"), 18, 4)
+	var v := Ui.vbox(6)
+	p.add_child(v)
+	v.add_child(Ui.label("GUIRLANDE DU MOIS", 26, Ui.JAUNE, true, 6))
+	var h := Ui.hbox(10)
+	v.add_child(h)
+	var nom := Ui.label(o["nom"], 22, Ui.BLANC, true, 4)
+	nom.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	h.add_child(nom)
+	var prix := Materiel.prix_suivant(Game.materiel, o["id"], mois)
+	var b := Ui.bouton(tr("Acheter · %d Jetons") % prix if prix >= 0 else tr("Dans ta collection"), Ui.VERT, 20)
+	if prix >= 0:
+		Ui.colorer_bouton(b, Ui.VERT, true)
+	b.disabled = prix < 0 or prix > Game.jetons
+	b.pressed.connect(func(): _acheter(o["id"], p))
+	h.add_child(b)
+	var txt := Ui.label("En vente seulement ce mois-ci, puis à toi pour toujours. Une guirlande à la fois dans la tribune.", 16, Ui.GRIS)
+	txt.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	v.add_child(txt)
+	var miennes := Materiel.guirlandes(Game.materiel)
+	if not miennes.is_empty():
+		var grille := GridContainer.new()
+		grille.columns = 2
+		grille.add_theme_constant_override("h_separation", 8)
+		grille.add_theme_constant_override("v_separation", 8)
+		v.add_child(grille)
+		for g in miennes:
+			var gid: String = g["id"]
+			var on := Materiel.actif(Game.materiel, gid)
+			var bg := Ui.bouton(("✓ " if on else "") + tr(g["nom"]), Ui.BLEU if on else Ui.NUIT, 17)  # sans_traduction
+			bg.custom_minimum_size = Vector2(318, 48)
+			bg.tooltip_text = "Ranger ou ressortir ce matériel dans la tribune"
+			bg.pressed.connect(func():
+				Game.basculer_materiel(gid)
+				_remplir())
+			grille.add_child(bg)
+	return p
 
 
 func _remplir_local() -> void:

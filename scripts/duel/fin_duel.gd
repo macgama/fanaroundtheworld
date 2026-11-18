@@ -8,6 +8,8 @@ extends RefCounted
 ## d'ambiance (1 min 30) : leurs Jetons sont relevés pour que chaque mode rapporte
 ## à peu près autant par minute de jeu (docs/equilibrage.md).
 const FACTEUR_JEU := {"arene": 1.3, "poussee": 1.6}  # sans_traduction
+## Jetons des duels × 2/3 (choix de Gaël le 18 nov. 2026 : trop de Jetons en fin de saison).
+const FACTEUR_GAINS := 0.67
 
 
 ## Jetons et XP d'une partie. `perf` va de 0 (rien fait) à 1 (partie parfaite).
@@ -15,7 +17,7 @@ const FACTEUR_JEU := {"arene": 1.3, "poussee": 1.6}  # sans_traduction
 static func gains(gagne: bool, perf: float, mode_suivi: String, equipe_gagne := false, jeu := "") -> Dictionary:
 	perf = clampf(perf, 0.0, 1.0)
 	var gain_mode: float = Game.MODES_SUIVI.get(mode_suivi, {}).get("gain", 1.0)
-	gain_mode *= float(FACTEUR_JEU.get(jeu, 1.0))
+	gain_mode *= float(FACTEUR_JEU.get(jeu, 1.0)) * FACTEUR_GAINS
 	var jetons := int(round((10.0 + 20.0 * perf + (15.0 if gagne else 0.0)) * gain_mode * (1.3 if equipe_gagne else 1.0)))
 	var xp := 40 + int(round(60.0 * perf)) + (40 if gagne else 0)
 	return {"jetons": jetons, "xp": xp}

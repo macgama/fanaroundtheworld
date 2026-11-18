@@ -79,8 +79,8 @@ func _tester_paye() -> void:
 	_verifier(EcharpesRegles.paye(1, 0.5, EcharpesRegles.SERIE_BONUS + 1)["bonus"] == 0, "bonus une fois par tranche")
 	var p := EcharpesRegles.paye(2, 0.7, 10)
 	_verifier(p["total"] == p["salaire"] + p["pourboire"] + p["bonus"], "total = salaire + pourboire + bonus")
-	_verifier(EcharpesRegles.paye_finale(41, 0) == 41, "plein tarif au 1er service")
-	_verifier(EcharpesRegles.paye_finale(41, EcharpesRegles.SERVICES_PLEIN_TARIF) == 21, "paye ÷ 2 après %d services" % EcharpesRegles.SERVICES_PLEIN_TARIF)
+	_verifier(EcharpesRegles.paye_finale(41, 0) == 28, "plein tarif au 1er service")
+	_verifier(EcharpesRegles.paye_finale(41, EcharpesRegles.SERVICES_PLEIN_TARIF) == 14, "paye ÷ 2 après %d services" % EcharpesRegles.SERVICES_PLEIN_TARIF)
 	# Service parfait simulé (robot), avec les allers au carton : du même ordre que la buvette.
 	var r := EcharpesRegles.new(7)
 	var stock := [3, 3, 3, 3, 3, 3]

@@ -61,6 +61,11 @@ if not AVANT:
         "billet_stade": 25, "trajet_facteur": 1.4,
         "boulot_plein": 2, "boulot_apres": 0.5, "boulot_quart": 5,
     })
+    if "--sans-baisse" not in sys.argv:
+        # 18 nov. 2026, choix de Gaël « les deux, en douceur » : gains ÷ 1,5 (duels, boulots,
+        # cotisations, buvette) + une guirlande de la saison par mois (1 500)
+        R.update({"cotisation_h": 0.17, "buvette_h": [0, 0.7, 1.0, 1.4, 2.0, 2.7], "atelier_h": [0, 0.35, 0.5, 0.7, 0.85, 1.0], "facteur_gains": 0.67, "facteur_paye": 0.67,
+                  "guirlande_mois": 1500})
 else:
     R.update({"xp_niveau": "plat", "places": "plat", "duel_perf_ambiance": 40})
 
@@ -126,7 +131,7 @@ TOURS_SEMAINE = {"occasionnel (20 min)": 0, "régulier (1 h)": 1, "passionné (3
 def jetons_duel(lieu, mode, rang):
     perf_j = R["duel_perf_ambiance"] if mode == "duel" else R["duel_perf"]
     base = R["duel_base"] + perf_j * PERF + R["duel_victoire"] * VICTOIRE
-    base *= GAIN_LIEU[lieu] * (1 + 0.3 * EQUIPE_GAGNE) * R["facteur_mode"][mode]
+    base *= GAIN_LIEU[lieu] * (1 + 0.3 * EQUIPE_GAGNE) * R["facteur_mode"][mode] * R.get("facteur_gains", 1.0)
     return base * (REJEU[rang] if rang < len(REJEU) else 0)
 
 
@@ -147,7 +152,7 @@ def boulots_jetons(n):
         else:
             f = 0.25
         total += BOULOT_JETONS * f
-    return total
+    return total * R.get("facteur_paye", 1.0)
 
 
 def simuler(nom, p, jours=303):
@@ -263,6 +268,9 @@ def simuler(nom, p, jours=303):
                 if jetons - GRAND_TOUR >= 150:
                     jetons -= GRAND_TOUR
                     depenses["grand tour"] += GRAND_TOUR
+        if R.get("guirlande_mois") and d % 30 == 15 and jetons - R["guirlande_mois"] >= 150:
+            jetons -= R["guirlande_mois"]
+            depenses["matériel+déco"] += R["guirlande_mois"]
         while achats and jetons - achats[0] >= 150 and buv == 5 and atel == 5:
             c = achats.pop(0)
             jetons -= c
@@ -303,4 +311,5 @@ for nom, p in PROFILS.items():
 print("\n### Jetons par minute (joueur moyen, pub, billet de 4 déduit)")
 for mode, duree in (("duel", 90 + 40), ("arene", 110 + 40), ("poussee", 150 + 40)):
     print(f"- {mode} : {(jetons_duel('pub', mode, 0) - 4) / duree * 60:.1f} / min ({duree} s menus compris)")
-print(f"- petit boulot : {BOULOT_JETONS / 90 * 60:.1f} / min plein tarif, {BOULOT_JETONS * R['boulot_apres'] / 90 * 60:.1f} / min ensuite (90 s menus compris)")
+f_p = R.get('facteur_paye', 1.0)
+print(f"- petit boulot : {BOULOT_JETONS * f_p / 90 * 60:.1f} / min plein tarif, {BOULOT_JETONS * f_p * R['boulot_apres'] / 90 * 60:.1f} / min ensuite (90 s menus compris)")

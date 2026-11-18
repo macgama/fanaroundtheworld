@@ -110,8 +110,8 @@ func _tester_paye() -> void:
 	_verifier(SpeakerRegles.paye_but(["bien", "bien", "bien"])["bonus"] == SpeakerRegles.BONUS_TRIPLE, "bonus avec trois « bien »")
 	_verifier(SpeakerRegles.paye_but([])["total"] == 0, "rien annoncé, rien gagné")
 	_verifier(SpeakerRegles.paye_but(["rate", "manque", "hors"])["total"] == 0, "appels ratés : rien")
-	_verifier(SpeakerRegles.paye_finale(40, 0) == 40, "plein tarif au 1er match")
-	_verifier(SpeakerRegles.paye_finale(41, SpeakerRegles.SERVICES_PLEIN_TARIF) == 21, "paye ÷ 2 après %d matchs" % SpeakerRegles.SERVICES_PLEIN_TARIF)
+	_verifier(SpeakerRegles.paye_finale(40, 0) == 27, "plein tarif au 1er match")
+	_verifier(SpeakerRegles.paye_finale(41, SpeakerRegles.SERVICES_PLEIN_TARIF) == 14, "paye ÷ 2 après %d matchs" % SpeakerRegles.SERVICES_PLEIN_TARIF)
 	# Ordre de grandeur, comme la buvette : parfait ≈ 45 à 60, joueur moyen ≈ 25 à 35.
 	var p := SpeakerRegles.new(5).programme()
 	var robot := 0

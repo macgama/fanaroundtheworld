@@ -896,7 +896,7 @@ func _finir() -> void:
 	var gagne := jauge > 0.0 or _forfait
 	var b := _buts(fiche["m"])
 	var equipe_gagne := b.x >= 0 and b.x > b.y and str(fiche["m"].get("status", "")) in ["LIVE", "HALFTIME", "FINISHED"]  # sans_traduction
-	var gain_mode: float = Game.MODES_SUIVI.get(mode, {}).get("gain", 1.0)
+	var gain_mode: float = Game.MODES_SUIVI.get(mode, {}).get("gain", 1.0) * FinDuel.FACTEUR_GAINS
 	var jetons := int(round((10.0 + points / 60.0 + (15.0 if gagne else 0.0)) * gain_mode * (1.3 if equipe_gagne else 1.0)))
 	var part := Game.noter_duel_match(str(fiche.get("id", fiche["m"].get("id", ""))))
 	jetons = int(round(jetons * part))  # même match rejoué : 100 %, 50 %, 25 %, puis rien
@@ -1283,6 +1283,8 @@ class Decor extends Control:
 	func _materiel(ferveur: float) -> void:
 		## Dessiné par-dessus notre tribune. Rien ici ne touche au score.
 		var w := size.x
+		if materiel.has("guirlande"):
+			_guirlande(str(materiel["guirlande"]))
 		var n_ech := int(materiel.get("echarpes", 0))
 		if n_ech > 0:
 			var nb: int = [0, 7, 12, 18][n_ech]
@@ -1308,6 +1310,62 @@ class Decor extends Control:
 				[Vector2(170, 880), Vector2(370, 900), Vector2(1710, 880)]][n_tam]
 			for i in pos.size():
 				_tambour(pos[i], 60.0 if (n_tam == 3 and i == 1) else 48.0, ferveur, i)
+
+	func _guirlande(id: String) -> void:
+		## Guirlande de la saison (Materiel.SAISON) : fanions et motifs du mois sur un fil.
+		var o := Materiel.objet(id)
+		if o.is_empty():
+			return
+		var col := Color(str(o["couleur"]))
+		var pts := PackedVector2Array()
+		var segs := 20
+		for k in segs + 1:
+			var u := float(k) / segs
+			pts.append(Vector2(u * size.x, 650.0 + sin(u * PI * 4.0) * 18.0 + sin(_t * 1.5 + u * 6.0) * 2.0))
+		draw_polyline(pts, Ui.CONTOUR, 5.0)
+		for k in segs:
+			var a := pts[k]
+			var b := pts[k + 1]
+			var m := a.lerp(b, 0.5)
+			if k % 2 == 0:
+				var tri := PackedVector2Array([a, b, m + Vector2(0, 58)])
+				draw_colored_polygon(tri, c_nous if k % 4 == 0 else col)
+				draw_polyline(PackedVector2Array([a, m + Vector2(0, 58), b]), Ui.CONTOUR, 3.0)
+			else:
+				var q := m + Vector2(0, 34 + sin(_t * 3.0 + k) * 3.0)
+				draw_line(m, q, Ui.CONTOUR, 2.0)
+				draw_circle(q, 27.0, Ui.CONTOUR)
+				draw_circle(q, 24.0, Ui.BLANC)
+				_motif(str(o["motif"]), q, 18.0, col.darkened(0.15))
+
+	func _motif(motif: String, c: Vector2, r: float, col: Color) -> void:
+		match motif:
+			"flocon":
+				for i in 3:
+					var d := Vector2.from_angle(i * PI / 3.0) * r
+					draw_line(c - d, c + d, col, 3.0)
+				draw_circle(c, 3.0, Ui.BLANC)
+			"coeur":
+				draw_circle(c + Vector2(-r * 0.45, -r * 0.2), r * 0.5, col)
+				draw_circle(c + Vector2(r * 0.45, -r * 0.2), r * 0.5, col)
+				draw_colored_polygon(PackedVector2Array([c + Vector2(-r * 0.92, 0), c + Vector2(r * 0.92, 0), c + Vector2(0, r)]), col)
+			"fleur":
+				for i in 5:
+					draw_circle(c + Vector2.from_angle(i * TAU / 5.0) * r * 0.55, r * 0.42, col)
+				draw_circle(c, r * 0.35, Ui.JAUNE)
+			"soleil":
+				for i in 8:
+					var d := Vector2.from_angle(i * TAU / 8.0 + _t)
+					draw_line(c + d * r * 0.6, c + d * r * 1.05, col, 3.0)
+				draw_circle(c, r * 0.55, col)
+			"feuille":
+				draw_colored_polygon(PackedVector2Array([c + Vector2(0, -r), c + Vector2(r * 0.6, 0), c + Vector2(0, r), c + Vector2(-r * 0.6, 0)]), col)
+				draw_line(c + Vector2(0, -r), c + Vector2(0, r), col.darkened(0.4), 2.0)
+			_:
+				var p := PackedVector2Array()
+				for i in 10:
+					p.append(c + Vector2.from_angle(-PI / 2.0 + i * PI / 5.0) * (r if i % 2 == 0 else r * 0.45))
+				draw_colored_polygon(p, col)
 
 	func _echarpe(c: Vector2, longueur: float, i: int) -> void:
 		var bandes := 6
