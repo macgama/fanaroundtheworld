@@ -41,6 +41,8 @@ func _r(x: float, y: float, w: float, h: float) -> Rect2:
 
 func _draw() -> void:
 	_k = minf(size.x / W, size.y / H)
+	if _k <= 0.01:
+		return  # pas encore de place (premier affichage)
 	_o = (size - Vector2(W, H) * _k) / 2.0
 	# ciel et sol
 	draw_rect(_r(0, 0, W, SOL), Color("#8fd3ff"))

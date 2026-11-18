@@ -11,11 +11,11 @@ extends RefCounted
 ## État sauvegardé dans Game.materiel : {id: {"niveau": n, "actif": bool}}.
 
 const OBJETS := [
-	{"id": "echarpes", "nom": "Mur d'écharpes", "texte": "Les écharpes tendues au-dessus des têtes.", "prix": [150, 400, 900]},
-	{"id": "drapeaux", "nom": "Grands drapeaux", "texte": "Des drapeaux qui flottent dans la tribune.", "prix": [200, 500, 1200]},
-	{"id": "tambours", "nom": "Tambours", "texte": "Ils battent plus vite quand la tribune s'enflamme.", "prix": [250, 600, 1400]},
-	{"id": "bache", "nom": "Bâche du club", "texte": "Le nom du fan club accroché à la balustrade.", "prix": [300, 800, 1800]},
-	{"id": "confettis", "nom": "Pluie de confettis", "texte": "Des confettis du club quand la tribune est à fond.", "prix": [400, 1000, 2200]},
+	{"id": "echarpes", "nom": "Mur d'écharpes", "texte": "Les écharpes tendues au-dessus des têtes.", "prix": [150, 600, 2000]},
+	{"id": "drapeaux", "nom": "Grands drapeaux", "texte": "Des drapeaux qui flottent dans la tribune.", "prix": [200, 800, 2500]},
+	{"id": "tambours", "nom": "Tambours", "texte": "Ils battent plus vite quand la tribune s'enflamme.", "prix": [250, 1000, 3000]},
+	{"id": "bache", "nom": "Bâche du club", "texte": "Le nom du fan club accroché à la balustrade.", "prix": [300, 1200, 3500]},
+	{"id": "confettis", "nom": "Pluie de confettis", "texte": "Des confettis du club quand la tribune est à fond.", "prix": [400, 1600, 4500]},
 ]
 const NIVEAU_MAX := 3
 

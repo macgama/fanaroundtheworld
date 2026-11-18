@@ -12,28 +12,28 @@ extends RefCounted
 
 const SALLES := [
 	{"id": "principale", "nom": "Salle principale", "texte": "Là où tout a commencé.", "prix": []},
-	{"id": "chants", "nom": "Salle des chants", "texte": "Pour répéter les chants du club.", "prix": [300, 800]},
-	{"id": "trophees", "nom": "Salle des trophées", "texte": "Tampons, souvenirs et succès exposés.", "prix": [400, 1000]},
-	{"id": "parking", "nom": "Parking du car", "texte": "Le car du fan club a enfin sa place.", "prix": [500, 1200]},
+	{"id": "chants", "nom": "Salle des chants", "texte": "Pour répéter les chants du club.", "prix": [300, 2000]},
+	{"id": "trophees", "nom": "Salle des trophées", "texte": "Tampons, souvenirs et succès exposés.", "prix": [400, 2500]},
+	{"id": "parking", "nom": "Parking du car", "texte": "Le car du fan club a enfin sa place.", "prix": [500, 3000]},
 ]
 const NIVEAU_MAX := 2
 
 ## Déco : une fois chacune, dans une salle déjà construite.
 const DECO := [
-	{"id": "guirlande", "salle": "principale", "nom": "Guirlande aux couleurs", "prix": 60},
-	{"id": "poster", "salle": "principale", "nom": "Poster géant", "prix": 90},
-	{"id": "canape", "salle": "principale", "nom": "Canapé du club", "prix": 120},
-	{"id": "babyfoot", "salle": "principale", "nom": "Baby-foot", "prix": 180},
-	{"id": "ecran", "salle": "principale", "nom": "Écran géant", "prix": 250},
-	{"id": "partitions", "salle": "chants", "nom": "Partitions encadrées", "prix": 80},
-	{"id": "micros", "salle": "chants", "nom": "Micros et enceintes", "prix": 220},
-	{"id": "piano", "salle": "chants", "nom": "Piano", "prix": 300},
-	{"id": "mur_tampons", "salle": "trophees", "nom": "Mur des tampons", "prix": 150},
-	{"id": "vitrine", "salle": "trophees", "nom": "Vitrine éclairée", "prix": 260},
-	{"id": "coupe", "salle": "trophees", "nom": "Coupe en or", "prix": 400},
-	{"id": "fanions_car", "salle": "parking", "nom": "Fanions sur le car", "prix": 120},
-	{"id": "barbecue", "salle": "parking", "nom": "Barbecue d'avant-match", "prix": 200},
-	{"id": "car_club", "salle": "parking", "nom": "Car aux couleurs du club", "prix": 600},
+	{"id": "guirlande", "salle": "principale", "nom": "Guirlande aux couleurs", "prix": 100},
+	{"id": "poster", "salle": "principale", "nom": "Poster géant", "prix": 150},
+	{"id": "canape", "salle": "principale", "nom": "Canapé du club", "prix": 250},
+	{"id": "babyfoot", "salle": "principale", "nom": "Baby-foot", "prix": 350},
+	{"id": "ecran", "salle": "principale", "nom": "Écran géant", "prix": 600},
+	{"id": "partitions", "salle": "chants", "nom": "Partitions encadrées", "prix": 150},
+	{"id": "micros", "salle": "chants", "nom": "Micros et enceintes", "prix": 450},
+	{"id": "piano", "salle": "chants", "nom": "Piano", "prix": 900},
+	{"id": "mur_tampons", "salle": "trophees", "nom": "Mur des tampons", "prix": 300},
+	{"id": "vitrine", "salle": "trophees", "nom": "Vitrine éclairée", "prix": 500},
+	{"id": "coupe", "salle": "trophees", "nom": "Coupe en or", "prix": 1200},
+	{"id": "fanions_car", "salle": "parking", "nom": "Fanions sur le car", "prix": 200},
+	{"id": "barbecue", "salle": "parking", "nom": "Barbecue d'avant-match", "prix": 400},
+	{"id": "car_club", "salle": "parking", "nom": "Car aux couleurs du club", "prix": 1500},
 ]
 
 

@@ -25,15 +25,15 @@ func _tester_regles() -> void:
 	var e := LocalClub.vide()
 	_verifier(LocalClub.niveau(e, "principale") == 1 and LocalClub.prix_salle(e, "principale") == -1, "salle principale déjà là")
 	_verifier(LocalClub.prix_salle(e, "chants") == 300 and LocalClub.prix_salle(e, "inconnue") == -1, "prix de construction")
-	_verifier(LocalClub.prix_deco(e, "piano") == -1 and LocalClub.prix_deco(e, "canape") == 120, "déco seulement dans une salle construite")
+	_verifier(LocalClub.prix_deco(e, "piano") == -1 and LocalClub.prix_deco(e, "canape") == 250, "déco seulement dans une salle construite")
 	LocalClub.construire(e, "chants")
-	_verifier(LocalClub.prix_salle(e, "chants") == 800 and LocalClub.prix_deco(e, "piano") == 300, "salle construite : agrandir, décorer")
+	_verifier(LocalClub.prix_salle(e, "chants") == 2000 and LocalClub.prix_deco(e, "piano") == 900, "salle construite : agrandir, décorer")
 	LocalClub.construire(e, "chants")
 	LocalClub.construire(e, "chants")
 	_verifier(LocalClub.niveau(e, "chants") == LocalClub.NIVEAU_MAX and LocalClub.prix_salle(e, "chants") == -1, "niveau max")
 	LocalClub.poser(e, "piano", "2026-11-18")
 	_verifier(LocalClub.a(e, "piano") and LocalClub.prix_deco(e, "piano") == -1, "une seule fois")
-	_verifier(LocalClub.valeur(e) == 300 + 800 + 300, "valeur du local (%d)" % LocalClub.valeur(e))
+	_verifier(LocalClub.valeur(e) == 300 + 2000 + 900, "valeur du local (%d)" % LocalClub.valeur(e))
 	_verifier(not LocalClub.complet(e), "pas encore complet")
 	for s in LocalClub.SALLES:
 		for i in 2:
@@ -50,9 +50,9 @@ func _tester_regles() -> void:
 func _tester_jeu() -> void:
 	var Game: Node = root.get_node("/root/Game")
 	Game.local_club = LocalClub.vide()
-	Game.jetons = 360
-	_verifier(Game.acheter_salle("chants") and Game.jetons == 60, "salle construite : 300 Jetons")
-	_verifier(not Game.acheter_deco("piano") and Game.jetons == 60, "pas assez pour le piano")
+	Game.jetons = 400
+	_verifier(Game.acheter_salle("chants") and Game.jetons == 100, "salle construite : 300 Jetons")
+	_verifier(not Game.acheter_deco("piano") and Game.jetons == 100, "pas assez pour le piano")
 	_verifier(Game.acheter_deco("guirlande") and Game.jetons == 0, "guirlande posée")
 	_verifier(not Game.acheter_deco("guirlande"), "pas deux fois")
 	_verifier(not Game.acheter_salle("trophees") and LocalClub.niveau(Game.local_club, "trophees") == 0, "pas de Jetons, pas de salle")
