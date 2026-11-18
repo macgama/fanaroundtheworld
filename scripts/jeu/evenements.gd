@@ -23,35 +23,54 @@ const TYPES := {
 	"finale": {
 		"court": "Finale", "titre": "Soirée de finale", "couleur": "#ffd23f", "sombre": true,
 		"texte": "La finale ! Toutes les tribunes du monde ont les yeux sur ce match.",
-		"mult": 2.0, "xp_pass": 200, "jetons": 50,
+		"mult": 2.0, "xp_pass": 200, "billet": 6.0, "jetons": 50,
 	},
 	"derby": {
 		"court": "Derby", "titre": "Derby", "couleur": "#ff3d7f", "sombre": false,
 		"texte": "Deux clubs voisins : toute la ville choisit son camp.",
-		"mult": 1.5, "xp_pass": 125, "jetons": 30,
+		"mult": 1.5, "xp_pass": 125, "billet": 2.4, "jetons": 30,
 	},
 	"demi": {
 		"court": "Demi-finale", "titre": "Demi-finale", "couleur": "#ff8a2b", "sombre": false,
 		"texte": "Une place en finale se joue sur ce match.",
-		"mult": 1.5, "xp_pass": 100, "jetons": 25,
+		"mult": 1.5, "xp_pass": 100, "billet": 4.0, "jetons": 25,
 	},
 	"choc": {
 		"court": "Grand Choc", "titre": "Grand Choc", "couleur": "#8b5cff", "sombre": false,
 		"texte": "Deux grands rivaux se retrouvent : le match que tout le monde attend.",
-		"mult": 1.4, "xp_pass": 100, "jetons": 25,
+		"mult": 1.4, "xp_pass": 100, "billet": 3.0, "jetons": 25,
 	},
 	"nations": {
 		"court": "Nations", "titre": "Fête des nations", "couleur": "#3ddc84", "sombre": true,
 		"texte": "Les sélections jouent pour leur pays : sortez les drapeaux !",
-		"mult": 1.3, "xp_pass": 75, "jetons": 20,
+		"mult": 1.3, "xp_pass": 75, "billet": 2.0, "jetons": 20,
 	},
 	"quart": {
 		"court": "Quart de finale", "titre": "Quart de finale", "couleur": "#1e6bff", "sombre": false,
 		"texte": "Plus que huit équipes en course.",
-		"mult": 1.25, "xp_pass": 50, "jetons": 15,
+		"mult": 1.25, "xp_pass": 50, "billet": 2.0, "jetons": 15,
 	},
 }
 const ORDRE := ["finale", "derby", "demi", "choc", "nations", "quart"]
+
+## Prix du billet au stade selon l'importance du match (« billet » de TYPES ci-dessus,
+## et la portée de la compétition). Une finale de coupe nationale : ×6, une finale
+## continentale ×9, une finale mondiale ×12 ; un derby ×2,4 ; un match de coupe
+## continentale ×1,6, d'une compétition mondiale ×2,4. Le facteur le plus fort compte.
+const BILLET_COMPETITION := {"pays": 1.0, "continent": 1.6, "monde": 2.4}  # sans_traduction
+const BILLET_FINALE_PORTEE := {"pays": 1.0, "continent": 1.5, "monde": 2.0}  # sans_traduction
+
+
+## Facteur du billet. `ev` : Evenements.detecter (ou {}), `portee` : Geo.niveau_competition.
+static func facteur_billet(ev: Dictionary, portee: String) -> float:
+	var f: float = BILLET_COMPETITION.get(portee, 1.0)
+	var t: Dictionary = TYPES.get(str(ev.get("type", "")), {})
+	if not t.is_empty():
+		var fe := float(t.get("billet", 1.0))
+		if str(ev.get("type", "")) == "finale":
+			fe *= float(BILLET_FINALE_PORTEE.get(portee, 1.0))
+		f = maxf(f, fe)
+	return f
 
 ## L'événement commence la veille du match et finit 6 h après le coup d'envoi.
 const AVANT := 24 * 3600

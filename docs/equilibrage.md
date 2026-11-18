@@ -140,11 +140,11 @@ sera revue.
 
 ## Ce qui reste à faire
 
-- **Les Jetons s'accumulent encore** : un joueur régulier gagne ≈ 1 000 Jetons par jour et
-  en dépense ≈ 60 en billets et trajets (dans le modèle, il va au stade 4 fois par
-  semaine) ; le local est payé en 5 jours. Il manque des achats d'« équipement » prévus
-  au GDD (écharpes, drapeaux, tambours…), qui ne doivent être ni des skins ni un avantage
-  en duel. Question posée à Gaël.
+- **Les Jetons s'accumulent encore** : un joueur régulier gagne ≈ 1 000 Jetons par jour. Les
+  achats ajoutés le 18 nov. (souvenirs, billets selon le match, matériel de tribune, Grand
+  Tour, local agrandi : voir [usages-jetons.md](usages-jetons.md)) occupent ses deux premiers
+  mois, mais il finit encore la saison avec ≈ 200 000 Jetons. Prochain levier : baisser les
+  gains ou ajouter des achats qui reviennent. Question posée à Gaël.
 - Mesurer les vraies réussites des joueurs (les profils sont des estimations) : nombre de
   duels par session, réussite moyenne, durée des menus.
 - L'IA de la Poussée ne joue jamais l'Ola en attaque et peu le Fumigène : à revoir avec

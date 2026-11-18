@@ -27,6 +27,7 @@ var _prono_pb := "home"
 var carte: CarteMonde
 var _titre_liste: Label
 var _sous_titre_liste: Label
+var _bouton_tour: Button
 var _jours: HBoxContainer
 var _liste: VBoxContainer
 var _fil: HBoxContainer
@@ -173,6 +174,13 @@ func _construire_interface() -> void:
 	_sous_titre_liste = Ui.label("", 17, Ui.GRIS)
 	_sous_titre_liste.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	vg.add_child(_sous_titre_liste)
+	# Grand Tour : les stades du pays pas encore tamponnés, en un voyage organisé
+	_bouton_tour = Ui.bouton("", Ui.VIOLET, 20)
+	_bouton_tour.tooltip_text = "Un voyage organisé : plusieurs stades du pays d'affilée, un tampon à chaque arrêt"
+	_bouton_tour.pressed.connect(func(): Game.aller(Game.SCENE_GRAND_TOUR, {"pays": pays,
+		"retour_params": {"niveau": "pays", "pays": pays, "continent": continent}}))
+	_bouton_tour.visible = false
+	vg.add_child(_bouton_tour)
 	var sj := ScrollContainer.new()
 	sj.vertical_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
 	sj.custom_minimum_size = Vector2(0, 52)
@@ -548,6 +556,7 @@ func _construire_liste() -> void:
 	for c in _jours.get_children():
 		c.queue_free()
 	var fiches := _matchs_du_niveau()
+	_bouton_tour.visible = false
 	match niveau:
 		"monde":
 			_titre_liste.text = "Matchs du monde"
@@ -561,6 +570,10 @@ func _construire_liste() -> void:
 			for f in fiches:
 				comps[f["competition"]] = true
 			_sous_titre_liste.text = ", ".join(comps.keys()) if not comps.is_empty() else "Championnat national"
+			var nb := GrandTour.a_tamponner(pays, Donnees.clubs_du_pays(pays), Game.tampons)
+			if nb >= GrandTour.MIN_ETAPES:
+				_bouton_tour.text = tr("Grand Tour · %d stades à tamponner") % nb
+				_bouton_tour.visible = true
 
 	# onglets des jours
 	var jours := {}
@@ -798,7 +811,7 @@ func _afficher_fiche() -> void:
 	grille.add_theme_constant_override("v_separation", 10)
 	for mode in Game.ORDRE_MODES:
 		var info: Dictionary = Game.MODES_SUIVI[mode]
-		var cout := Game.cout_suivi(mode, dist)
+		var cout := Game.cout_suivi(mode, dist, f["m"])
 		var b := Button.new()
 		b.custom_minimum_size = Vector2(205, 92)
 		b.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -838,7 +851,7 @@ func _afficher_fiche() -> void:
 	else:
 		v.add_child(Ui.label(tr("Pas de trajet · gains ×%s · pas de tampon") % Trad.decimal(Game.MODES_SUIVI[mode_suivi]["gain"]), 17, Ui.GRIS))
 
-	var cout_final := Game.cout_suivi(mode_suivi, dist)
+	var cout_final := Game.cout_suivi(mode_suivi, dist, f["m"])
 	var go := Ui.bouton("C'EST PARTI !", Ui.JAUNE, 40)
 	Ui.colorer_bouton(go, Ui.JAUNE, true)
 	go.custom_minimum_size = Vector2(0, 96)

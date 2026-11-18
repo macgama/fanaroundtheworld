@@ -45,6 +45,8 @@ const SCENE_PASS := "res://scenes/pass/pass.tscn"
 const SCENE_TOURNOI := "res://scenes/tournoi/tournoi.tscn"
 const SCENE_LIGUE := "res://scenes/ligue/ligue.tscn"
 const SCENE_SOIREE := "res://scenes/soiree/soiree.tscn"
+const SCENE_LOCAL := "res://scenes/local/local.tscn"
+const SCENE_GRAND_TOUR := "res://scenes/grand_tour/grand_tour.tscn"
 
 ## Paramètres passés d'un écran à l'autre (match choisi, camp supporté…).
 var params: Dictionary = {}
@@ -113,6 +115,15 @@ var cortege: Dictionary = {}
 ## Matchs dont le cortège est déjà fait (une fois par vrai match) : id -> jour.
 var corteges_faits: Dictionary = {}
 const MAX_CORTEGES_FAITS := 80
+## Stade où se trouve le fan club aujourd'hui (arrivée au stade) : {cle, jour}.
+## Sert à la boutique souvenirs (prix sur place, voir Souvenirs).
+var stade_du_jour: Dictionary = {}
+## Matériel de tribune (voir Materiel) : {id: {niveau, actif}}. Décor seulement.
+var materiel: Dictionary = {}
+## Local agrandi et décoré (voir LocalClub) : {salles, deco}. Décor seulement.
+var local_club: Dictionary = LocalClub.vide()
+## Dernier Grand Tour (voir GrandTour) : {jour, pays, taille, cles}. Un par jour.
+var grand_tour: Dictionary = {}
 ## Ligue des tribunes (saison du mois, scripts/jeu/ligue.gd).
 var ligue: Dictionary = Ligue.vide()
 ## Soirs de match : buts déjà récompensés et fil des buts, par match (SoireeMatch).
@@ -185,7 +196,7 @@ func _outils_de_test() -> void:
 			"arene": SCENE_ARENE, "poussee": SCENE_POUSSEE,
 			"pronos": SCENE_PRONOS, "missions": SCENE_MISSIONS, "favoris": SCENE_FAVORIS, "club": SCENE_CLUB, "creation": SCENE_CREATION_CLUB, "chant": SCENE_CHANT, "buvette": SCENE_BUVETTE, "boulots": SCENE_BOULOTS, "speaker": SCENE_SPEAKER, "tifo": SCENE_TIFO,
 			"salon": SCENE_SALON, "collection": SCENE_COLLECTION, "classement": SCENE_CLASSEMENT, "pass": SCENE_PASS,
-			"tournoi": SCENE_TOURNOI, "ligue": SCENE_LIGUE, "soiree": SCENE_SOIREE,
+			"tournoi": SCENE_TOURNOI, "ligue": SCENE_LIGUE, "soiree": SCENE_SOIREE, "local": SCENE_LOCAL, "grand_tour": SCENE_GRAND_TOUR,
 			"cortege": SCENE_CORTEGE, "defi": SCENE_DEFI}
 		for b in ListeBoulots.LISTE:
 			scenes[b["id"]] = b["scene"]  # chaque petit boulot : --scene=<id>
@@ -293,8 +304,24 @@ func gain_suivi(mode: String) -> float:
 	return float(MODES_SUIVI.get(mode, {}).get("gain", 1.0))
 
 
-func cout_suivi(mode: String, distance_km: float) -> int:
-	var c: int = MODES_SUIVI[mode]["billet"]
+## Prix du billet pour suivre ce match. Au stade, il suit l'importance du match
+## (derby, finale, coupe continentale… voir Evenements.facteur_billet) ; à l'écran
+## géant, au plus ×2 ; au pub et à la maison, il ne change pas.
+func billet(mode: String, m: Dictionary = {}) -> int:
+	var base := int(MODES_SUIVI[mode]["billet"])
+	if m.is_empty() or base == 0 or mode == "pub":
+		return base
+	var comp := str(m.get("competition", {}).get("id", ""))
+	# Compétition inconnue ou matchs amicaux : prix d'un match de championnat.
+	var portee := "pays" if Geo.info_competition(comp).is_empty() or "friend" in comp else Geo.niveau_competition(comp)  # sans_traduction
+	var f := Evenements.facteur_billet(evenement_de(m), portee)
+	if mode == "ecran":
+		f = minf(f, 2.0)
+	return int(round(base * f / 5.0)) * 5 if f > 1.0 else base
+
+
+func cout_suivi(mode: String, distance_km: float, m: Dictionary = {}) -> int:
+	var c := billet(mode, m)
 	if mode == "stade":
 		c += cout_trajet(distance_km)
 	return c
@@ -445,13 +472,15 @@ func a_tampon(cle: String) -> bool:
 	return tampons.has(cle)
 
 
-func tamponner(cle: String, info: Dictionary) -> bool:
+func tamponner(cle: String, info: Dictionary, en_jouant := true) -> bool:
 	## Ajoute le tampon du stade. Renvoie true si c'est une première visite.
+	## en_jouant faux (Grand Tour payé en Jetons) : ni XP de PASS, ni mission.
 	if tampons.has(cle):
 		return false
 	tampons[cle] = info
-	gagner_xp_pass(PassSaison.XP_NOUVEAU_STADE)
-	noter_mission("nouveau_stade", cle)
+	if en_jouant:
+		gagner_xp_pass(PassSaison.XP_NOUVEAU_STADE)
+		noter_mission("nouveau_stade", cle)
 	sauver()
 	return true
 
@@ -1354,14 +1383,124 @@ func series_album() -> Array:
 	return Collection.series_album(collection, fanzzy, familles, series_fanzzy)
 
 
+func series_vitrine() -> Array:
+	return Souvenirs.series(collection, tampons)
+
+
 ## Nombre de primes de collection prêtes à réclamer (pastille sur la carte).
 func primes_pretes() -> int:
-	return Collection.pretes(series_carnet()).size() + Collection.pretes(series_album()).size()
+	return Collection.pretes(series_carnet()).size() + Collection.pretes(series_album()).size() + Collection.pretes(series_vitrine()).size()
+
+
+## Le fan club est-il passé dans ce stade aujourd'hui ? (plusieurs avec un Grand Tour)
+func au_stade(cle: String) -> bool:
+	if cle == "" or str(stade_du_jour.get("jour", "")) != Time.get_date_string_from_system():
+		return false
+	return str(stade_du_jour.get("cle", "")) == cle or cle in stade_du_jour.get("cles", [])
+
+
+func noter_arrivee_stade(cle: String) -> void:
+	var jour := Time.get_date_string_from_system()
+	var cles: Array = []
+	if str(stade_du_jour.get("jour", "")) == jour:
+		cles = stade_du_jour.get("cles", []).duplicate() if stade_du_jour.get("cles") is Array else []
+		if str(stade_du_jour.get("cle", "")) != "" and not str(stade_du_jour["cle"]) in cles:
+			cles.append(str(stade_du_jour["cle"]))
+	if not cle in cles:
+		cles.append(cle)
+	stade_du_jour = {"cle": cle, "jour": jour, "cles": cles}
+
+
+## Grand Tour proposé dans ce pays (voir GrandTour), depuis la position du fan club.
+func proposer_grand_tour(pays: String, taille: String) -> Dictionary:
+	var depart := Vector2(float(position_club.get("lon", 0.0)), float(position_club.get("lat", 0.0)))
+	return GrandTour.proposer(pays, Donnees.clubs_du_pays(pays), tampons, depart, taille, convoi().size())
+
+
+func grand_tour_fait_aujourdhui() -> bool:
+	return GrandTour.fait_le(grand_tour, Time.get_date_string_from_system())
+
+
+## Paie le Grand Tour et tamponne ses étapes. Renvoie les clés des nouveaux tampons
+## ([] si impossible : déjà fait aujourd'hui, ou pas assez de Jetons).
+func partir_grand_tour(tour: Dictionary) -> Array:
+	if tour.is_empty() or grand_tour_fait_aujourdhui() or not depenser(int(tour["prix"])):
+		return []
+	var jour := Time.get_date_string_from_system()
+	var nouveaux: Array = []
+	var pays := str(tour["pays"])
+	for e in tour["etapes"]:
+		if tamponner(e["cle"], {"nom": e["nom"], "club": e["club"], "date": jour,
+				"match": Trad.t("Grand Tour"), "pays": pays, "continent": Geo.continent_de(pays), "competition": ""}, false):
+			nouveaux.append(e["cle"])
+		noter_arrivee_stade(e["cle"])
+	var fin: Dictionary = tour["etapes"][tour["etapes"].size() - 1]
+	position_club = {"nom": fin["nom"], "lat": fin["pos"].y, "lon": fin["pos"].x}
+	grand_tour = {"jour": jour, "pays": pays, "taille": tour["taille"], "cles": tour["etapes"].map(func(e): return e["cle"])}
+	Succes.compter(stats, "grand_tour", "", 1)
+	sauver()
+	return nouveaux
+
+
+## Prix d'un souvenir de ce stade (sur place aujourd'hui, ou par correspondance).
+func prix_souvenir(cle: String, type: String) -> int:
+	return Souvenirs.prix(type, au_stade(cle))
+
+
+## Achète un souvenir pour la vitrine du club. Renvoie false si impossible ou trop cher.
+func acheter_souvenir(cle: String, type: String) -> bool:
+	if not Souvenirs.achetable(collection, tampons, cle, type):
+		return false
+	if not depenser(prix_souvenir(cle, type)):
+		return false
+	Souvenirs.ajouter(collection, cle, type, Time.get_date_string_from_system())
+	Succes.compter(stats, "souvenir", type, 1)
+	sauver()
+	return true
+
+
+## Achète (ou améliore) un objet de matériel de tribune. false si impossible ou trop cher.
+func acheter_materiel(id: String) -> bool:
+	var p := Materiel.prix_suivant(materiel, id)
+	if p < 0 or not depenser(p):
+		return false
+	Materiel.monter(materiel, id)
+	Succes.compter(stats, "materiel", id, 1)
+	sauver()
+	return true
+
+
+## Construit ou agrandit une salle du local. false si impossible ou trop cher.
+func acheter_salle(id: String) -> bool:
+	var p := LocalClub.prix_salle(local_club, id)
+	if p < 0 or not depenser(p):
+		return false
+	LocalClub.construire(local_club, id)
+	Succes.compter(stats, "local", id, 1)
+	sauver()
+	return true
+
+
+## Achète une déco du local. false si impossible ou trop cher.
+func acheter_deco(id: String) -> bool:
+	var p := LocalClub.prix_deco(local_club, id)
+	if p < 0 or not depenser(p):
+		return false
+	LocalClub.poser(local_club, id, Time.get_date_string_from_system())
+	Succes.compter(stats, "local", "", 1)
+	sauver()
+	return true
+
+
+## Range ou ressort un objet de matériel déjà acheté.
+func basculer_materiel(id: String) -> void:
+	Materiel.basculer(materiel, id)
+	sauver()
 
 
 ## Réclame la prime d'une série complète. Renvoie les Jetons gagnés (0 sinon).
 func reclamer_prime(id: String) -> int:
-	for s in series_carnet() + series_album():
+	for s in series_carnet() + series_album() + series_vitrine():
 		if s["id"] == id:
 			var n := Collection.reclamer(collection, s, Time.get_date_string_from_system())
 			if n > 0:
@@ -1543,6 +1682,10 @@ func sauver() -> void:
 		"deplacement": deplacement,
 		"cortege": cortege,
 		"corteges_faits": corteges_faits,
+		"stade_du_jour": stade_du_jour,
+		"materiel": materiel,
+		"grand_tour": grand_tour,
+		"local": local_club,
 		"ligue": ligue,
 		"soirees": soirees,
 	}
@@ -1622,6 +1765,12 @@ func _appliquer(d: Dictionary) -> void:
 	cortege = co if co is Dictionary else {}
 	var cf: Variant = d.get("corteges_faits", {})
 	corteges_faits = cf if cf is Dictionary else {}
+	var sj: Variant = d.get("stade_du_jour", {})
+	stade_du_jour = sj if sj is Dictionary else {}
+	materiel = Materiel.reparer(d.get("materiel", null))
+	local_club = LocalClub.reparer(d.get("local", null))
+	var gt: Variant = d.get("grand_tour", {})
+	grand_tour = gt if gt is Dictionary else {}
 	ligue = Ligue.reparer(d.get("ligue", null))
 	soirees = SoireeMatch.reparer(d.get("soirees", null))
 	# Un FANZZY retiré du catalogue ne doit pas casser la tribune.
@@ -1672,6 +1821,10 @@ func reinitialiser() -> void:
 	deplacement = {}
 	cortege = {}
 	corteges_faits = {}
+	stade_du_jour = {}
+	materiel = {}
+	grand_tour = {}
+	local_club = LocalClub.vide()
 	ligue = Ligue.vide()
 	soirees = SoireeMatch.vide()
 	equipe = equipe_par_defaut()

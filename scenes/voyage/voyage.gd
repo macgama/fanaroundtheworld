@@ -70,6 +70,7 @@ func _arrive() -> void:
 		"pays": _fiche["lieu"]["pays"], "continent": _fiche["lieu"]["continent"],
 		"competition": str(_fiche["m"].get("competition", {}).get("id", "")),
 	})
+	Game.noter_arrivee_stade(_fiche["stade"]["cle"])  # boutique souvenirs au prix sur place aujourd'hui
 	Game.sauver()
 	var voile := ColorRect.new()
 	voile.color = Color(0.08, 0.06, 0.2, 0.0)
@@ -101,8 +102,8 @@ func _arrive() -> void:
 	bas.set_anchors_preset(Control.PRESET_CENTER_BOTTOM)
 	bas.offset_top = -230
 	bas.offset_bottom = -50
-	bas.offset_left = -400
-	bas.offset_right = 400
+	bas.offset_left = -760
+	bas.offset_right = 760
 	bas.alignment = BoxContainer.ALIGNMENT_CENTER
 	add_child(bas)
 	var msg := Ui.label("NOUVEAU TAMPON !" if nouveau else "Stade déjà tamponné, content de revenir !", 44 if nouveau else 30, Ui.JAUNE, true, 10)
@@ -116,29 +117,35 @@ func _arrive() -> void:
 	if bilan is Dictionary:
 		bas.offset_top = -330
 		bas.add_child(_ligne_bilan(bilan))
+	var boutons := Ui.hbox(18)
+	boutons.alignment = BoxContainer.ALIGNMENT_CENTER
+	var boutique := Ui.bouton("BOUTIQUE SOUVENIRS", Ui.JAUNE, 30)
+	Ui.colorer_bouton(boutique, Ui.JAUNE, true)
+	boutique.custom_minimum_size = Vector2(400, 96)
+	boutique.tooltip_text = tr("Fanion, écharpe, maillot… pour la vitrine du club, au prix de la boutique aujourd'hui")
+	boutique.pressed.connect(func(): Game.aller(Game.SCENE_COLLECTION, {"onglet": "vitrine", "stade": _fiche["stade"]["cle"],  # sans_traduction
+		"retour": Game.SCENE_TRIBUNE, "retour_params": Game.params}))
+	boutons.add_child(boutique)
 	var match_id := str(_fiche["id"])
 	if Game.club_cree() and not Game.cortege_fait(match_id):
 		# le dernier kilomètre se fait à pied, avec tout le kop
-		var hb := Ui.hbox(18)
-		hb.alignment = BoxContainer.ALIGNMENT_CENTER
-		var c := Ui.bouton("PARTIR EN CORTÈGE", Ui.VERT, 36)
+		var c := Ui.bouton("PARTIR EN CORTÈGE", Ui.VERT, 34)
 		Ui.colorer_bouton(c, Ui.VERT, true)
-		c.custom_minimum_size = Vector2(520, 96)
+		c.custom_minimum_size = Vector2(460, 96)
 		c.tooltip_text = "Marche jusqu'au stade avec ton kop : ferveur, nouveaux supporters et bonus de départ"
 		c.pressed.connect(func(): Game.aller(Game.SCENE_CORTEGE, Game.params))
-		hb.add_child(c)
+		boutons.add_child(c)
 		var d := Ui.bouton("Direct en tribune", Ui.NUIT, 24)
 		d.custom_minimum_size = Vector2(0, 96)
 		d.pressed.connect(func(): Game.aller(Game.SCENE_TRIBUNE, Game.params))
-		hb.add_child(d)
-		bas.add_child(hb)
+		boutons.add_child(d)
 	else:
 		var b := Ui.bouton("ENTRER DANS LE STADE", Ui.VERT, 36)
 		Ui.colorer_bouton(b, Ui.VERT, true)
-		b.custom_minimum_size = Vector2(560, 96)
-		b.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+		b.custom_minimum_size = Vector2(500, 96)
 		b.pressed.connect(func(): Game.aller(Game.SCENE_TRIBUNE, Game.params))
-		bas.add_child(b)
+		boutons.add_child(b)
+	bas.add_child(boutons)
 	bas.modulate.a = 0.0
 	create_tween().tween_property(bas, "modulate:a", 1.0, 0.3).set_delay(0.7)
 
