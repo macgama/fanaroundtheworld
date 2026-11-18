@@ -37,6 +37,11 @@ var _ecrans := {
 	"deplacement": [Game.SCENE_DEPLACEMENT, {"match_id": "ex:1", "camp": "away", "mode": "stade", "cout": 0}, [KEY_1, KEY_2, KEY_3, KEY_1]],
 	"voyage_bilan": [Game.SCENE_VOYAGE, {"match_id": "ex:1", "camp": "away", "mode": "stade", "cout": 0, "arrive": true,
 		"bilan": {"ferveur": 72, "a_l_heure": true, "jetons": 18, "xp_pass": 144, "mult": 1.14}}, []],
+	"cortege": [Game.SCENE_CORTEGE, {"match_id": "ex:1", "camp": "home", "mode": "stade", "cout": 0}, [KEY_SPACE, KEY_1, KEY_ESCAPE]],
+	"cortege_auto": [Game.SCENE_CORTEGE, {"match_id": "ex:1", "camp": "away", "mode": "stade", "cout": 0, "auto": true}, [KEY_SPACE, KEY_SPACE, KEY_1, KEY_2, KEY_SPACE]],
+	"defi_rythme": [Game.SCENE_DEFI, {"id": "GD8"}, [KEY_SPACE, KEY_SPACE, KEY_SPACE, KEY_SPACE]],
+	"defi_memoire": [Game.SCENE_DEFI, {"id": "AN4"}, [KEY_1, KEY_2, KEY_3, KEY_4, KEY_KP_1]],
+	"defi_precision": [Game.SCENE_DEFI, {"id": "AN1", "auto": true}, [KEY_SPACE, KEY_SPACE]],
 	"tribune": [Game.SCENE_TRIBUNE, {"match_id": "ex:1", "camp": "home", "mode": "stade", "cout": 0}, []],
 	"duel": [Game.SCENE_DUEL, {"match_id": "ex:1", "camp": "home", "mode": "pub", "cout": 0},
 		[KEY_SPACE, KEY_T, KEY_O, KEY_UP, KEY_DOWN, KEY_LEFT, KEY_RIGHT, KEY_B, KEY_N, KEY_ESCAPE]],
@@ -196,6 +201,16 @@ func _verifier_ici(cond: bool, ecran: String, msg: String) -> void:
 
 
 func _ouvrir(e: Array) -> void:
+	if e[0] == Game.SCENE_DEFI:
+		# le défi demande un FANZZY rencontré, pas encore membre, et une place au club
+		if not Game.club_cree():
+			Game.creer_club(Game.fan_club_nom, FanClub.COULEURS[0], FanClub.COULEURS[7])
+		var id := str(e[1]["id"])
+		Game.club["membres"].erase(id)
+		Game.xp = maxi(Game.xp, 2000)
+		Rencontres.retirer(Game.club, id)
+		Game.club["rencontres"] = Rencontres.liste(Game.club).slice(0, Rencontres.MAX_EN_ATTENTE - 1)
+		Rencontres.ajouter(Game.club, id, "stade", Game.maintenant())
 	Game.aller(e[0], (e[1] as Dictionary).duplicate(true))
 	await _attendre(0.6)
 

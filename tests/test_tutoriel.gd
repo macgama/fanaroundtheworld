@@ -104,11 +104,11 @@ func _ready() -> void:
 		_verifier(Tutoriel.etape == "voyage", "étape voyage après le déplacement (%s)" % Tutoriel.etape)
 	if Tutoriel.etape == "voyage":
 		for _i in 40:
-			if Tutoriel._trouver("ENTRER DANS LE STADE"):
+			if Tutoriel._trouver("Direct en tribune") or Tutoriel._trouver("ENTRER DANS LE STADE"):
 				break
 			await _attendre(0.25)
 		await _capture("7-voyage")
-		_appuyer("ENTRER DANS LE STADE")
+		_appuyer("Direct en tribune" if Tutoriel._trouver("Direct en tribune") else "ENTRER DANS LE STADE")
 		await _attendre(0.5)
 	_verifier(Tutoriel.etape == "tribune", "étape tribune (%s)" % Tutoriel.etape)
 	await _capture("8-tribune")

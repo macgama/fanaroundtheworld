@@ -125,9 +125,15 @@ un joueur riche en Jetons ne doit pas écraser les autres.
 
 - **Création** : nom, deux couleurs, écusson dessiné à partir des initiales. Les trois
   FANZZY de la tribune sont les membres fondateurs.
-- **Recrutement** : gratuit (pas de FANZZY contre des Jetons). Le nombre de places suit
+- **Recrutement** : gratuit (pas de FANZZY contre des Jetons). On **rencontre** les FANZZY
+  (au stade, pendant le cortège, en déplacement) puis on les **convainc** avec un petit défi
+  sur le geste de leur famille (voir [kop-et-cortege.md](kop-et-cortege.md)). Le nombre de places suit
   le niveau du club : 3 au niveau 1, 2 de plus par niveau jusqu'au niveau 5, puis 1 par niveau. On peut renvoyer un membre
   qui n'est pas dans la tribune.
+- **Le kop** : derrière les FANZZY, des supporters anonymes (compteur qui ne baisse jamais).
+  Il donne la renommée, remplit la tribune en duel, ajoute un petit bonus de départ et
+  quelques cotisations. Avant d'entrer au stade, le **cortège** (marche jusqu'au stade avec
+  des arrêts à choix) le fait grandir.
 - **Recettes**, en Jetons, qui tombent en continu dans la caisse du club :
   - cotisations : 0,17 Jeton par heure et par membre ;
   - buvette (5 niveaux, de 0,7 à 2,7 Jetons/h) : double pendant 3 h après un duel ;
@@ -136,7 +142,7 @@ un joueur riche en Jetons ne doit pas écraser les autres.
 - **Bonus de taille** : +2 % sur les cotisations et la buvette par membre au-delà du premier.
   (Recettes divisées par 4 environ le 17 nov. 2026 : elles faisaient les trois quarts des
   Jetons d'un joueur, voir [equilibrage.md](equilibrage.md).)
-  Renommée : Petit groupe, Bande de potes, Club de quartier, Tribune entière, Légende du virage.
+  Renommée (selon le kop) : Petit groupe, Bande de potes, Club de quartier, Tribune entière, Virage plein, Légende du virage.
 - La caisse garde **8 h** de recettes : il faut revenir récolter (pas de gain infini hors ligne).
 - Ouvrir et améliorer la buvette et l'atelier coûte des Jetons : c'est de l'équipement.
 

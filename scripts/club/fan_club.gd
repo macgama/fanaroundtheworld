@@ -64,6 +64,8 @@ static func nouveau(membres: Array, c1: String, c2: String, maintenant: int) -> 
 		"dernier_duel": 0,
 		"total_gagne": 0,
 		"chant": {},  # composé dans le créateur de chants (ChantClub)
+		"kop": Kop.DEPART,  # supporters anonymes (Kop), ne baisse jamais
+		"rencontres": [],   # FANZZY rencontrés, à convaincre (Rencontres)
 	}
 
 
@@ -78,6 +80,11 @@ static func reparer(c: Variant) -> Dictionary:
 	var base := vide()
 	if not c is Dictionary:
 		return base
+	if not c.has("kop"):
+		# sauvegarde d'avant le kop : un peu de monde derrière chaque membre
+		c["kop"] = Kop.depuis_membres(c.get("membres", []).size())
+	if not c.has("rencontres"):
+		c["rencontres_offertes"] = false  # Game en offre quelques-unes au chargement
 	for k in base:
 		if not c.has(k):
 			c[k] = base[k]
@@ -87,6 +94,9 @@ static func reparer(c: Variant) -> Dictionary:
 	c["dernier_duel"] = int(c["dernier_duel"])
 	c["total_gagne"] = int(c["total_gagne"])
 	c["chant"] = ChantClub.reparer(c["chant"])
+	c["kop"] = maxi(0, int(c["kop"]))
+	if not c["rencontres"] is Array:
+		c["rencontres"] = []
 	return c
 
 
@@ -153,8 +163,9 @@ static func renommee(n: int) -> String:
 # ---------------------------------------------------------------- recettes
 
 static func cotisations_heure(c: Dictionary) -> float:
+	## Les FANZZY cotisent, et le kop aussi un peu (Kop.cotisations_heure).
 	var n := nb_membres(c)
-	return n * COTISATION_HEURE * multiplicateur_taille(n)
+	return n * COTISATION_HEURE * multiplicateur_taille(n) + Kop.cotisations_heure(Kop.valeur(c))
 
 
 static func buvette_heure(c: Dictionary) -> float:

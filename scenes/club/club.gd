@@ -179,7 +179,8 @@ func _construire_infos() -> void:
 	var lignes := [
 		["Niveau du club", "%d" % Game.niveau()],
 		["Membres", tr("%d / %d places") % [n, places]],
-		["Renommée", FanClub.renommee(n)],
+		["Kop", tr("%s supporters") % Kop.texte(Game.kop())],
+		["Renommée", Kop.renommee(Game.kop())],
 		["Bonus de taille", "+%d %%" % int(round((FanClub.multiplicateur_taille(n) - 1.0) * 100.0))],
 		["Stades visités", "%d" % Game.tampons.size()],
 		["Duels gagnés", "%d / %d" % [Game.duels_gagnes, Game.duels_joues]],
@@ -198,6 +199,11 @@ func _construire_infos() -> void:
 		sep.custom_minimum_size = Vector2(0, 2)
 		_infos.add_child(sep)
 	_infos.add_child(Ui.espace())
+	var suivant := Kop.prochain(Game.kop())
+	if not suivant.is_empty():
+		var lk := Ui.label(tr("Prochaine renommée : %s à %s supporters (duels, cortèges, déplacements).") % [tr(str(suivant[1])), Kop.texte(int(suivant[0]))], 18, Ui.GRIS)
+		lk.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		_infos.add_child(lk)
 	var prochain := Ui.label(tr("Niveau %d : +%d places pour recruter.") % [Game.niveau() + 1, FanClub.places(Game.niveau() + 1) - FanClub.places(Game.niveau())], 18, Ui.GRIS)
 	prochain.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_infos.add_child(prochain)
@@ -225,7 +231,8 @@ func _construire_membres() -> void:
 	if FanClub.peut_recruter(Game.club, Game.niveau()):
 		var b := Button.new()
 		b.custom_minimum_size = Vector2(180, 250)
-		b.text = "+\nRecruter"
+		var nb := Rencontres.liste(Game.club).size() + Game.recrues_pass().size()
+		b.text = "+\nRecruter" if nb == 0 else (tr("+\nRecruter\n(%d rencontrés)") if nb > 1 else tr("+\nRecruter\n(%d rencontré)")) % nb
 		b.add_theme_font_size_override("font_size", 30)
 		b.add_theme_color_override("font_color", Ui.CONTOUR)
 		b.add_theme_color_override("font_hover_color", Ui.CONTOUR)
@@ -300,6 +307,8 @@ func _confirmer_renvoi(id: String, nom: String) -> void:
 
 # ------------------------------------------------------------------ recrutement
 
+## Recruter : les FANZZY rencontrés (à convaincre par un petit défi) et les
+## recrues du PASS (sans défi). On ne choisit plus dans tout le catalogue.
 func _ouvrir_recrutement() -> void:
 	if _recrutement:
 		_recrutement.queue_free()
@@ -323,9 +332,10 @@ func _ouvrir_recrutement() -> void:
 	v.add_child(h)
 	h.add_child(Ui.label("RECRUTER", 46, Ui.JAUNE, true, 10))
 	var libres := FanClub.places(Game.niveau()) - FanClub.nb_membres(Game.club)
-	var st := Ui.label((tr("%d places libres. Recruter est gratuit : c'est la taille du club qui compte.") if libres > 1 else tr("%d place libre. Recruter est gratuit : c'est la taille du club qui compte.")) % libres, 20, Ui.BLANC)
+	var st := Ui.label((tr("%d places libres. Convaincs les FANZZY que tu as rencontrés !") if libres > 1 else tr("%d place libre. Convaincs les FANZZY que tu as rencontrés !")) % libres if libres > 0 else tr("Club plein : monte de niveau pour ouvrir des places."), 20, Ui.BLANC)
 	st.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	st.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	st.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	h.add_child(st)
 	var fermer := Ui.bouton("Fermer", Ui.NUIT_CLAIR, 24)
 	fermer.pressed.connect(func(): _recrutement.queue_free(); _recrutement = null)
@@ -335,21 +345,30 @@ func _ouvrir_recrutement() -> void:
 	sc.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	v.add_child(sc)
 	var g := GridContainer.new()
-	g.columns = 6
+	g.columns = 5
 	g.add_theme_constant_override("h_separation", 14)
 	g.add_theme_constant_override("v_separation", 14)
 	sc.add_child(g)
-	var candidats := Game.fanzzy.filter(func(z): return not FanClub.est_membre(Game.club, z["id"]))
-	if candidats.is_empty():
-		v.add_child(Ui.label("Tous les FANZZY connus sont déjà membres !", 24, Ui.BLANC, true))
-	for z in candidats:
-		g.add_child(_carte_candidat(z))
+	var rencontres := Rencontres.liste(Game.club)
+	for r in rencontres:
+		var z := Game.fanzzy_par_id(str(r["id"]))
+		if not z.is_empty():
+			g.add_child(_carte_candidat(z, r, libres > 0))
+	for z in Game.recrues_pass():
+		g.add_child(_carte_candidat(z, {}, libres > 0))
+	var aide := Ui.label(tr("Les FANZZY se rencontrent au stade après un duel, pendant le cortège ou en déplacement (%d en attente au plus). Ça ne coûte jamais de Jetons.") % Rencontres.MAX_EN_ATTENTE, 18, Ui.GRIS)
+	aide.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	if rencontres.is_empty() and Game.recrues_pass().is_empty():
+		var vide := Ui.label("Personne à convaincre pour l'instant.", 26, Ui.BLANC, true)
+		v.add_child(vide)
+	v.add_child(aide)
 
 
-func _carte_candidat(z: Dictionary) -> Control:
+## Carte d'un FANZZY à recruter. `r` : sa rencontre ({} pour une recrue du PASS).
+func _carte_candidat(z: Dictionary, r: Dictionary, place: bool) -> Control:
 	var fam: String = z["famille"]
 	var p := Ui.panneau(Game.couleur_famille(fam).darkened(0.35), 22, 4)
-	p.custom_minimum_size = Vector2(240, 0)
+	p.custom_minimum_size = Vector2(290, 0)
 	var v := Ui.vbox(6)
 	p.add_child(v)
 	var t := TextureRect.new()
@@ -361,24 +380,48 @@ func _carte_candidat(z: Dictionary) -> Control:
 	var n := Ui.label(z["nom"], 18, Ui.BLANC, true, 4)
 	n.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	n.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	n.custom_minimum_size = Vector2(200, 48)
+	n.custom_minimum_size = Vector2(250, 48)
 	v.add_child(n)
 	var pf := Ui.pastille(Game.nom_famille(fam), Game.couleur_famille(fam), 14, fam in ["voix", "fide"])
 	pf.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 	v.add_child(pf)
-	var b := Ui.bouton("Recruter", Ui.VERT, 22)
-	Ui.colorer_bouton(b, Ui.VERT, true)
 	var id: String = z["id"]
-	b.pressed.connect(func():
-		if Game.recruter(id):
-			_annoncer(tr("%s rejoint le club !") % z["nom"], Ui.VERT)
-			_construire()
-			if FanClub.peut_recruter(Game.club, Game.niveau()):
-				_ouvrir_recrutement()
-			else:
-				_recrutement.queue_free()
-				_recrutement = null)
-	v.add_child(b)
+	if r.is_empty():
+		# recrue du PASS : elle rejoint tout de suite
+		var lp := Ui.label("Recrue du PASS : sans défi", 16, Ui.JAUNE, true)
+		lp.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		v.add_child(lp)
+		var b := Ui.bouton("Recruter", Ui.VERT, 22)
+		Ui.colorer_bouton(b, Ui.VERT, true)
+		b.disabled = not place
+		b.pressed.connect(func():
+			if Game.recruter(id):
+				_annoncer(tr("%s rejoint le club !") % z["nom"], Ui.VERT)
+				_construire()
+				_ouvrir_recrutement())
+		v.add_child(b)
+	else:
+		var ll := Ui.label(tr("Rencontré %s") % Rencontres.lieu_texte(str(r.get("lieu", ""))), 15, Ui.GRIS)
+		ll.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		ll.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		v.add_child(ll)
+		var defi := Rencontres.defi(fam)
+		var obj := Rencontres.objectif(z)
+		var ld := Ui.label(tr("Défi : %s (%d / %d)") % [tr(Rencontres.TITRES_DEFI[defi]), int(obj[0]), int(obj[1])], 16, Ui.JAUNE, true)
+		ld.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		ld.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		v.add_child(ld)
+		var attente := Rencontres.attente(Game.club, id, Game.maintenant())
+		var b := Ui.bouton("Convaincre", Ui.VERT, 22)
+		Ui.colorer_bouton(b, Ui.VERT, true)
+		if attente > 0:
+			b.text = tr("Revient dans %d min") % int(ceil(attente / 60.0))
+			b.disabled = true
+		elif not place:
+			b.disabled = true
+			b.tooltip_text = "Club plein : monte de niveau pour ouvrir des places"
+		b.pressed.connect(func(): Game.aller(Game.SCENE_DEFI, {"id": id}))
+		v.add_child(b)
 	p.tooltip_text = z.get("histoire", "")
 	return p
 

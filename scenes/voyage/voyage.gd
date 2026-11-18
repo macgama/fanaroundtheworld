@@ -102,8 +102,8 @@ func _arrive() -> void:
 	bas.set_anchors_preset(Control.PRESET_CENTER_BOTTOM)
 	bas.offset_top = -230
 	bas.offset_bottom = -50
-	bas.offset_left = -500
-	bas.offset_right = 500
+	bas.offset_left = -760
+	bas.offset_right = 760
 	bas.alignment = BoxContainer.ALIGNMENT_CENTER
 	add_child(bas)
 	var msg := Ui.label("NOUVEAU TAMPON !" if nouveau else "Stade déjà tamponné, content de revenir !", 44 if nouveau else 30, Ui.JAUNE, true, 10)
@@ -117,10 +117,6 @@ func _arrive() -> void:
 	if bilan is Dictionary:
 		bas.offset_top = -330
 		bas.add_child(_ligne_bilan(bilan))
-	var b := Ui.bouton("ENTRER DANS LE STADE", Ui.VERT, 36)
-	Ui.colorer_bouton(b, Ui.VERT, true)
-	b.custom_minimum_size = Vector2(500, 96)
-	b.pressed.connect(func(): Game.aller(Game.SCENE_TRIBUNE, Game.params))
 	var boutons := Ui.hbox(18)
 	boutons.alignment = BoxContainer.ALIGNMENT_CENTER
 	var boutique := Ui.bouton("BOUTIQUE SOUVENIRS", Ui.JAUNE, 30)
@@ -130,7 +126,25 @@ func _arrive() -> void:
 	boutique.pressed.connect(func(): Game.aller(Game.SCENE_COLLECTION, {"onglet": "vitrine", "stade": _fiche["stade"]["cle"],  # sans_traduction
 		"retour": Game.SCENE_TRIBUNE, "retour_params": Game.params}))
 	boutons.add_child(boutique)
-	boutons.add_child(b)
+	var match_id := str(_fiche["id"])
+	if Game.club_cree() and not Game.cortege_fait(match_id):
+		# le dernier kilomètre se fait à pied, avec tout le kop
+		var c := Ui.bouton("PARTIR EN CORTÈGE", Ui.VERT, 34)
+		Ui.colorer_bouton(c, Ui.VERT, true)
+		c.custom_minimum_size = Vector2(460, 96)
+		c.tooltip_text = "Marche jusqu'au stade avec ton kop : ferveur, nouveaux supporters et bonus de départ"
+		c.pressed.connect(func(): Game.aller(Game.SCENE_CORTEGE, Game.params))
+		boutons.add_child(c)
+		var d := Ui.bouton("Direct en tribune", Ui.NUIT, 24)
+		d.custom_minimum_size = Vector2(0, 96)
+		d.pressed.connect(func(): Game.aller(Game.SCENE_TRIBUNE, Game.params))
+		boutons.add_child(d)
+	else:
+		var b := Ui.bouton("ENTRER DANS LE STADE", Ui.VERT, 36)
+		Ui.colorer_bouton(b, Ui.VERT, true)
+		b.custom_minimum_size = Vector2(500, 96)
+		b.pressed.connect(func(): Game.aller(Game.SCENE_TRIBUNE, Game.params))
+		boutons.add_child(b)
 	bas.add_child(boutons)
 	bas.modulate.a = 0.0
 	create_tween().tween_property(bas, "modulate:a", 1.0, 0.3).set_delay(0.7)
@@ -150,6 +164,15 @@ func _ligne_bilan(b: Dictionary) -> Control:
 		int(b["jetons"]), int(b["xp_pass"]), Trad.decimal(b["mult"])], 18, Ui.BLANC)
 	l2.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	v.add_child(l2)
+	var extra: Array = []
+	if int(b.get("kop", 0)) > 0:
+		extra.append(tr("+%s supporters au kop") % Kop.texte(int(b["kop"])))
+	if str(b.get("rencontre", "")) != "":
+		extra.append(tr("%s a voyagé avec vous et veut rejoindre le club") % tr(str(Game.fanzzy_par_id(str(b["rencontre"])).get("nom", ""))))
+	if not extra.is_empty():
+		var l3 := Ui.label(" · ".join(extra), 18, Ui.VERT, true, 4)
+		l3.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		v.add_child(l3)
 	return pan
 
 
