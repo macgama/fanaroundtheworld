@@ -44,6 +44,7 @@ const SCENE_TOURNOI := "res://scenes/tournoi/tournoi.tscn"
 const SCENE_LIGUE := "res://scenes/ligue/ligue.tscn"
 const SCENE_SOIREE := "res://scenes/soiree/soiree.tscn"
 const SCENE_LOCAL := "res://scenes/local/local.tscn"
+const SCENE_GRAND_TOUR := "res://scenes/grand_tour/grand_tour.tscn"
 
 ## Paramètres passés d'un écran à l'autre (match choisi, camp supporté…).
 var params: Dictionary = {}
@@ -112,6 +113,8 @@ var deplacement: Dictionary = {}
 var stade_du_jour: Dictionary = {}
 ## Matériel de tribune (voir Materiel) : {id: {niveau, actif}}. Décor seulement.
 var materiel: Dictionary = {}
+## Dernier Grand Tour (voir GrandTour) : {jour, pays, taille, cles}. Un par jour.
+var grand_tour: Dictionary = {}
 ## Ligue des tribunes (saison du mois, scripts/jeu/ligue.gd).
 var ligue: Dictionary = Ligue.vide()
 ## Soirs de match : buts déjà récompensés et fil des buts, par match (SoireeMatch).
@@ -184,7 +187,7 @@ func _outils_de_test() -> void:
 			"arene": SCENE_ARENE, "poussee": SCENE_POUSSEE,
 			"pronos": SCENE_PRONOS, "missions": SCENE_MISSIONS, "favoris": SCENE_FAVORIS, "club": SCENE_CLUB, "creation": SCENE_CREATION_CLUB, "chant": SCENE_CHANT, "buvette": SCENE_BUVETTE, "boulots": SCENE_BOULOTS, "speaker": SCENE_SPEAKER, "tifo": SCENE_TIFO,
 			"salon": SCENE_SALON, "collection": SCENE_COLLECTION, "classement": SCENE_CLASSEMENT, "pass": SCENE_PASS,
-			"tournoi": SCENE_TOURNOI, "ligue": SCENE_LIGUE, "soiree": SCENE_SOIREE, "local": SCENE_LOCAL}
+			"tournoi": SCENE_TOURNOI, "ligue": SCENE_LIGUE, "soiree": SCENE_SOIREE, "local": SCENE_LOCAL, "grand_tour": SCENE_GRAND_TOUR}
 		for b in ListeBoulots.LISTE:
 			scenes[b["id"]] = b["scene"]  # chaque petit boulot : --scene=<id>
 		if args.has("onglet"):
@@ -439,13 +442,15 @@ func a_tampon(cle: String) -> bool:
 	return tampons.has(cle)
 
 
-func tamponner(cle: String, info: Dictionary) -> bool:
+func tamponner(cle: String, info: Dictionary, en_jouant := true) -> bool:
 	## Ajoute le tampon du stade. Renvoie true si c'est une première visite.
+	## en_jouant faux (Grand Tour payé en Jetons) : ni XP de PASS, ni mission.
 	if tampons.has(cle):
 		return false
 	tampons[cle] = info
-	gagner_xp_pass(PassSaison.XP_NOUVEAU_STADE)
-	noter_mission("nouveau_stade", cle)
+	if en_jouant:
+		gagner_xp_pass(PassSaison.XP_NOUVEAU_STADE)
+		noter_mission("nouveau_stade", cle)
 	sauver()
 	return true
 
@@ -1233,13 +1238,54 @@ func primes_pretes() -> int:
 	return Collection.pretes(series_carnet()).size() + Collection.pretes(series_album()).size() + Collection.pretes(series_vitrine()).size()
 
 
-## Le fan club est-il dans ce stade aujourd'hui ?
+## Le fan club est-il passé dans ce stade aujourd'hui ? (plusieurs avec un Grand Tour)
 func au_stade(cle: String) -> bool:
-	return cle != "" and str(stade_du_jour.get("cle", "")) == cle and str(stade_du_jour.get("jour", "")) == Time.get_date_string_from_system()
+	if cle == "" or str(stade_du_jour.get("jour", "")) != Time.get_date_string_from_system():
+		return false
+	return str(stade_du_jour.get("cle", "")) == cle or cle in stade_du_jour.get("cles", [])
 
 
 func noter_arrivee_stade(cle: String) -> void:
-	stade_du_jour = {"cle": cle, "jour": Time.get_date_string_from_system()}
+	var jour := Time.get_date_string_from_system()
+	var cles: Array = []
+	if str(stade_du_jour.get("jour", "")) == jour:
+		cles = stade_du_jour.get("cles", []).duplicate() if stade_du_jour.get("cles") is Array else []
+		if str(stade_du_jour.get("cle", "")) != "" and not str(stade_du_jour["cle"]) in cles:
+			cles.append(str(stade_du_jour["cle"]))
+	if not cle in cles:
+		cles.append(cle)
+	stade_du_jour = {"cle": cle, "jour": jour, "cles": cles}
+
+
+## Grand Tour proposé dans ce pays (voir GrandTour), depuis la position du fan club.
+func proposer_grand_tour(pays: String, taille: String) -> Dictionary:
+	var depart := Vector2(float(position_club.get("lon", 0.0)), float(position_club.get("lat", 0.0)))
+	return GrandTour.proposer(pays, Donnees.clubs_du_pays(pays), tampons, depart, taille, convoi().size())
+
+
+func grand_tour_fait_aujourdhui() -> bool:
+	return GrandTour.fait_le(grand_tour, Time.get_date_string_from_system())
+
+
+## Paie le Grand Tour et tamponne ses étapes. Renvoie les clés des nouveaux tampons
+## ([] si impossible : déjà fait aujourd'hui, ou pas assez de Jetons).
+func partir_grand_tour(tour: Dictionary) -> Array:
+	if tour.is_empty() or grand_tour_fait_aujourdhui() or not depenser(int(tour["prix"])):
+		return []
+	var jour := Time.get_date_string_from_system()
+	var nouveaux: Array = []
+	var pays := str(tour["pays"])
+	for e in tour["etapes"]:
+		if tamponner(e["cle"], {"nom": e["nom"], "club": e["club"], "date": jour,
+				"match": Trad.t("Grand Tour"), "pays": pays, "continent": Geo.continent_de(pays), "competition": ""}, false):
+			nouveaux.append(e["cle"])
+		noter_arrivee_stade(e["cle"])
+	var fin: Dictionary = tour["etapes"][tour["etapes"].size() - 1]
+	position_club = {"nom": fin["nom"], "lat": fin["pos"].y, "lon": fin["pos"].x}
+	grand_tour = {"jour": jour, "pays": pays, "taille": tour["taille"], "cles": tour["etapes"].map(func(e): return e["cle"])}
+	Succes.compter(stats, "grand_tour", "", 1)
+	sauver()
+	return nouveaux
 
 
 ## Prix d'un souvenir de ce stade (sur place aujourd'hui, ou par correspondance).
@@ -1460,6 +1506,7 @@ func sauver() -> void:
 		"deplacement": deplacement,
 		"stade_du_jour": stade_du_jour,
 		"materiel": materiel,
+		"grand_tour": grand_tour,
 		"ligue": ligue,
 		"soirees": soirees,
 	}
@@ -1538,6 +1585,8 @@ func _appliquer(d: Dictionary) -> void:
 	var sj: Variant = d.get("stade_du_jour", {})
 	stade_du_jour = sj if sj is Dictionary else {}
 	materiel = Materiel.reparer(d.get("materiel", null))
+	var gt: Variant = d.get("grand_tour", {})
+	grand_tour = gt if gt is Dictionary else {}
 	ligue = Ligue.reparer(d.get("ligue", null))
 	soirees = SoireeMatch.reparer(d.get("soirees", null))
 	# Un FANZZY retiré du catalogue ne doit pas casser la tribune.
@@ -1585,6 +1634,7 @@ func reinitialiser() -> void:
 	deplacement = {}
 	stade_du_jour = {}
 	materiel = {}
+	grand_tour = {}
 	ligue = Ligue.vide()
 	soirees = SoireeMatch.vide()
 	equipe = equipe_par_defaut()
