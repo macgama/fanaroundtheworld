@@ -10,7 +10,8 @@ extends RefCounted
 ## garde-robe est un simple souvenir (les skins viennent du PASS et des événements).
 ##
 ## L'état sauvegardé (Game.collection) :
-##   {"fanzzy": {id: date}, "skins": {id_skin: date}, "primes": {id_serie: date}}
+##   {"fanzzy": {id: date}, "skins": {id_skin: date}, "primes": {id_serie: date},
+##    "souvenirs": {cle_stade: {type: date}}}
 
 ## [nombre à atteindre, prime en Jetons]
 const PALIERS_STADES := [[1, 20], [5, 50], [10, 100], [25, 200], [50, 400], [100, 800]]
@@ -30,7 +31,7 @@ const NOMS_CONTINENTS := {
 
 
 static func vide() -> Dictionary:
-	return {"fanzzy": {}, "skins": {}, "primes": {}}
+	return {"fanzzy": {}, "skins": {}, "primes": {}, "souvenirs": {}}  # souvenirs : voir Souvenirs
 
 
 static func reparer(c: Variant) -> Dictionary:

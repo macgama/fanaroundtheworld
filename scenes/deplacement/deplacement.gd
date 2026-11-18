@@ -129,7 +129,7 @@ func _cout_trajet() -> int:
 
 
 func _cout_total() -> int:
-	return int(Game.MODES_SUIVI["stade"]["billet"]) + _cout_trajet()
+	return Game.billet("stade", _fiche["m"]) + _cout_trajet()
 
 
 # ------------------------------------------------------------------ organiser
@@ -191,7 +191,7 @@ func _afficher() -> void:
 	var fd := Deplacement.ferveur_depart(_transport, _familles, _exterieur)
 	v.add_child(Ui.label(tr("Ferveur au départ : %d / 100") % fd, 17, Ui.GRIS))
 	var hprix := Ui.hbox(6)
-	hprix.add_child(Ui.label(tr("Billet %d + trajet %d = ") % [int(Game.MODES_SUIVI["stade"]["billet"]), _cout_trajet()], 20, Ui.BLANC, true))
+	hprix.add_child(Ui.label(tr("Billet %d + trajet %d = ") % [Game.billet("stade", _fiche["m"]), _cout_trajet()], 20, Ui.BLANC, true))
 	hprix.add_child(Ui.icone("jeton", 26))
 	hprix.add_child(Ui.label(str(_cout_total()), 24, Ui.JAUNE if _cout_total() <= Game.jetons else Ui.ROUGE, true))
 	v.add_child(hprix)

@@ -798,7 +798,7 @@ func _afficher_fiche() -> void:
 	grille.add_theme_constant_override("v_separation", 10)
 	for mode in Game.ORDRE_MODES:
 		var info: Dictionary = Game.MODES_SUIVI[mode]
-		var cout := Game.cout_suivi(mode, dist)
+		var cout := Game.cout_suivi(mode, dist, f["m"])
 		var b := Button.new()
 		b.custom_minimum_size = Vector2(205, 92)
 		b.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -838,7 +838,7 @@ func _afficher_fiche() -> void:
 	else:
 		v.add_child(Ui.label(tr("Pas de trajet · gains ×%s · pas de tampon") % Trad.decimal(Game.MODES_SUIVI[mode_suivi]["gain"]), 17, Ui.GRIS))
 
-	var cout_final := Game.cout_suivi(mode_suivi, dist)
+	var cout_final := Game.cout_suivi(mode_suivi, dist, f["m"])
 	var go := Ui.bouton("C'EST PARTI !", Ui.JAUNE, 40)
 	Ui.colorer_bouton(go, Ui.JAUNE, true)
 	go.custom_minimum_size = Vector2(0, 96)

@@ -106,6 +106,9 @@ var demo_fin_vue := false
 ## Dernier déplacement fait (voir Deplacement) : {match, jour, mult, ferveur}.
 ## Ses Jetons de duel sont multipliés par « mult » le jour même.
 var deplacement: Dictionary = {}
+## Stade où se trouve le fan club aujourd'hui (arrivée au stade) : {cle, jour}.
+## Sert à la boutique souvenirs (prix sur place, voir Souvenirs).
+var stade_du_jour: Dictionary = {}
 ## Ligue des tribunes (saison du mois, scripts/jeu/ligue.gd).
 var ligue: Dictionary = Ligue.vide()
 ## Soirs de match : buts déjà récompensés et fil des buts, par match (SoireeMatch).
@@ -276,8 +279,24 @@ func gain_suivi(mode: String) -> float:
 	return float(MODES_SUIVI.get(mode, {}).get("gain", 1.0))
 
 
-func cout_suivi(mode: String, distance_km: float) -> int:
-	var c: int = MODES_SUIVI[mode]["billet"]
+## Prix du billet pour suivre ce match. Au stade, il suit l'importance du match
+## (derby, finale, coupe continentale… voir Evenements.facteur_billet) ; à l'écran
+## géant, au plus ×2 ; au pub et à la maison, il ne change pas.
+func billet(mode: String, m: Dictionary = {}) -> int:
+	var base := int(MODES_SUIVI[mode]["billet"])
+	if m.is_empty() or base == 0 or mode == "pub":
+		return base
+	var comp := str(m.get("competition", {}).get("id", ""))
+	# Compétition inconnue ou matchs amicaux : prix d'un match de championnat.
+	var portee := "pays" if Geo.info_competition(comp).is_empty() or "friend" in comp else Geo.niveau_competition(comp)  # sans_traduction
+	var f := Evenements.facteur_billet(evenement_de(m), portee)
+	if mode == "ecran":
+		f = minf(f, 2.0)
+	return int(round(base * f / 5.0)) * 5 if f > 1.0 else base
+
+
+func cout_suivi(mode: String, distance_km: float, m: Dictionary = {}) -> int:
+	var c := billet(mode, m)
 	if mode == "stade":
 		c += cout_trajet(distance_km)
 	return c
@@ -1202,14 +1221,44 @@ func series_album() -> Array:
 	return Collection.series_album(collection, fanzzy, familles, series_fanzzy)
 
 
+func series_vitrine() -> Array:
+	return Souvenirs.series(collection, tampons)
+
+
 ## Nombre de primes de collection prêtes à réclamer (pastille sur la carte).
 func primes_pretes() -> int:
-	return Collection.pretes(series_carnet()).size() + Collection.pretes(series_album()).size()
+	return Collection.pretes(series_carnet()).size() + Collection.pretes(series_album()).size() + Collection.pretes(series_vitrine()).size()
+
+
+## Le fan club est-il dans ce stade aujourd'hui ?
+func au_stade(cle: String) -> bool:
+	return cle != "" and str(stade_du_jour.get("cle", "")) == cle and str(stade_du_jour.get("jour", "")) == Time.get_date_string_from_system()
+
+
+func noter_arrivee_stade(cle: String) -> void:
+	stade_du_jour = {"cle": cle, "jour": Time.get_date_string_from_system()}
+
+
+## Prix d'un souvenir de ce stade (sur place aujourd'hui, ou par correspondance).
+func prix_souvenir(cle: String, type: String) -> int:
+	return Souvenirs.prix(type, au_stade(cle))
+
+
+## Achète un souvenir pour la vitrine du club. Renvoie false si impossible ou trop cher.
+func acheter_souvenir(cle: String, type: String) -> bool:
+	if not Souvenirs.achetable(collection, tampons, cle, type):
+		return false
+	if not depenser(prix_souvenir(cle, type)):
+		return false
+	Souvenirs.ajouter(collection, cle, type, Time.get_date_string_from_system())
+	Succes.compter(stats, "souvenir", type, 1)
+	sauver()
+	return true
 
 
 ## Réclame la prime d'une série complète. Renvoie les Jetons gagnés (0 sinon).
 func reclamer_prime(id: String) -> int:
-	for s in series_carnet() + series_album():
+	for s in series_carnet() + series_album() + series_vitrine():
 		if s["id"] == id:
 			var n := Collection.reclamer(collection, s, Time.get_date_string_from_system())
 			if n > 0:
@@ -1389,6 +1438,7 @@ func sauver() -> void:
 		"tournoi": tournoi,
 		"demo_fin_vue": demo_fin_vue,
 		"deplacement": deplacement,
+		"stade_du_jour": stade_du_jour,
 		"ligue": ligue,
 		"soirees": soirees,
 	}
@@ -1464,6 +1514,8 @@ func _appliquer(d: Dictionary) -> void:
 	tournoi = Tournoi.reparer(d.get("tournoi", null))
 	var dp: Variant = d.get("deplacement", {})
 	deplacement = dp if dp is Dictionary else {}
+	var sj: Variant = d.get("stade_du_jour", {})
+	stade_du_jour = sj if sj is Dictionary else {}
 	ligue = Ligue.reparer(d.get("ligue", null))
 	soirees = SoireeMatch.reparer(d.get("soirees", null))
 	# Un FANZZY retiré du catalogue ne doit pas casser la tribune.
@@ -1509,6 +1561,7 @@ func reinitialiser() -> void:
 	tournoi = Tournoi.vide()
 	demo_fin_vue = false
 	deplacement = {}
+	stade_du_jour = {}
 	ligue = Ligue.vide()
 	soirees = SoireeMatch.vide()
 	equipe = equipe_par_defaut()

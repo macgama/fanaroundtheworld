@@ -2,12 +2,14 @@ extends Control
 ## Collection : le carnet de voyage (un tampon par stade visité) et l'album
 ## des FANZZY (ceux qui ont joué un duel avec toi, et les skins portés).
 ## À droite, les séries : chaque série complète donne une prime en Jetons.
+## Onglet « Vitrine du club » : les souvenirs achetés dans les boutiques des stades
+## (Jetons, jamais de skins ; règles dans scripts/jeu/souvenirs.gd).
 ## Onglet « Succès » : les succès Steam (gagnés aussi hors Steam, voir Succes).
 ## Règles dans scripts/jeu/collection.gd.
 
 const Voyage := preload("res://scenes/voyage/voyage.gd")
 const SonsScript := preload("res://scripts/audio/sons.gd")
-const ONGLETS := [["carnet", "Carnet de voyage"], ["album", "Album FANZZY"], ["succes", "Succès"]]
+const ONGLETS := [["carnet", "Carnet de voyage"], ["vitrine", "Vitrine du club"], ["album", "Album FANZZY"], ["succes", "Succès"]]
 
 var _onglet := "carnet"
 var _boutons_onglets: Dictionary = {}
@@ -37,7 +39,7 @@ func _ready() -> void:
 	haut.add_child(Ui.label("COLLECTION", 60, Ui.JAUNE, true, 10))
 	for o in ONGLETS:
 		var b := Ui.bouton(o[1], Ui.NUIT, 26)
-		b.custom_minimum_size = Vector2(240, 70)
+		b.custom_minimum_size = Vector2(220, 70)
 		b.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 		b.pressed.connect(func(): _choisir(o[0]))
 		_boutons_onglets[o[0]] = b
@@ -91,14 +93,22 @@ func _ready() -> void:
 	racine.add_child(bas)
 	var retour := Ui.bouton("Retour à la carte", Ui.NUIT, 28)
 	retour.custom_minimum_size = Vector2(340, 84)
-	retour.pressed.connect(func(): Game.aller(Game.SCENE_CARTE, Game.params))
+	# Venu de la boutique du stade (arrivée au stade) : on y retourne.
+	var p_retour: Dictionary = Game.params.get("retour_params", {}) if Game.params.get("retour_params") is Dictionary else {}
+	if str(Game.params.get("retour", "")) != "":
+		retour.text = tr("Retour au stade")
+	retour.pressed.connect(func():
+		if str(Game.params.get("retour", "")) != "":
+			Game.aller(str(Game.params["retour"]), p_retour)
+		else:
+			Game.aller(Game.SCENE_CARTE, Game.params))
 	bas.add_child(retour)
 
 	_sons = SonsScript.new()
 	add_child(_sons)
 	Donnees.mis_a_jour.connect(_remplir)
 	Game.succes_gagnes.connect(func(_l): _remplir())
-	if str(Game.params.get("onglet", "")) in ["carnet", "album", "succes"]:
+	if str(Game.params.get("onglet", "")) in ["carnet", "vitrine", "album", "succes"]:
 		_onglet = str(Game.params["onglet"])
 	_choisir(_onglet)
 
@@ -132,6 +142,9 @@ func _remplir() -> void:
 	if _onglet == "carnet":
 		_remplir_carnet()
 		series = Game.series_carnet()
+	elif _onglet == "vitrine":
+		_remplir_vitrine()
+		series = Game.series_vitrine()
 	else:
 		_remplir_album()
 		series = Game.series_album()
@@ -219,6 +232,107 @@ func _date_courte(d: String) -> String:
 	if p.size() != 3:
 		return d
 	return "%s/%s/%s" % [p[2], p[1], p[0].right(2)]
+
+
+# ---------------------------------------------------------------- vitrine
+
+func _remplir_vitrine() -> void:
+	var c: Dictionary = Game.collection
+	var nb := Souvenirs.nombre(c)
+	_titre.text = tr("VITRINE DU CLUB · %d / %d souvenirs") % [nb, Game.tampons.size() * Souvenirs.TYPES.size()]
+	if Game.tampons.is_empty():
+		var vide := Ui.label("Chaque stade tamponné a sa boutique souvenirs. Va voir un match « Au stade » pour ouvrir la première.", 24, Ui.GRIS)
+		vide.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		_gauche.add_child(vide)
+		return
+	var aide := Ui.label(tr("Sur place, le jour du match : prix de la boutique. Ensuite, par correspondance : ×%s.") % Trad.decimal(Souvenirs.PRIX_CORRESPONDANCE), 20, Ui.GRIS)
+	aide.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_gauche.add_child(aide)
+	# Le stade où l'on est aujourd'hui d'abord, puis ceux qui manquent le moins, puis les plus récents.
+	var cles: Array = Game.tampons.keys()
+	var focus := str(Game.params.get("stade", ""))
+	cles.sort_custom(func(a, b):
+		var fa := 0 if (str(a) == focus or Game.au_stade(str(a))) else 1
+		var fb := 0 if (str(b) == focus or Game.au_stade(str(b))) else 1
+		if fa != fb:
+			return fa < fb
+		var na := Souvenirs.du_stade(c, str(a)).size()
+		var nb2 := Souvenirs.du_stade(c, str(b)).size()
+		if na != nb2:
+			return na > nb2
+		return str(_info_tampon(str(a)).get("date", "")) > str(_info_tampon(str(b)).get("date", "")))
+	for cle in cles:
+		_gauche.add_child(_etagere(str(cle)))
+
+
+func _info_tampon(cle: String) -> Dictionary:
+	return Game.tampons[cle] if Game.tampons.get(cle) is Dictionary else {}
+
+
+## Une étagère par stade : les cinq souvenirs, achetés ou à acheter.
+func _etagere(cle: String) -> Control:
+	var info := _info_tampon(cle)
+	var sur_place := Game.au_stade(cle)
+	var eq := Fiction.equipe({"id": cle.trim_prefix("stade:")})
+	var pan := Ui.panneau(Color("#24603f") if sur_place else Ui.NUIT_CLAIR, 20, 4)
+	var v := Ui.vbox(8)
+	pan.add_child(v)
+	var h := Ui.hbox(10)
+	h.add_child(Ui.label(str(info.get("nom", cle)), 26, Ui.BLANC, true, 4))
+	h.add_child(Ui.label(str(info.get("club", "")), 18, Ui.GRIS))
+	h.add_child(Ui.espace())
+	if sur_place:
+		h.add_child(Ui.pastille(tr("Tu es au stade : prix boutique"), Ui.JAUNE, 16, true))
+	v.add_child(h)
+	var rang := Ui.hbox(10)
+	for t in Souvenirs.TYPES:
+		rang.add_child(_case_souvenir(cle, t, eq, FanClub.sigle(str(info.get("club", "")))))
+	v.add_child(rang)
+	return pan
+
+
+func _case_souvenir(cle: String, t: Dictionary, eq: Dictionary, sigle: String) -> Control:
+	var possede := Souvenirs.a(Game.collection, cle, t["id"])
+	var v := Ui.vbox(4)
+	v.custom_minimum_size = Vector2(150, 0)
+	var d := SouvenirDessin.new()
+	d.type = t["id"]
+	d.c1 = eq.get("c1", Ui.BLEU)
+	d.c2 = eq.get("c2", Ui.BLANC)
+	d.sigle = sigle
+	d.possede = possede
+	d.custom_minimum_size = Vector2(110, 110)
+	d.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	v.add_child(d)
+	var nom := Ui.label(t["nom"], 16, Ui.BLANC if possede else Ui.GRIS, possede)
+	nom.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	v.add_child(nom)
+	if possede:
+		var l := Ui.label("Dans la vitrine", 15, Ui.VERT, true)
+		l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		v.add_child(l)
+	else:
+		var prix := Game.prix_souvenir(cle, t["id"])
+		var b := Ui.bouton(tr("%d Jetons") % prix, Ui.JAUNE if Game.jetons >= prix else Ui.NUIT, 18)
+		if Game.jetons >= prix:
+			Ui.colorer_bouton(b, Ui.JAUNE, true)
+		else:
+			b.disabled = true
+			b.tooltip_text = tr("Pas assez de Jetons")
+		b.custom_minimum_size = Vector2(140, 48)
+		b.pressed.connect(func(): _acheter(cle, t["id"], d))
+		v.add_child(b)
+	return v
+
+
+func _acheter(cle: String, type: String, d: Control) -> void:
+	if not Game.acheter_souvenir(cle, type):
+		return
+	_sons.jouer("ui_parfait")
+	Ui.pop(d, 1.3, 0.3)
+	_jetons.text = "%d" % Game.jetons
+	Ui.pop(_jetons)
+	get_tree().create_timer(0.4).timeout.connect(_remplir)
 
 
 # ---------------------------------------------------------------- album
