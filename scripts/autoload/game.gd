@@ -113,6 +113,8 @@ var deplacement: Dictionary = {}
 var stade_du_jour: Dictionary = {}
 ## Matériel de tribune (voir Materiel) : {id: {niveau, actif}}. Décor seulement.
 var materiel: Dictionary = {}
+## Local agrandi et décoré (voir LocalClub) : {salles, deco}. Décor seulement.
+var local_club: Dictionary = LocalClub.vide()
 ## Dernier Grand Tour (voir GrandTour) : {jour, pays, taille, cles}. Un par jour.
 var grand_tour: Dictionary = {}
 ## Ligue des tribunes (saison du mois, scripts/jeu/ligue.gd).
@@ -1316,6 +1318,28 @@ func acheter_materiel(id: String) -> bool:
 	return true
 
 
+## Construit ou agrandit une salle du local. false si impossible ou trop cher.
+func acheter_salle(id: String) -> bool:
+	var p := LocalClub.prix_salle(local_club, id)
+	if p < 0 or not depenser(p):
+		return false
+	LocalClub.construire(local_club, id)
+	Succes.compter(stats, "local", id, 1)
+	sauver()
+	return true
+
+
+## Achète une déco du local. false si impossible ou trop cher.
+func acheter_deco(id: String) -> bool:
+	var p := LocalClub.prix_deco(local_club, id)
+	if p < 0 or not depenser(p):
+		return false
+	LocalClub.poser(local_club, id, Time.get_date_string_from_system())
+	Succes.compter(stats, "local", "", 1)
+	sauver()
+	return true
+
+
 ## Range ou ressort un objet de matériel déjà acheté.
 func basculer_materiel(id: String) -> void:
 	Materiel.basculer(materiel, id)
@@ -1507,6 +1531,7 @@ func sauver() -> void:
 		"stade_du_jour": stade_du_jour,
 		"materiel": materiel,
 		"grand_tour": grand_tour,
+		"local": local_club,
 		"ligue": ligue,
 		"soirees": soirees,
 	}
@@ -1585,6 +1610,7 @@ func _appliquer(d: Dictionary) -> void:
 	var sj: Variant = d.get("stade_du_jour", {})
 	stade_du_jour = sj if sj is Dictionary else {}
 	materiel = Materiel.reparer(d.get("materiel", null))
+	local_club = LocalClub.reparer(d.get("local", null))
 	var gt: Variant = d.get("grand_tour", {})
 	grand_tour = gt if gt is Dictionary else {}
 	ligue = Ligue.reparer(d.get("ligue", null))
@@ -1635,6 +1661,7 @@ func reinitialiser() -> void:
 	stade_du_jour = {}
 	materiel = {}
 	grand_tour = {}
+	local_club = LocalClub.vide()
 	ligue = Ligue.vide()
 	soirees = SoireeMatch.vide()
 	equipe = equipe_par_defaut()

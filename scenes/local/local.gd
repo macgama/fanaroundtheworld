@@ -1,12 +1,14 @@
 extends Control
 ## Le local du club : ce que le fan club achète avec ses Jetons pour lui-même.
+## Onglet « Le local » : construire la salle des chants, la salle des trophées et
+## le parking du car, puis les décorer (règles dans scripts/club/local_club.gd).
 ## Onglet « Matériel de tribune » : écharpes, drapeaux, tambours, bâche,
 ## confettis, dessinés dans notre tribune en duel (aucun effet sur le score ;
 ## règles dans scripts/club/materiel.gd). À gauche, un aperçu de la tribune.
 
 const Duel := preload("res://scenes/duel/duel.gd")
 const SonsScript := preload("res://scripts/audio/sons.gd")
-const ONGLETS := [["materiel", "Matériel de tribune"]]
+const ONGLETS := [["local", "Le local"], ["materiel", "Matériel de tribune"]]
 
 
 ## Faux duel pour l'aperçu : Duel.Decor lit seulement `jauge` (et `fiche` hors stade).
@@ -15,12 +17,15 @@ class Apercu extends RefCounted:
 	var fiche := {}
 
 
-var _onglet := "materiel"
+var _onglet := "local"
 var _boutons_onglets: Dictionary = {}
 var _jetons: Label
 var _liste: VBoxContainer
 var _cadre: Control
 var _decor: Control
+var _dessin: LocalDessin
+var _titre_gauche: Label
+var _aide: Label
 var _apercu := Apercu.new()
 var _sons: Node
 var _t := 0.0
@@ -69,7 +74,8 @@ func _ready() -> void:
 	corps.add_child(pg)
 	var vg := Ui.vbox(12)
 	pg.add_child(vg)
-	vg.add_child(Ui.label("TA TRIBUNE EN DUEL", 34, Ui.BLANC, true, 6))
+	_titre_gauche = Ui.label("", 34, Ui.BLANC, true, 6)
+	vg.add_child(_titre_gauche)
 	_cadre = Control.new()
 	_cadre.clip_contents = true
 	_cadre.size_flags_vertical = Control.SIZE_EXPAND_FILL
@@ -87,10 +93,16 @@ func _ready() -> void:
 	_decor.texte_tifo = Game.fan_club_nom.to_upper()
 	_decor.size = Vector2(1920, 1080)
 	_cadre.add_child(_decor)
+	_dessin = LocalDessin.new()
+	_dessin.set_anchors_preset(Control.PRESET_FULL_RECT)
+	_dessin.c1 = cc[0]
+	_dessin.c2 = cc[1]
+	_dessin.nom_club = Game.fan_club_nom
+	_cadre.add_child(_dessin)
 	_cadre.resized.connect(_placer_apercu)
-	var aide := Ui.label("Pur décor : le matériel ne change ni la jauge, ni les points. En duel, il prend les couleurs de l'équipe que tu soutiens.", 19, Ui.GRIS)
-	aide.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	vg.add_child(aide)
+	_aide = Ui.label("", 19, Ui.GRIS)
+	_aide.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	vg.add_child(_aide)
 
 	var pd := Ui.panneau()
 	pd.custom_minimum_size = Vector2(700, 0)
@@ -112,6 +124,8 @@ func _ready() -> void:
 
 	_sons = SonsScript.new()
 	add_child(_sons)
+	if str(Game.params.get("onglet", "")) in ["local", "materiel"]:
+		_onglet = str(Game.params["onglet"])
 	_choisir(_onglet)
 
 
@@ -140,13 +154,87 @@ func _choisir(o: String) -> void:
 
 func _remplir() -> void:
 	_jetons.text = "%d" % Game.jetons
-	_decor.materiel = Materiel.affiche(Game.materiel)
 	for c in _liste.get_children():
 		_liste.remove_child(c)
 		c.queue_free()
+	var local := _onglet == "local"
+	_decor.visible = not local
+	_dessin.visible = local
+	if local:
+		_titre_gauche.text = tr("LE LOCAL DES %s") % Game.fan_club_nom.to_upper() if Game.fan_club_nom != "" else tr("LE LOCAL")
+		_aide.text = tr("Pur décor : agrandir et décorer le local ne change ni les duels, ni les gains. Jetons déjà mis dans le local : %d") % LocalClub.valeur(Game.local_club)
+		_dessin.etat = Game.local_club
+		_dessin.chiffres = {"tampons": Game.tampons.size(), "souvenirs": Souvenirs.nombre(Game.collection), "succes": Game.succes.size()}
+		_remplir_local()
+		return
+	_titre_gauche.text = tr("TA TRIBUNE EN DUEL")
+	_aide.text = tr("Pur décor : le matériel ne change ni la jauge, ni les points. En duel, il prend les couleurs de l'équipe que tu soutiens.")
+	_decor.materiel = Materiel.affiche(Game.materiel)
 	_liste.add_child(Ui.label("MATÉRIEL DE TRIBUNE", 34, Ui.JAUNE, true, 6))
 	for o in Materiel.OBJETS:
 		_liste.add_child(_carte_objet(o))
+
+
+func _remplir_local() -> void:
+	for s in LocalClub.SALLES:
+		var id: String = s["id"]
+		var n := LocalClub.niveau(Game.local_club, id)
+		var p := Ui.panneau(Ui.NUIT_CLAIR, 18, 4)
+		_liste.add_child(p)
+		var v := Ui.vbox(6)
+		p.add_child(v)
+		var h := Ui.hbox(10)
+		v.add_child(h)
+		var titre := Ui.label(s["nom"], 26, Ui.BLANC if n > 0 else Ui.GRIS, true, 6)
+		titre.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		h.add_child(titre)
+		var prix := LocalClub.prix_salle(Game.local_club, id)
+		if prix >= 0:
+			var b := Ui.bouton(tr("Construire · %d") % prix if n == 0 else tr("Agrandir · %d") % prix, Ui.VERT, 20)
+			Ui.colorer_bouton(b, Ui.VERT, true)
+			b.disabled = prix > Game.jetons
+			if b.disabled:
+				b.tooltip_text = tr("Il te faut %d Jetons") % prix
+			b.pressed.connect(func():
+				if Game.acheter_salle(id):
+					_achat(p))
+			h.add_child(b)
+		elif n == LocalClub.NIVEAU_MAX:
+			h.add_child(Ui.label("★★", 24, Ui.JAUNE, true, 4))  # sans_traduction
+		var txt := Ui.label(s["texte"], 17, Ui.GRIS)
+		txt.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		v.add_child(txt)
+		if n == 0:
+			continue
+		var grille := GridContainer.new()
+		grille.columns = 2
+		grille.add_theme_constant_override("h_separation", 8)
+		grille.add_theme_constant_override("v_separation", 8)
+		v.add_child(grille)
+		for o in LocalClub.deco_de(id):
+			var did: String = o["id"]
+			var pd := LocalClub.prix_deco(Game.local_club, did)
+			var bd := Ui.bouton("", Ui.BLEU, 18)
+			bd.custom_minimum_size = Vector2(318, 52)
+			if pd < 0:
+				bd.text = "✓ " + tr(o["nom"])  # sans_traduction
+				bd.disabled = true
+			else:
+				bd.text = tr("%s · %d") % [tr(o["nom"]), pd]
+				bd.disabled = pd > Game.jetons
+				if bd.disabled:
+					bd.tooltip_text = tr("Il te faut %d Jetons") % pd
+			bd.pressed.connect(func():
+				if Game.acheter_deco(did):
+					_achat(p))
+			grille.add_child(bd)
+
+
+func _achat(carte: Control) -> void:
+	_sons.jouer("ui_parfait")
+	Ui.pop(carte, 1.05, 0.25)
+	Ui.pop(_jetons)
+	_remplir()
 
 
 func _carte_objet(o: Dictionary) -> Control:

@@ -130,7 +130,7 @@ func _ready() -> void:
 	bas.add_child(b_chant)
 	var b_local := Ui.bouton("Local", Ui.BLEU, 30)
 	b_local.custom_minimum_size = Vector2(210, 88)
-	b_local.tooltip_text = "Matériel de tribune : drapeaux, tambours, bâche…"
+	b_local.tooltip_text = "Agrandir et décorer le local, matériel de tribune"
 	b_local.pressed.connect(func(): Game.aller(Game.SCENE_LOCAL))
 	bas.add_child(b_local)
 	var b_tournoi := Ui.bouton("Tournoi", Ui.ROSE, 30)
