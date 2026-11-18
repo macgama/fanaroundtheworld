@@ -4,10 +4,18 @@ extends RefCounted
 ## fan club, mêmes règles que le duel d'ambiance) et panneau de résultats.
 
 
+## Les parties d'Arène (2 min) et de Poussée (3 min) durent plus longtemps qu'un duel
+## d'ambiance (1 min 30) : leurs Jetons sont relevés pour que chaque mode rapporte
+## à peu près autant par minute de jeu (docs/equilibrage.md).
+const FACTEUR_JEU := {"arene": 1.3, "poussee": 1.6}  # sans_traduction
+
+
 ## Jetons et XP d'une partie. `perf` va de 0 (rien fait) à 1 (partie parfaite).
-static func gains(gagne: bool, perf: float, mode_suivi: String, equipe_gagne := false) -> Dictionary:
+## `jeu` : "arene" ou "poussee" (voir FACTEUR_JEU).
+static func gains(gagne: bool, perf: float, mode_suivi: String, equipe_gagne := false, jeu := "") -> Dictionary:
 	perf = clampf(perf, 0.0, 1.0)
 	var gain_mode: float = Game.MODES_SUIVI.get(mode_suivi, {}).get("gain", 1.0)
+	gain_mode *= float(FACTEUR_JEU.get(jeu, 1.0))
 	var jetons := int(round((10.0 + 20.0 * perf + (15.0 if gagne else 0.0)) * gain_mode * (1.3 if equipe_gagne else 1.0)))
 	var xp := 40 + int(round(60.0 * perf)) + (40 if gagne else 0)
 	return {"jetons": jetons, "xp": xp}
@@ -25,9 +33,9 @@ static func equipe_gagne(fiche: Dictionary, camp: String) -> bool:
 
 
 ## Enregistre la partie (sauvegarde comprise) et renvoie les gains.
-static func enregistrer(gagne: bool, perf: float, fiche: Dictionary, camp: String, mode_suivi: String) -> Dictionary:
+static func enregistrer(gagne: bool, perf: float, fiche: Dictionary, camp: String, mode_suivi: String, jeu := "") -> Dictionary:
 	var eg := equipe_gagne(fiche, camp)
-	var g := gains(gagne, perf, mode_suivi, eg)
+	var g := gains(gagne, perf, mode_suivi, eg, jeu)
 	g["part"] = Game.noter_duel_match(str(fiche.get("id", fiche.get("m", {}).get("id", ""))))
 	g["jetons"] = int(round(g["jetons"] * g["part"]))
 	g["mult_depl"] = Game.bonus_deplacement(str(fiche.get("id", fiche.get("m", {}).get("id", ""))))
@@ -52,7 +60,7 @@ static func enregistrer(gagne: bool, perf: float, fiche: Dictionary, camp: Strin
 static func ligne_deplacement(mult: float, bonus: int) -> Array:
 	if mult <= 1.0 or bonus <= 0:
 		return []
-	return [[Trad.t("Ferveur du déplacement (×%s)") % str(mult).replace(".", ","), Trad.t("+%d Jetons") % bonus]]
+	return [[Trad.t("Ferveur du déplacement (×%s)") % Trad.decimal(mult), Trad.t("+%d Jetons") % bonus]]
 
 
 ## Ligne « Ligue des tribunes » du panneau de fin, ou [] si le duel n'y comptait pas.
@@ -70,7 +78,7 @@ static func ligne_ligue(d: Variant) -> Array:
 static func ligne_tournoi(d: Variant) -> Array:
 	if not d is Dictionary or d.is_empty():
 		return []
-	return [[Trad.t("Tournoi · %s contre %s") % ["victoire" if d["gagne"] else Trad.t("défaite"), Tournoi.nom_texte(d["nom_adv"])], Trad.t("+%d pt%s") % [int(d["pts"]), "" if int(d["pts"]) == 1 else "s"]]]
+	return [[Trad.t("Tournoi · %s contre %s") % [Trad.t("victoire") if d["gagne"] else Trad.t("défaite"), Tournoi.nom_texte(d["nom_adv"])], Trad.t("+%d pt%s") % [int(d["pts"]), "" if int(d["pts"]) == 1 else "s"]]]
 
 
 ## Nom affiché pour la tribune d'en face : le club adverse du tournoi, sinon celle de l'équipe.

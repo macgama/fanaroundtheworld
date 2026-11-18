@@ -193,7 +193,7 @@ func _construire_infos() -> void:
 		sep.custom_minimum_size = Vector2(0, 2)
 		_infos.add_child(sep)
 	_infos.add_child(Ui.espace())
-	var prochain := Ui.label(tr("Niveau %d : +%d places pour recruter.") % [Game.niveau() + 1, FanClub.PLACES_PAR_NIVEAU], 18, Ui.GRIS)
+	var prochain := Ui.label(tr("Niveau %d : +%d places pour recruter.") % [Game.niveau() + 1, FanClub.places(Game.niveau() + 1) - FanClub.places(Game.niveau())], 18, Ui.GRIS)
 	prochain.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_infos.add_child(prochain)
 	var barre := ProgressBar.new()
@@ -472,13 +472,14 @@ func _maj_caisse() -> void:
 		var boost := FanClub.apres_match(c, now)
 		_lbl_buv.text = tr("Niveau %d · %s Jetons/h%s\nEn caisse : %d") % [
 			c["buvette"], _nombre(FanClub.buvette_heure(c) * (2.0 if boost else 1.0)),
-			" · après-match x2 !" if boost else "", int(c["caisse_buvette"])]
+			tr(" · après-match x2 !") if boost else "", int(c["caisse_buvette"])]
 		_lbl_buv.tooltip_text = "La buvette rapporte double pendant 3 h après chaque duel."
 	if c["atelier"] == 0:
 		_lbl_ech.text = "Fermé. Ouvre-le pour tricoter des écharpes aux couleurs du club."
 	else:
-		_lbl_ech.text = tr("Niveau %d · %d écharpe%s/h · %d Jetons pièce\nStock : %d / %d") % [
-			c["atelier"], int(FanClub.echarpes_heure(c)), "s" if FanClub.echarpes_heure(c) > 1 else "",
+		_lbl_ech.text = (tr("Niveau %d · %d écharpes/h · %d Jetons pièce\nStock : %d / %d") if FanClub.echarpes_heure(c) > 1
+				else tr("Niveau %d · %d écharpe/h · %d Jetons pièce\nStock : %d / %d")) % [
+			c["atelier"], int(FanClub.echarpes_heure(c)),
 			FanClub.prix_echarpe(c), int(c["echarpes"]), FanClub.stock_max(c)]
 	var stock := int(c["echarpes"])
 	_vendre.text = tr("Vendre (+%d)") % (stock * FanClub.prix_echarpe(c)) if stock > 0 else tr("Rien à vendre")
@@ -491,7 +492,7 @@ func _maj_caisse() -> void:
 			b.text = "Niveau max"
 			b.disabled = true
 		else:
-			b.text = "%s · %d J" % [tr("Ouvrir") if ouvrir else tr("Améliorer"), cout]
+			b.text = tr("%s · %d Jetons") % [tr("Ouvrir") if ouvrir else tr("Améliorer"), cout]
 			b.disabled = cout > Game.jetons
 			b.tooltip_text = tr("Il te faut %d Jetons") % cout if cout > Game.jetons else ""
 	var total := FanClub.en_caisse(c)
@@ -502,7 +503,8 @@ func _maj_caisse() -> void:
 func _nombre(x: float) -> String:
 	## « 9,1 » ou « 3 » : virgule française, pas de « .0 » inutile.
 	var s := str(snappedf(x, 0.1))
-	return s.trim_suffix(".0").replace(".", ",")
+	s = s.trim_suffix(".0")
+	return Trad.decimal(s)
 
 
 func _boutons_amelioration() -> Array:

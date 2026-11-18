@@ -184,7 +184,7 @@ func _afficher() -> void:
 	esp.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	v.add_child(esp)
 	var aide := Ui.panneau(Ui.NUIT_CLAIR, 18, 3)
-	var la := Ui.label(tr("En route, chaque choix fait monter ou baisser la ferveur du convoi. À l'arrivée : une prime de Jetons et d'XP du PASS, et jusqu'à ×%s sur les Jetons des duels de ce match aujourd'hui. Certains choix demandent un FANZZY d'une famille précise dans le convoi.") % str(1.0 + Deplacement.BONUS_DUEL_MAX).replace(".", ","), 15, Ui.GRIS)
+	var la := Ui.label(tr("En route, chaque choix fait monter ou baisser la ferveur du convoi. À l'arrivée : une prime de Jetons et d'XP du PASS, et jusqu'à ×%s sur les Jetons des duels de ce match aujourd'hui. Certains choix demandent un FANZZY d'une famille précise dans le convoi.") % Trad.decimal(1.0 + Deplacement.BONUS_DUEL_MAX), 15, Ui.GRIS)
 	la.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	aide.add_child(la)
 	v.add_child(aide)
@@ -504,7 +504,8 @@ func _unhandled_input(ev: InputEvent) -> void:
 		return
 	if _attente_choix:
 		var idx := -1
-		match (ev as InputEventKey).keycode:
+		# touche physique : en AZERTY, « 1 » sans Maj donne « & »
+		match (ev as InputEventKey).physical_keycode:
 			KEY_1, KEY_KP_1:
 				idx = 0
 			KEY_2, KEY_KP_2:

@@ -115,7 +115,7 @@ var _scores_favoris: Dictionary = {}
 
 ## Où suivre le match. Au stade : billet + trajet, tampon du stade, plus de Jetons.
 const MODES_SUIVI := {
-	"stade": {"titre": "Au stade", "texte": "Billet + déplacement · tampon", "gain": 1.5, "billet": 20},
+	"stade": {"titre": "Au stade", "texte": "Billet + déplacement · tampon", "gain": 1.5, "billet": 25},
 	"ecran": {"titre": "Écran géant", "texte": "Fan zone de la ville", "gain": 1.2, "billet": 8},
 	"pub": {"titre": "Au pub", "texte": "Avec les supporters du coin", "gain": 1.0, "billet": 4},
 	"maison": {"titre": "À la maison", "texte": "Gratuit, entre amis", "gain": 0.6, "billet": 0},
@@ -219,11 +219,41 @@ func aller(scene: String, p: Dictionary = {}) -> void:
 # ---------------------------------------------------------------- progression
 
 func niveau() -> int:
-	return 1 + xp / 200
+	return niveau_de(xp)
 
 
 func xp_dans_niveau() -> float:
-	return float(xp % 200) / 200.0
+	var n := niveau()
+	return float(xp - xp_debut_niveau(n)) / float(xp_pour_niveau(n))
+
+
+## Courbe du niveau du fan club (docs/equilibrage.md) : 200 XP par niveau jusqu'au
+## niveau 6 (tout ce qui se débloque arrive vite), puis 100 XP de plus à chaque niveau.
+const XP_NIVEAU := 200
+const NIVEAU_COURBE := 5
+const XP_NIVEAU_EN_PLUS := 100
+
+
+## XP à gagner pour passer du niveau n au niveau n + 1.
+static func xp_pour_niveau(n: int) -> int:
+	return XP_NIVEAU + XP_NIVEAU_EN_PLUS * maxi(0, n - NIVEAU_COURBE)
+
+
+## XP totale au début du niveau n.
+static func xp_debut_niveau(n: int) -> int:
+	var t := 0
+	for k in range(1, maxi(1, n)):
+		t += xp_pour_niveau(k)
+	return t
+
+
+static func niveau_de(points: int) -> int:
+	var n := 1
+	var reste := maxi(0, points)
+	while reste >= xp_pour_niveau(n):
+		reste -= xp_pour_niveau(n)
+		n += 1
+	return n
 
 
 func ajouter_xp(n: int) -> void:

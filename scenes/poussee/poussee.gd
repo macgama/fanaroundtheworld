@@ -44,6 +44,7 @@ var _suivante: TextureRect
 var _ferveur_barre: BarreFerveur
 var _rng := RandomNumberGenerator.new()
 var _ia_pense := [1.5, 1.5]
+var niveaux_ia := [IaNiveau.PAR_DEFAUT, IaNiveau.PAR_DEFAUT]  # ton camp (démo --auto), l'adversaire
 var _auto := false             # démo : ton camp joue tout seul
 var _visuels := {}              # [equipe, famille] -> id FANZZY
 
@@ -72,6 +73,7 @@ func _ready() -> void:
 	camp = p.get("camp", "home")
 	mode_suivi = p.get("mode", "stade")
 	_auto = p.get("auto", false)
+	niveaux_ia = p.get("ia", [IaNiveau.moi(), IaNiveau.adversaire()])
 	_rng.seed = hash(str(fiche["id"])) + Time.get_ticks_msec()
 	var dom: Dictionary = fiche["dom"]
 	var ext: Dictionary = fiche["ext"]
@@ -116,6 +118,9 @@ func _choisir_visuels() -> void:
 # ------------------------------------------------------------------ construction
 
 func _construire() -> void:
+	# l'écran entier laisse passer les clics : sinon il les garde pour lui et
+	# le clic sur le terrain (poser un FANZZY) n'arrive jamais à _unhandled_input
+	mouse_filter = Control.MOUSE_FILTER_IGNORE
 	var fond := ColorRect.new()
 	fond.color = Color("#2a2266")
 	fond.set_anchors_preset(Control.PRESET_FULL_RECT)
@@ -278,6 +283,8 @@ func _compte_a_rebours() -> void:
 	for t in ["3", "2", "1", "POUSSEZ !"]:
 		annoncer(t, Ui.JAUNE)
 		await get_tree().create_timer(0.75).timeout
+		if not is_inside_tree():
+			return  # écran quitté pendant le compte à rebours
 	en_cours = true
 	_lbl_annonce.text = ""
 
@@ -295,8 +302,12 @@ func _unhandled_input(ev: InputEvent) -> void:
 		return
 	if ev is InputEventKey and ev.pressed and not ev.echo:
 		var k := (ev as InputEventKey).keycode
-		if k >= KEY_1 and k <= KEY_4:
-			_selectionner(k - KEY_1)
+		# chiffres : touche physique (en AZERTY, « 1 » sans Maj donne « & »)
+		var kp := (ev as InputEventKey).physical_keycode
+		if kp >= KEY_1 and kp <= KEY_4:
+			_selectionner(kp - KEY_1)
+		elif kp >= KEY_KP_1 and kp <= KEY_KP_4:
+			_selectionner(kp - KEY_KP_1)
 		elif k == KEY_ESCAPE:
 			if selection >= 0:
 				selection = -1
@@ -598,13 +609,24 @@ func _ballon(delta: float) -> void:
 
 # ------------------------------------------------------------------ IA
 
-## L'adversaire (et ton camp en mode démo --auto) : défend quand le ballon
-## ou des supporters entrent dans sa moitié, sinon attaque.
+## L'adversaire (et ton camp en mode démo --auto), selon son niveau (IaNiveau) :
+## normal et difficile lisent le terrain (scripts/duel/ia_poussee.gd) ;
+## facile défend quand le ballon ou des supporters entrent dans sa moitié,
+## sinon joue une carte au hasard.
 func _ia(e: int, delta: float) -> void:
 	_ia_pense[e] -= delta
 	if _ia_pense[e] > 0.0:
 		return
-	_ia_pense[e] = _rng.randf_range(0.6, 1.2)
+	var p := IaNiveau.params(str(niveaux_ia[e]))
+	_ia_pense[e] = _rng.randf_range(p["pense"][0], p["pense"][1])
+	if p["malin"]:
+		var d := IaPoussee.decider(self, e, p, _rng)
+		if not d.is_empty() and zone_permise(e, piles[e][d["i"]], d["pos"]):
+			if e == 0:
+				_jouer(d["i"], d["pos"])
+			else:
+				poser(e, d["i"], d["pos"])
+		return
 	var s := _sens(e)
 	var main: Array = piles[e].slice(0, PousseeRegles.TAILLE_MAIN)
 	var cx := TERRAIN.get_center().x
@@ -834,7 +856,7 @@ func _finir(res: int, pourquoi: String) -> void:
 		_pluie(Vector2(_rng.randf_range(300, 1600), _rng.randf_range(200, 600)), couleurs[0 if gagne else 1], 40)
 	var perf := PousseeRegles.performance(gagne, maxf(tribune[1], 0.0), posees[0])
 	print("Poussée : %s (%s) à %.0f s, tribunes %d/%d, cartes %d/%d" % [["défaite", "égalité", "victoire"][res + 1], pourquoi, temps, tribune[0], tribune[1], posees[0], posees[1]])
-	var g := FinDuel.enregistrer(gagne, perf, fiche, camp, mode_suivi)
+	var g := FinDuel.enregistrer(gagne, perf, fiche, camp, mode_suivi, "poussee")
 	await get_tree().create_timer(2.0).timeout
 	_lbl_annonce.text = ""
 	var titre := "VICTOIRE !" if gagne else ("ÉGALITÉ !" if res == 0 else "PERDU DE PEU…")
@@ -968,6 +990,9 @@ class Unite extends Node2D:
 class Sol extends Node2D:
 	var jeu
 
+	func _ready() -> void:
+		texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR_WITH_MIPMAPS  # supporters réduits proprement
+
 	func _draw() -> void:
 		var t: Rect2 = TERRAIN
 		var cy := t.get_center().y
@@ -979,11 +1004,24 @@ class Sol extends Node2D:
 			draw_rect(r, Color("#3a3290"))
 			var conquis: float = 1.0 - clampf(jeu.tribune[e] / PousseeRegles.TRIBUNE_PV, 0.0, 1.0)
 			var n := 0
-			for yy in range(int(r.position.y) + 18, int(r.end.y) - 8, 26):
+			var sprites := FouleSprites.disponible()
+			for yy in range(int(r.position.y) + (30 if sprites else 18), int(r.end.y) - 8, 26):
+				if sprites and n > 0:  # la marche du rang précédent
+					draw_rect(Rect2(r.position.x, yy - 12, r.size.x, 16), Color("#2a2357", 0.9))
+					draw_rect(Rect2(r.position.x, yy - 12, r.size.x, 3), Color("#8b7dff", 0.8))
 				for xx in range(int(r.position.x) + 16, int(r.end.x) - 8, 26):
 					n += 1
 					var h := fposmod(sin(n * 12.9898) * 43758.5453, 1.0)
 					var col: Color = jeu.couleurs[1 - e] if h < conquis else jeu.couleurs[e]
+					if sprites:
+						# les envahisseurs exultent, les locaux tiennent bon (ou dépriment)
+						var envahi := h < conquis
+						var ga := FouleSprites.geste_ambiance(0.9 if envahi else 0.75 - conquis * 0.5, h, ms)
+						if not envahi and conquis > 0.5 and fposmod(h * 13.0, 1.0) < conquis - 0.3:
+							ga = [&"depit", ms + h]
+						FouleSprites.dessiner(self, Vector2(xx, yy + 18), 40.0, ga[0], ga[1], col, jeu.couleurs[1 - e] if envahi else Ui.BLANC,
+							FouleSprites.PEAUX[n % FouleSprites.PEAUX.size()], n % 3)
+						continue
 					var saut := absf(sin(ms * 6.0 + n)) * 4.0
 					draw_circle(Vector2(xx, yy - saut), 9, col.darkened(0.15 * fposmod(h * 7.0, 1.0)))
 		draw_rect(t.grow(10), Ui.CONTOUR)

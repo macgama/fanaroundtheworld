@@ -38,8 +38,8 @@ func _ready() -> void:
 	var jetons := Game.jetons
 	var r := Game.recompense_evenement(derby, 30)
 	_verifier(int(r.get("bonus", -1)) == 15, "bonus ×1,5 sur 30 Jetons : +15 (%s)" % str(r.get("bonus")))
-	_verifier(int(r.get("prime_xp", 0)) == 250 and int(r.get("prime_jetons", 0)) == 30, "prime du premier duel")
-	_verifier(Game.jetons == jetons + 45 and Game.xp_pass == 250, "Jetons et XP de PASS versés")
+	_verifier(int(r.get("prime_xp", 0)) == 125 and int(r.get("prime_jetons", 0)) == 30, "prime du premier duel")
+	_verifier(Game.jetons == jetons + 45 and Game.xp_pass == 125, "Jetons et XP de PASS versés")
 	_verifier(Game.prime_evenement_gagnee("test:derby"), "prime notée")
 	var lignes := FinDuel.lignes_evenement(r)
 	_verifier(lignes.size() == 2 and "Derby de Milan" in str(lignes[0][0]), "lignes du panneau de fin : %s" % str(lignes))
@@ -55,7 +55,7 @@ func _ready() -> void:
 	_verifier(Game.recompense_evenement(_match("test:banal", 1.0, "af:9001", "af:9002"), 30).is_empty(), "match banal : rien")
 
 	Game.charger()
-	_verifier(Game.prime_evenement_gagnee("test:derby") and Game.xp_pass == 250, "sauvegardé")
+	_verifier(Game.prime_evenement_gagnee("test:derby") and Game.xp_pass == 125, "sauvegardé")
 	Game.reinitialiser()
 	_verifier(not Game.prime_evenement_gagnee("test:derby"), "remis à zéro")
 

@@ -348,7 +348,7 @@ func _classement(liste: VBoxContainer, f: Dictionary) -> void:
 			liste.add_child(_ligne_club(int(t["rang"]), t["nom"], t["couleurs"], Tournoi.points(t), (t["duels"] as Array).size(), true))
 		return
 	if f["etat"] != "actif":
-		_texte(liste, "Le classement du prochain tournoi s'affichera dès vendredi.", 20, Ui.GRIS)
+		liste.add_child(Ui.etat_vide("calendrier", "Le classement du prochain tournoi s'affichera dès vendredi."))
 		return
 	_texte(liste, "Classement en ligne désactivé (mode test) : clubs du jeu." if EnLigne.desactive
 		else "Hors ligne : classement d'entraînement contre les clubs du jeu. Le vrai classement revient avec la connexion.", 17, Ui.GRIS)
@@ -384,7 +384,7 @@ func _ligne_club(rang: int, nom_v: Variant, couleurs: Variant, points: int, duel
 ## Matchs du calendrier qui comptent pour le tournoi (week-end, pas annulés).
 func _liste_matchs(liste: VBoxContainer, f: Dictionary) -> void:
 	if f["etat"] != "actif":
-		_texte(liste, "Les matchs du prochain week-end apparaîtront ici vendredi.", 20, Ui.GRIS)
+		liste.add_child(Ui.etat_vide("calendrier", "Les matchs du prochain week-end apparaîtront ici vendredi."))
 		return
 	var t: Dictionary = Game.tournoi
 	var now := Game.maintenant()
@@ -403,7 +403,7 @@ func _liste_matchs(liste: VBoxContainer, f: Dictionary) -> void:
 			return ea
 		return Donnees.heure_unix(a) < Donnees.heure_unix(b))
 	if matchs.is_empty():
-		_texte(liste, "Aucun match du week-end dans le calendrier pour l'instant.", 20, Ui.GRIS)
+		liste.add_child(Ui.etat_vide("calendrier", "Aucun match du week-end dans le calendrier pour l'instant."))
 		return
 	_texte(liste, tr("Chaque match ne compte qu'une fois. Au stade : +%d point. Derby, finale, Grand Choc : +%d point.") % [Tournoi.BONUS_STADE, Tournoi.BONUS_EVENEMENT], 17, Ui.GRIS)
 	for m in matchs.slice(0, 60):
@@ -446,7 +446,7 @@ func _liste_duels(liste: VBoxContainer) -> void:
 	var t: Dictionary = Game.tournoi
 	var d: Array = t["duels"]
 	if d.is_empty():
-		_texte(liste, "Pas encore de duel de tournoi ce week-end.", 20, Ui.GRIS)
+		liste.add_child(Ui.etat_vide("stade", "Pas encore de duel de tournoi ce week-end."))
 		return
 	for x in d:
 		var m := Donnees.match_par_id(str(x["match"]))

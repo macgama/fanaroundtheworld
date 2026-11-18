@@ -147,7 +147,7 @@ func _maj() -> void:
 	_remplir_carte(_carte_moi, Game.fan_club_nom, Game.couleurs_club(), Game.equipe.map(func(id): return Game.skin_de(str(id))), tr("Toi · niveau %d") % Game.niveau())
 	var adv := Reseau.adversaire
 	if adv.is_empty():
-		_remplir_carte(_carte_eux, "En attente…", [Ui.NUIT_CLAIR, Ui.GRIS], [], "")
+		_remplir_carte(_carte_eux, tr("En attente…"), [Ui.NUIT_CLAIR, Ui.GRIS], [], "")
 	else:
 		_remplir_carte(_carte_eux, adv["nom"], adv["couleurs"], adv["equipe"], tr("Adversaire · niveau %d") % adv["niveau"])
 	var m := Reseau.match_salon

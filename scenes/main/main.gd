@@ -287,6 +287,23 @@ func _ouvrir_options() -> void:
 				get_tree().reload_current_scene())
 		hl.add_child(bl)
 	v.add_child(hl)
+	# niveau de l'adversaire ordi (Arène et Poussée)
+	var hd := Ui.hbox(14)
+	var ld := Ui.label("Adversaire ordi", 24, Ui.BLANC, true)
+	ld.custom_minimum_size.x = 270
+	ld.tooltip_text = "Arène et Poussée : le niveau des FANZZY dirigés par l'ordi"
+	hd.add_child(ld)
+	var boutons_niv: Array = []
+	for niv in IaNiveau.NIVEAUX:
+		var bd := Ui.bouton(IaNiveau.NOMS[niv], Ui.VIOLET if niv == Reglages.difficulte() else Color("#55507f"), 22)
+		bd.tooltip_text = IaNiveau.AIDES[niv]
+		boutons_niv.append(bd)
+		bd.pressed.connect(func():
+			Reglages.regler_difficulte(niv)
+			for k in boutons_niv.size():
+				Ui.colorer_bouton(boutons_niv[k], Ui.VIOLET if IaNiveau.NIVEAUX[k] == niv else Color("#55507f")))
+		hd.add_child(bd)
+	v.add_child(hd)
 	v.add_child(Ui.label("Partie", 26, Ui.JAUNE, true))
 	var sauv := Ui.label(Plateforme.texte_sauvegarde(), 18, Ui.GRIS)
 	sauv.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART

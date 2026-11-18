@@ -4,7 +4,6 @@
 	"COLLECTION": "COLLECTION",
 	"SÉRIES ET PRIMES": "SETS AND REWARDS",
 	"Les skins sont cosmétiques : ils viennent du PASS et des événements, jamais des Jetons. La garde-robe garde ceux que tes FANZZY ont portés en duel.": "Skins are cosmetic: they come from the PASS and events, never from Tokens. The wardrobe keeps the ones your FANZZY have worn in duels.",
-	"CARNET DE VOYAGE · %d stade%s · %d pays": "TRAVEL LOG · %d stadium%s · %d countries",
 	"Aucun stade tamponné pour l'instant.\nChoisis un match sur la carte et va le voir « Au stade » : le stade du club qui reçoit rejoint ton carnet.": "No stadium stamped yet.\nPick a match on the map and go \"At the stadium\": the home club's stadium joins your log.",
 	"Ailleurs": "Elsewhere",
 	"ALBUM FANZZY · %d / %d": "FANZZY ALBUM · %d / %d",
@@ -36,5 +35,7 @@
 	"Tes succès sont aussi envoyés à Steam : ils apparaissent sur ton profil.": "Your achievements are also sent to Steam: they show on your profile.",
 	"Steam n'est pas lancé : tes succès sont gardés ici et seront envoyés à Steam la prochaine fois.": "Steam isn't running: your achievements are kept here and will be sent to Steam next time.",
 	"Les succès ne donnent ni Jetons ni skins : ce sont des souvenirs de supporter.": "Achievements give neither Tokens nor skins: they're fan memories.",
-	"Gagné le %02d/%02d/%d": "Earned on %02d/%02d/%d"
+	"Gagné le %02d/%02d/%d": "Earned on %02d/%02d/%d",
+	"CARNET DE VOYAGE": "TRAVEL LOG",
+	"1 pays": "1 country"
 }

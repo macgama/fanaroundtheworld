@@ -166,6 +166,7 @@ func _construire() -> void:
 	_decor.duel = self
 	_decor.set_anchors_preset(Control.PRESET_FULL_RECT)
 	_decor.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_decor.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR_WITH_MIPMAPS  # supporters réduits proprement
 	add_child(_decor)
 	var dom: Dictionary = fiche["dom"]
 	var ext: Dictionary = fiche["ext"]
@@ -377,10 +378,13 @@ func _compte_a_rebours() -> void:
 	add_child(l)
 	for t in ["3", "2", "1", "ALLEZ !"]:
 		l.text = t
+		Ui.ajuster_taille(l, 220, get_viewport_rect().size.x - 120)
 		l.pivot_offset = l.size / 2.0
 		Ui.pop(l, 1.4, 0.3)
 		_jouer("tambour")
 		await get_tree().create_timer(0.7).timeout
+		if not is_inside_tree():
+			return  # écran quitté pendant le compte à rebours
 	l.queue_free()
 	_prochaine_mesure = 0.4
 	pret = true
@@ -543,11 +547,11 @@ func _chant() -> void:
 	if ecart <= FENETRE_PARFAIT * tw:
 		parfaits += 1
 		gain = 2.0 * float(mods["perfectBonus"])  # sans_traduction
-		_piste.eclat("PARFAIT !", Ui.JAUNE)
+		_piste.eclat(tr("PARFAIT !"), Ui.JAUNE)
 		_jouer("clap", 0.0, 1.15)
 	else:
 		biens += 1
-		_piste.eclat("BIEN", Ui.VERT)
+		_piste.eclat(tr("BIEN"), Ui.VERT)
 		_jouer("clap", -4.0)
 	_pousser(gain * mult * 0.9)
 	points += int(gain * mult * 10.0)
@@ -573,7 +577,7 @@ func _rate(appui: bool) -> void:
 	if mods["backfire"]:
 		cout *= 1.5
 	_pousser(-cout)
-	_piste.eclat("RATÉ", Ui.ROUGE)
+	_piste.eclat(tr("RATÉ"), Ui.ROUGE)
 	_fanzzy[0].trembler()
 	_maj_combo()
 
@@ -1267,7 +1271,7 @@ class Decor extends Control:
 		while x < size.x:
 			var col: Color = [Ui.ROSE, Ui.JAUNE, Ui.BLEU, Ui.VERT, Ui.VIOLET][i % 5]
 			draw_rect(Rect2(x, r.position.y - 26, 300, 26), col)
-			draw_string(f, Vector2(x + 14, r.position.y - 6), pubs[i % pubs.size()], HORIZONTAL_ALIGNMENT_LEFT, -1, 20, Ui.CONTOUR if col == Ui.JAUNE else Ui.BLANC)
+			draw_string(f, Vector2(x + 14, r.position.y - 6), tr(pubs[i % pubs.size()]), HORIZONTAL_ALIGNMENT_LEFT, -1, 20, Ui.CONTOUR if col == Ui.JAUNE else Ui.BLANC)
 			x += 300
 			i += 1
 
@@ -1286,7 +1290,8 @@ class Decor extends Control:
 		var rng := RandomNumberGenerator.new()
 		rng.seed = _graine + int(r.position.y)
 		var peaux := [Color("#f2c9a0"), Color("#d9a273"), Color("#a86b3c"), Color("#6b4226"), Color("#ffe0bd")]
-		var pas := rayon * 2.3
+		var sprites := FouleSprites.disponible()
+		var pas := rayon * (2.6 if sprites else 2.3)
 		var rangs := int(r.size.y / (rayon * 2.6))
 		for j in rangs:
 			var y := r.position.y + j * rayon * 2.6 + rayon * 1.2
@@ -1294,6 +1299,21 @@ class Decor extends Control:
 			var x := r.position.x + (pas / 2.0 if j % 2 == 1 else 0.0)
 			while x < r.end.x:
 				var ph := rng.randf() * TAU
+				if sprites:
+					# supporters Quaternius : geste d'ambiance, ola quand la vague passe
+					var corps2: Color = c1 if rng.randf() < 0.75 else c2
+					var peau2: Color = FouleSprites.PEAUX[rng.randi() % FouleSprites.PEAUX.size()]
+					var variante := rng.randi() % 3
+					var rr2 := rayon * echelle
+					var ga := FouleSprites.geste_ambiance(ferveur, ph / TAU, _t)
+					if devant and _t - _ola_t < 3.0:
+						var dans := _t - _ola_t - x / (size.x * 0.8) + 0.3
+						if dans >= 0.0 and dans < FouleSprites.duree(&"ola"):
+							ga = [&"ola", dans]
+					var autre: Color = c2 if corps2 == c1 else c1
+					FouleSprites.dessiner(self, Vector2(x, y + rr2 * 4.2), rr2 * 5.2, ga[0], ga[1], corps2, autre, peau2, variante)
+					x += pas * echelle
+					continue
 				var actif := rng.randf() < ferveur
 				var saut := 0.0
 				if actif:
@@ -1311,6 +1331,12 @@ class Decor extends Control:
 					draw_line(p + Vector2(-rr * 0.8, rr * 0.6), p + Vector2(-rr * 1.3, -rr * 0.6), corps, rr * 0.4)
 					draw_line(p + Vector2(rr * 0.8, rr * 0.6), p + Vector2(rr * 1.3, -rr * 0.6), corps, rr * 0.4)
 				x += pas * echelle
+			if sprites:
+				# la marche de tribune devant ce rang cache le bas des jambes
+				var rr3 := rayon * echelle
+				var marche := Rect2(r.position.x, y + rr3 * 1.9, r.size.x, rr3 * 2.8)
+				draw_rect(marche, Color("#2a2357", 0.92))
+				draw_rect(Rect2(marche.position, Vector2(marche.size.x, rr3 * 0.35)), Color("#8b7dff", 0.9))
 
 
 ## La piste de rythme : les notes glissent vers le cercle de gauche.

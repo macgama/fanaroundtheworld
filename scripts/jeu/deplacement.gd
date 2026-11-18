@@ -191,11 +191,18 @@ const EVENEMENT_ETAPE := {"id": "etape", "titre": "Étape : %s",
 	]}
 
 
-## Coût de base d'un trajet, en Jetons (même barème que l'ancien trajet direct).
+## Coût de base d'un trajet, en Jetons. Équilibrage du 17 nov. 2026 : les longs
+## voyages coûtent plus cher (plafond 150 au lieu de 80) pour que l'autre bout du
+## monde reste un vrai projet du fan club (docs/equilibrage.md).
+const KM_PAR_JETON := 80.0
+const COUT_BASE_MIN := 5
+const COUT_BASE_MAX := 150
+
+
 static func cout_base(distance_km: float) -> int:
 	if distance_km < 30.0:
 		return 0
-	return clampi(int(round(distance_km / 120.0)) + 5, 5, 80)
+	return clampi(int(round(distance_km / KM_PAR_JETON)) + COUT_BASE_MIN, COUT_BASE_MIN, COUT_BASE_MAX)
 
 
 static func transport_possible(transport: String, distance_km: float) -> bool:
@@ -362,7 +369,7 @@ static func bilan(etat: Dictionary) -> Dictionary:
 		"a_l_heure": a_l_heure,
 		"retard": int(etat["retard"]),
 		"jetons": int(etat["jetons"]) + int(round(ferveur / 4.0)),
-		"xp_pass": ferveur * 2,
+		"xp_pass": ferveur,
 		"xp": 20 + ferveur / 5,
 		"mult": multiplicateur(ferveur),
 	}
