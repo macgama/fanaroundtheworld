@@ -1,0 +1,156 @@
+<title>FanAroundTheWorld</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,700;12..96,800&family=Inter:wght@400;600&display=swap">
+<style>
+/* Layout: one full-screen stage; the game canvas fills it, a start card sits over it until launch. Single dark look (stadium at night). */
+:root {
+  --nuit: #0d1420;
+  --gradin: #18233a;
+  --craie: #eef2f7;
+  --brume: #9aa8bd;
+  --pelouse: #3ccf7a;
+  --pelouse-fonce: #1f8c4e;
+  --alerte: #ff7a6b;
+  --display: "Bricolage Grotesque", "Arial Black", system-ui, sans-serif;
+  --texte: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+  color-scheme: dark;
+}
+[hidden] { display: none !important; }
+html, body { height: 100%; }
+body { background: var(--nuit); color: var(--craie); font-family: var(--texte); overflow: hidden; }
+#scene { position: fixed; inset: 0; background: #000; }
+#canvas { display: block; width: 100%; height: 100%; outline: none; }
+#canvas:focus { outline: none; }
+#accueil {
+  position: fixed; inset: 0; display: grid; place-items: center;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: max(16px, env(safe-area-inset-top, 0px)) max(16px, env(safe-area-inset-bottom, 0px));
+  background:
+    radial-gradient(120% 70% at 50% 110%, rgba(60,207,122,.28), transparent 60%),
+    repeating-linear-gradient(90deg, rgba(255,255,255,.025) 0 48px, transparent 48px 96px),
+    var(--nuit);
+}
+.carte { width: min(100%, 30rem); display: grid; gap: 1.25rem; text-align: left; }
+.surtitre { font-size: .75rem; letter-spacing: .14em; text-transform: uppercase; color: var(--pelouse); font-weight: 600; }
+h1 { margin: 0; font-family: var(--display); font-weight: 800; font-size: clamp(2.2rem, 8vw, 3.4rem); line-height: .95; text-wrap: balance; }
+p { margin: 0; line-height: 1.55; color: var(--brume); max-width: 60ch; }
+button#jouer {
+  justify-self: start; font: 700 1.15rem/1 var(--display); letter-spacing: .02em;
+  color: var(--nuit); background: var(--pelouse); border: 0; border-radius: 999px;
+  padding: 1rem 2.2rem; cursor: pointer; box-shadow: 0 6px 0 var(--pelouse-fonce);
+  transition: transform .08s ease, box-shadow .08s ease;
+}
+button#jouer:hover { transform: translateY(-1px); box-shadow: 0 7px 0 var(--pelouse-fonce); }
+button#jouer:active { transform: translateY(4px); box-shadow: 0 2px 0 var(--pelouse-fonce); }
+button#jouer:focus-visible { outline: 3px solid var(--craie); outline-offset: 3px; }
+button#jouer:disabled { opacity: .6; cursor: progress; }
+.barre { height: 8px; background: var(--gradin); border-radius: 99px; overflow: hidden; }
+.barre > div { height: 100%; width: 0; background: var(--pelouse); transition: width .2s; }
+#etat { font-size: .85rem; color: var(--brume); font-variant-numeric: tabular-nums; min-height: 1.3em; }
+#etat.erreur { color: var(--alerte); }
+.notes { font-size: .8rem; display: grid; gap: .35rem; padding-left: 1.1rem; margin: 0; color: var(--brume); }
+@media (prefers-reduced-motion: reduce) { button#jouer, .barre > div { transition: none; } }
+</style>
+
+<div id="scene"><canvas id="canvas" tabindex="0">Ton navigateur ne gère pas le canvas HTML5.</canvas></div>
+
+<div id="accueil">
+  <div class="carte">
+    <span class="surtitre">Version de test · navigateur</span>
+    <h1>FanAroundTheWorld</h1>
+    <p>Le jeu complet, hors ligne. Ta progression reste dans ce navigateur.</p>
+    <button id="jouer" type="button">Jouer</button>
+    <div class="barre" aria-hidden="true"><div id="avance"></div></div>
+    <div id="etat" role="status">Environ 50 Mo à charger au premier lancement.</div>
+    <ul class="notes">
+      <li>Matchs d'exemple à la place des vrais calendriers et du direct.</li>
+      <li>Pas de duel en ligne, de classement ni de Steam ici.</li>
+      <li>Plein écran conseillé (F11). Le son démarre au clic.</li>
+    </ul>
+  </div>
+</div>
+
+<script src="index.js"></script>
+<script>
+(function () {
+  // Les gros fichiers du jeu sont découpés en morceaux de moins de 15 Mo (limite des artéfacts).
+  var MORCEAUX = {
+    "index.wasm": { parts: ["data/moteur-0.wasm"], gzip: true, type: "application/wasm" },
+    "index.pck": { parts: ["data/jeu-0.wasm", "data/jeu-1.wasm", "data/jeu-2.wasm"], gzip: false, type: "application/octet-stream" }
+  };
+  var TAILLES = { "index.pck": 41503832, "index.wasm": 39509339 };
+  var vraiFetch = window.fetch.bind(window);
+  var charge = {}, total = 0;
+  for (var k in MORCEAUX) total += 1;
+
+  function assembler(nom) {
+    var m = MORCEAUX[nom];
+    return Promise.all(m.parts.map(function (p) {
+      return vraiFetch(p).then(function (r) {
+        if (!r.ok) throw new Error(p + " : " + r.status);
+        return r.blob();
+      });
+    })).then(function (blobs) {
+      var b = new Blob(blobs);
+      if (m.gzip) {
+        return new Response(b.stream().pipeThrough(new DecompressionStream("gzip"))).arrayBuffer();
+      }
+      return b.arrayBuffer();
+    }).then(function (buf) {
+      return new Response(buf, { status: 200, headers: { "Content-Type": m.type, "Content-Length": String(buf.byteLength) } });
+    });
+  }
+
+  window.fetch = function (input, init) {
+    var url = typeof input === "string" ? input : (input && input.url) || "";
+    var nom = url.split("?")[0].split("/").pop();
+    if (MORCEAUX[nom]) return assembler(nom);
+    return vraiFetch(input, init);
+  };
+
+  var bouton = document.getElementById("jouer");
+  var etat = document.getElementById("etat");
+  var avance = document.getElementById("avance");
+  var canvas = document.getElementById("canvas");
+
+  var engine = new Engine({
+    args: [],
+    canvasResizePolicy: 2,
+    executable: "index",
+    mainPack: "index.pck",
+    fileSizes: TAILLES,
+    focusCanvas: true,
+    ensureCrossOriginIsolationHeaders: false,
+    experimentalVK: false,
+    gdextensionLibs: [],
+    serviceWorker: ""
+  });
+
+  function erreur(msg) {
+    etat.textContent = "Le jeu n'a pas pu démarrer : " + msg + ". Recharge la page pour réessayer.";
+    etat.className = "erreur";
+    bouton.disabled = false;
+  }
+
+  bouton.addEventListener("click", function () {
+    bouton.disabled = true;
+    etat.textContent = "Chargement…";
+    var manque = Engine.getMissingFeatures({ threads: false });
+    if (manque.length) { erreur("navigateur trop ancien (" + manque.join(", ") + ")"); return; }
+    engine.startGame({
+      onProgress: function (cur, tot) {
+        if (tot > 0) {
+          var pc = Math.min(100, Math.round(cur / tot * 100));
+          avance.style.width = pc + "%";
+          etat.textContent = "Chargement… " + pc + " %";
+        }
+      }
+    }).then(function () {
+      document.getElementById("accueil").hidden = true;
+      canvas.focus();
+    }, function (e) { erreur(e && e.message ? e.message : String(e)); });
+  });
+})();
+</script>
